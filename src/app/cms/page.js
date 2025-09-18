@@ -37,9 +37,9 @@ setTitle("");
 setDescription("");
 fetchPosts();
 }
-async function deletePosts() {
+async function deletePosts(id) {
     await supabase.from("posts").delete().eq("id", id);
-    fetchPosts ();
+    fetchPosts();
 }
 
 
@@ -85,14 +85,12 @@ return (
            <div className="text-black line-clamp-2">{post.description}</div>
            <button
            className="border-2 border-red-500 py-1 px-1 cursor-pointer
-           hover:bg-fray-300 rounded-lg mt-2 "
+           hover:bg-fray-300 rounded-lg "
            onClick={() => deletePosts(post.id)}>
             Delete
            </button>
          </div>
-         
-       
-       ))}
+         ))}
        </div>
     </>
     );
