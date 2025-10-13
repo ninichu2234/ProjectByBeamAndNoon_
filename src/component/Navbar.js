@@ -10,7 +10,7 @@ export default function Navbar() {
         {/* ส่วนที่ 1: โลโก้ (ซ้าย) */}
         <div className="flex items-center">
          <Link 
-              href="/landing-page" 
+              href="/" 
               onClick={() => setMobileMenuOpen(false)}
               className="text-2xl font-bold text-gray-900">
             <span className="text-blue-600">My</span>Cafe
@@ -20,7 +20,7 @@ export default function Navbar() {
       {/* ส่วนที่ 2: เมนูและปุ่ม (ขวา) - สำหรับ Desktop */}
         <nav className="hidden md:flex items-center space-x-8">
           <Link
-            href="#" //รอใส่ลิ้งกันmenu
+            href="/menu-page" //รอใส่ลิ้งกันmenu
             className="text-gray-700 hover:text-blue-600 transition-colors duration-300"
             >Menu
           </Link>
@@ -83,7 +83,7 @@ export default function Navbar() {
             </Link>
             
             <Link 
-              href="/menu" 
+              href="/menu-page/page.js" 
               onClick={() => setMobileMenuOpen(false)} 
               className="text-gray-700 hover:text-amber-600 font-medium text-lg text-center py-2"
             >

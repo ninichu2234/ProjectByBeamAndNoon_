@@ -1,231 +1,92 @@
-import Image from "next/image";
-import Navbar from "../component/Navbar";
-import AboutUsSection from "../component/AboutUsSection";
+import Link from 'next/link';
 
 export default function Home() {
-  return (  
-  <div class="font-kanit antialiased bg-gray-50 text-gray-900"> 
-  <Navbar/> 
-  <AboutUsSection/>
-  
+  return (
+    <main>
+      {/* ======================================= */}
+      {/* Section 1: Hero Section (ส่วนต้อนรับ)    */}
+      {/* ======================================= */}
+      <section className="relative flex items-center justify-center h-screen bg-gray-800">
+        {/* --- ส่วน Background --- */}
+        {/* TODO: เปลี่ยนเป็นรูปภาพหรือวิดีโอของร้านคุณ */}
+        {/* <video autoPlay loop muted className="absolute z-0 w-auto min-w-full min-h-full max-w-none">
+          <source src="/videos/cafe-ambience.mp4" type="video/mp4" />
+          Your browser does not support the video tag.
+        </video> */}
+        <img
+          src="https://images.unsplash.com/photo-1554118811-1e0d58224f24?q=80&w=2940&auto=format&fit=crop"
+          alt="Cafe ambience"
+          className="absolute z-0 w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-black/60 z-10"></div> {/* Overlay สีดำโปร่งแสง */}
 
-  <section class="bg-gradient-to-br from-blue-50 to-indigo-100 py-20">
-    <div class="container mx-auto px-6">
-      <div class="max-w-4xl mx-auto text-center">
-       
-        <h1 class="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
-          ยินดีต้อนรับสู่
-          <span class="text-blue-600">เว็บไซต์ของเรา</span>
-        </h1>
-
-
-        <p class="text-xl text-gray-600 mb-8 leading-relaxed">
-          เรามีบริการที่ครบครันและทีมงานมืออาชีพ
-          พร้อมให้บริการคุณด้วยความใส่ใจและคุณภาพสูงสุด
-        </p>
-
-
-        <div class="flex flex-col sm:flex-row gap-4 justify-center">
-          <button
-            class="bg-blue-600 text-white px-8 py-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors duration-300 flex items-center justify-center gap-2"
-          >
-            <span>เริ่มต้นเลย</span>
-            <i class="fas fa-arrow-right"></i>
-          </button>
-          <button
-            class="border-2 border-blue-600 text-blue-600 px-8 py-4 rounded-lg font-semibold hover:bg-blue-600 hover:text-white transition-colors duration-300 flex items-center justify-center gap-2"
-          >
-            <i class="fas fa-play"></i>
-            <span>ดูวิดีโอ</span>
-          </button>
-        </div>
-      </div>
-    </div>
-  </section>
-
-
-  
-  <section class="py-20 bg-gray-50">
-    <div class="container mx-auto px-6">
-
-      <div class="text-center mb-16">
-        <h2 class="text-4xl font-bold text-gray-900 mb-4">ค่านิยมของเรา</h2>
-        <p class="text-xl text-gray-600">สิ่งที่เรายึดถือและปฏิบัติ</p>
-      </div>
-
-
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-
-        <div
-          class="bg-white p-8 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 text-center"
-        >
-          <div
-            class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6"
-          >
-            <i class="fas fa-heart text-blue-600 text-2xl"></i>
-          </div>
-          <h3 class="text-xl font-bold text-gray-900 mb-4">ความใส่ใจ</h3>
-          <p class="text-gray-600 leading-relaxed">
-            เรามุ่งมั่นในการให้บริการด้วยความใส่ใจและเข้าใจความต้องการของลูกค้า
+        {/* --- ส่วนเนื้อหา --- */}
+        <div className="relative z-20 text-center text-white p-4">
+          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight">
+            สั่งกาแฟ... <span className="text-amber-400">ในแบบของคุณ</span>
+          </h1>
+          <p className="mt-4 max-w-2xl mx-auto text-lg md:text-xl text-gray-200">
+            ให้ AI ช่วยแนะนำเมนูที่ใช่สำหรับคุณ หรือเลือกดูเมนูทั้งหมดด้วยตัวคุณเอง
           </p>
-        </div>
 
-
-        <div
-          class="bg-white p-8 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 text-center"
-        >
-          <div
-            class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6"
-          >
-            <i class="fas fa-star text-green-600 text-2xl"></i>
-          </div>
-          <h3 class="text-xl font-bold text-gray-900 mb-4">คุณภาพ</h3>
-          <p class="text-gray-600 leading-relaxed">
-            เรามุ่งมั่นในการส่งมอบผลงานที่มีคุณภาพสูงสุดและตรงตามความต้องการ
-          </p>
-        </div>
-
-
-        <div
-          class="bg-white p-8 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 text-center"
-        >
-          <div
-            class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-6"
-          >
-            <i class="fas fa-lightbulb text-purple-600 text-2xl"></i>
-          </div>
-          <h3 class="text-xl font-bold text-gray-900 mb-4">นวัตกรรม</h3>
-          <p class="text-gray-600 leading-relaxed">
-            เราพัฒนาและปรับปรุงบริการอย่างต่อเนื่องด้วยเทคโนโลยีที่ทันสมัย
-          </p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-
-  <section class="py-16 bg-blue-600 text-white">
-    <div class="container mx-auto px-6 text-center">
-      <h2 class="text-3xl font-bold mb-4">พร้อมเริ่มต้นแล้วหรือยัง?</h2>
-      <p class="text-blue-100 mb-8 max-w-2xl mx-auto">
-        ติดต่อเราวันนี้เพื่อรับคำปรึกษาฟรี หรือสอบถามข้อมูลเพิ่มเติม
-      </p>
-      <div class="flex flex-col sm:flex-row gap-4 justify-center">
-        <button
-          class="bg-white text-blue-600 px-8 py-3 rounded-md font-semibold hover:bg-gray-100 transition-colors duration-300 flex items-center justify-center gap-2"
-        >
-          <i class="fas fa-phone"></i>
-          <span>โทรเลย</span>
-        </button>
-        <button
-          class="border-2 border-white text-white px-8 py-3 rounded-md font-semibold hover:bg-white hover:text-blue-600 transition-colors duration-300 flex items-center justify-center gap-2"
-        >
-          <i class="fas fa-envelope"></i>
-          <span>ส่งอีเมล</span>
-        </button>
-      </div>
-    </div>
-  </section>
-
-
-  <footer class="bg-gray-900 text-white py-12">
-    <div class="container mx-auto px-6">
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-       
-        <div class="md:col-span-2">
-          <div class="text-2xl font-bold mb-4">
-            <span class="text-blue-400">Your</span>Brand
-          </div>
-          <p class="text-gray-400 mb-4 leading-relaxed">
-            บริษัทที่ให้บริการครบครันด้วยทีมงานมืออาชีพ
-            พร้อมให้คำปรึกษาและบริการที่ดีที่สุด
-          </p>
-          <div class="flex space-x-4">
-            <a
-              href="#"
-              class="text-gray-400 hover:text-white transition-colors duration-300"
-            >
-              <i class="fab fa-facebook text-xl"></i>
-            </a>
-            <a
-              href="#"
-              class="text-gray-400 hover:text-white transition-colors duration-300"
-            >
-              <i class="fab fa-twitter text-xl"></i>
-            </a>
-            <a
-              href="#"
-              class="text-gray-400 hover:text-white transition-colors duration-300"
-            >
-              <i class="fab fa-instagram text-xl"></i>
-            </a>
+          {/* --- ปุ่ม CTA คู่ --- */}
+          <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link href="/chat">
+              <button className="w-full sm:w-auto bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 px-8 rounded-full transition-all duration-300 shadow-lg transform hover:scale-105">
+                ✨ คุยกับ AI แนะนำเมนู
+              </button>
+            </Link>
+            <Link href="/menu-page">
+              <button className="w-full sm:w-auto bg-transparent hover:bg-white/20 text-white font-semibold py-3 px-8 border-2 border-white rounded-full transition-all duration-300">
+                ดูเมนูทั้งหมด
+              </button>
+            </Link>
           </div>
         </div>
+      </section>
 
+      {/* ================================================= */}
+      {/* Section 2: Reassurance Section (ส่วนอธิบาย)      */}
+      {/* ================================================= */}
+      <section className="bg-gray-50 py-20 md:py-24">
+        <div className="container mx-auto px-6">
+          {/* --- หัวข้อของ Section --- */}
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-800">ไม่ต้องกังวล เราช่วยได้</h2>
+            <p className="mt-3 text-gray-600 text-lg">
+              ไม่ว่าคุณจะอยากลองอะไรใหม่ๆ หรือแค่อยากได้กาแฟที่ถูกใจ
+            </p>
+          </div>
+          
+          {/* --- Layout 2 คอลัมน์ --- */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+            
+            {/* คอลัมน์ซ้าย: ปัญหา */}
+            <div className="text-center md:text-left">
+              <div className="bg-gray-200 h-64 rounded-lg shadow-md mb-6 flex items-center justify-center">
+                {/* TODO: ใส่รูปคนกำลังเลือกเมนูเยอะๆ แล้วทำหน้างง */}
+                <span className="text-gray-500">🖼️ รูปภาพ: เลือกเมนูไม่ถูก</span>
+              </div>
+              <h3 className="text-2xl font-bold text-gray-800">เลือกไม่ถูกใช่ไหม?</h3>
+              <p className="mt-2 text-gray-600">
+                เมนูเยอะไปหมด? อยากลองอะไรใหม่ๆ แต่ไม่รู้จะเริ่มยังไง? ปัญหานี้จะหมดไป
+              </p>
+            </div>
 
-        <div>
-          <h3 class="text-lg font-semibold mb-4">ลิงก์ด่วน</h3>
-          <ul class="space-y-2">
-            <li>
-              <a
-                href="#"
-                class="text-gray-400 hover:text-white transition-colors duration-300"
-                >หน้าแรก</a
-              >
-            </li>
-            <li>
-              <a
-                href="#"
-                class="text-gray-400 hover:text-white transition-colors duration-300"
-                >บริการ</a
-              >
-            </li>
-            <li>
-              <a
-                href="#"
-                class="text-gray-400 hover:text-white transition-colors duration-300"
-                >เกี่ยวกับเรา</a
-              >
-            </li>
-            <li>
-              <a
-                href="#"
-                class="text-gray-400 hover:text-white transition-colors duration-300"
-                >ติดต่อ</a
-              >
-            </li>
-          </ul>
+            {/* คอลัมน์ขวา: ทางออก */}
+            <div className="text-center md:text-left">
+               <div className="bg-gray-200 h-64 rounded-lg shadow-md mb-6 flex items-center justify-center">
+                {/* TODO: ใส่รูป Mockup หน้าจอแชทกับ AI */}
+                <span className="text-gray-500">🖼️ รูปภาพ: ตัวอย่างแชทกับ AI</span>
+              </div>
+              <h3 className="text-2xl font-bold text-amber-600">ให้เราช่วยแนะนำ!</h3>
+              <p className="mt-2 text-gray-600">
+                แค่บอกความรู้สึกของคุณ AI ของเราพร้อมช่วยเลือกเครื่องดื่มที่ใช่ที่สุดสำหรับคุณ
+              </p>
+            </div>
+          </div>
         </div>
-
-
-        <div>
-          <h3 class="text-lg font-semibold mb-4">ติดต่อเรา</h3>
-          <ul class="space-y-2 text-gray-400">
-            <li class="flex items-center gap-2">
-              <i class="fas fa-phone"></i>
-              <span>02-123-4567</span>
-            </li>
-            <li class="flex items-center gap-2">
-              <i class="fas fa-envelope"></i>
-              <span>info@yourbrand.com</span>
-            </li>
-            <li class="flex items-start gap-2">
-              <i class="fas fa-map-marker-alt mt-1"></i>
-              <span>123 ถนนสุขุมวิท กรุงเทพฯ 10110</span>
-            </li>
-          </ul>
-        </div>
-      </div>
-
-
-      <div
-        class="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400"
-      >
-        <p>&copy; 2024 YourBrand. สงวนลิขสิทธิ์ทั้งหมด</p>
-      </div>
-    </div>
-  </footer>
-</div>
-);
+      </section>
+    </main>
+  );
 }
-
