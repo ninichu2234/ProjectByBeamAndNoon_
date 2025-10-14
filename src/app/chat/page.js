@@ -1,35 +1,66 @@
-"use client"; // ต้องมีบรรทัดนี้เพื่อบอกว่า Component นี้ทำงานฝั่ง Client
-
+"use client";
 import React from 'react';
+// Make sure this path points to your supabase client setup file
+import { supabase } from '../lib/supabaseClient';
 
 export default function ChatPage() {
 
     async function promptGemini() {
-        // !!! คำเตือน: การใส่ API Key ไว้ในโค้ดฝั่ง Client แบบนี้อันตรายมาก !!!
-        // ผู้ใช้จะเห็น Key ของคุณได้จาก Source Code ในเบราว์เซอร์
-        const API_KEY = 'AIzaSyBKc_6DmN-5YZWtnKqRzjGCdqb7txWsv3I'; // <--- ไม่ปลอดภัยอย่างยิ่ง
-        const MODEL_NAME = 'gemini-1.5-pro-latest'; // แนะนำให้ใช้รุ่นล่าสุด
-        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${API_KEY}`;
-        
+        // --- Get UI Elements ---
         const questionInput = document.getElementById('question');
         const fileInput = document.getElementById('fileInput');
         const answerDiv = document.getElementById('answer');
+        
+        answerDiv.innerHTML = "กำลังดึงข้อมูลเมนูและสอบถาม AI... กรุณารอสักครู่ ✨";
 
-        answerDiv.innerHTML = "กำลังคิด... กรุณารอสักครู่ ✨";
+        // --- 1. Fetch Menu Data from Supabase ---
+        // This is where you put the code to get data from Supabase
+        const { data: menuItems, error: supabaseError } = await supabase
+            .from('menuItems') // **สำคัญ:** ตรวจสอบให้แน่ใจว่าชื่อตารางของคุณคือ 'menu_items'
+            .select('menuName, menuDescription, menuPrice')
+            .order('menuId', { ascending: true }); // Make sure you have a column named 'id' or change it to 'menuId'
 
+        if (supabaseError) {
+            console.error('Error fetching menuItems:', supabaseError.message);
+            answerDiv.innerHTML = "เกิดข้อผิดพลาดในการดึงข้อมูลเมนูจากฐานข้อมูลค่ะ";
+            return; // Stop the function if we can't get the menu
+        }
+
+        // --- 2. Format the Menu Data into Text for the AI ---
+        let menuContext = "";
+        if (menuItems && menuItems.length > 0) {
+            menuContext = "Here is the menu data from our database:\n";
+            menuItems.forEach(item => {
+                menuContext += `- Name: ${item.name}, Description: ${item.description}, Price: ${item.price} baht.\n`;
+            });
+        } else {
+            menuContext = "There are no items on the menu in the database.\n";
+        }
+        
+        // --- 3. Build the Final Prompt for the AI ---
+        const API_KEY = 'AIzaSyBKc_6DmN-5YZWtnKqRzjGCdqb7txWsv3I'; // <-- Still insecure
+        const MODEL_NAME = 'gemini-2.5-pro-latest'; // <-- Corrected model name
+        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${API_KEY}`;
+        
         let fileData = '';
         if (fileInput.files.length > 0) {
             const file = fileInput.files[0];
             fileData = await readTextFile(file);
         }
         
-        const myOwnContent = "We open between 8am - 6pm during weekday. During weekend, we open 10am - 9pm.";
+        const myOwnContent = "Our cafe opens between 8am - 6pm during weekdays. During weekends, we open 10am - 9pm.";
         
-        let promptText = `Use the following information: ${myOwnContent}.`;
+        // Now we add the menuContext to the prompt
+        let promptText = `
+            You are a helpful cafe assistant. Use the following information to answer the user's question.
+            General Info: ${myOwnContent}
+            Menu from Database: ${menuContext}
+        `;
+
         if (fileData) {
             promptText += ` Also use this information from the uploaded file: ${fileData}.`;
         }
-        promptText += ` Answer the following question: ${questionInput.value}`;
+        promptText += ` Now, answer this user's question: "${questionInput.value}"`;
 
         const requestBody = {
             contents: [{
@@ -37,6 +68,7 @@ export default function ChatPage() {
             }]
         };
 
+        // --- 4. Call the Gemini API (same as before) ---
         try {
             const response = await fetch(API_URL, {
                 method: 'POST',
@@ -45,6 +77,8 @@ export default function ChatPage() {
             });
 
             if (!response.ok) {
+                const errorBody = await response.text();
+                console.error('API Error Response:', errorBody);
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
 
@@ -52,7 +86,7 @@ export default function ChatPage() {
             const responseText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
 
             if (responseText) {
-                answerDiv.innerHTML = responseText.replace(/\n/g, '<br>'); // แสดงผลขึ้นบรรทัดใหม่
+                answerDiv.innerHTML = responseText.replace(/\n/g, '<br>');
             } else {
                 answerDiv.innerHTML = "ขออภัยค่ะ ไม่ได้รับคำตอบจาก AI";
             }
@@ -103,7 +137,7 @@ export default function ChatPage() {
                 </button>
             </div>
 
-            <div className="mt-8 bg-gray-100 p-6 rounded-lg shadow-md">
+            <div className="mt-8 bg-gray-100 p-6 rounded-lg shadow-md min-h-[100px]">
                 <h2 className="text-xl font-bold mb-4">คำตอบจาก AI:</h2>
                 <div id="answer" className="text-gray-800 whitespace-pre-wrap">
                     ... คำตอบจะแสดงที่นี่ ...
@@ -112,6 +146,3 @@ export default function ChatPage() {
         </div>
     );
 }
-
-
-
