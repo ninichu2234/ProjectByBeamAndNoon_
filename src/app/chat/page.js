@@ -31,7 +31,7 @@ export default function ChatPage() {
         if (menuItems && menuItems.length > 0) {
             menuContext = "Here is the menu data from our database:\n";
             menuItems.forEach(item => {
-                menuContext += `- Name: ${item.name}, Description: ${item.description}, Price: ${item.price} baht.\n`;
+                menuContext += `- Name: ${item.menuName}, Description: ${item.menuDescription}, Price: ${item.menuPrice} baht.\n`;
             });
         } else {
             menuContext = "There are no items on the menu in the database.\n";
@@ -39,7 +39,7 @@ export default function ChatPage() {
         
         // --- 3. Build the Final Prompt for the AI ---
         const API_KEY = 'AIzaSyBKc_6DmN-5YZWtnKqRzjGCdqb7txWsv3I'; // <-- Still insecure
-        const MODEL_NAME = 'gemini-2.5-pro-latest'; // <-- Corrected model name
+        const MODEL_NAME = 'gemini-2.5-pro'; // <-- Corrected model name
         const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${API_KEY}`;
         
         let fileData = '';
