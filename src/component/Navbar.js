@@ -43,13 +43,8 @@ export default function Navbar() {
               Menu
             </a>
             <a
-<<<<<<< HEAD
               href="/member"
               className="text-gray-700 hover:text-blue-600 transition-colors duration-300"
-=======
-              href="/member"
-              className="text-white hover:text-green-700 transition-colors duration-300"
->>>>>>> 6e0cb27 (update5)
             >
               Member
             </a>
