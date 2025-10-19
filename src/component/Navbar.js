@@ -6,6 +6,7 @@ export default function Navbar() {
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
   // State สำหรับเก็บจำนวนสินค้าในตะกร้า (ตัวอย่าง)
   const [cartItemCount, setCartItemCount] = useState(3);
+  const [cartCount, setCartCount] = useState(0);
 
   // ไอคอนแก้วน้ำ (SVG)
   const WaterGlassIcon = () => (
@@ -20,7 +21,7 @@ export default function Navbar() {
   );
 
   return (
-    <header className="bg-white shadow-sm sticky top-0 z-50">
+    <header className="bg-[#4A3728] shadow-sm sticky top-0 z-50">
       <div className="container mx-auto px-6">
         <div className="flex items-center justify-between h-16 relative">
           {/* ส่วนที่ 1: โลโก้ (ซ้าย) */}
@@ -29,7 +30,7 @@ export default function Navbar() {
               href="/" 
               onClick={() => setMobileMenuOpen(false)}
               className="text-2xl font-bold text-gray-900">
-              <span className="text-blue-600">My</span>Cafe
+              <span className="text-white">My</span>Cafe
             </a>
           </div>
 
@@ -37,19 +38,24 @@ export default function Navbar() {
           <nav className="hidden md:flex items-center space-x-8">
             <a
               href="/menu-page"
-              className="text-gray-700 hover:text-blue-600 transition-colors duration-300"
+              className="text-white hover:text-green-700 transition-colors duration-300"
             >
               Menu
             </a>
             <a
+<<<<<<< HEAD
               href="/member"
               className="text-gray-700 hover:text-blue-600 transition-colors duration-300"
+=======
+              href="/member"
+              className="text-white hover:text-green-700 transition-colors duration-300"
+>>>>>>> 6e0cb27 (update5)
             >
               Member
             </a>
             
             {/* ------------ ส่วนของไอคอนแก้วน้ำ (ตะกร้า) ที่เพิ่มเข้ามา ------------ */}
-            <a href="/cart" className="relative text-gray-700 hover:text-blue-600 transition-colors duration-300">
+            <a href="/cart" className="relative text-white hover:text-green-700 transition-colors duration-300">
               <WaterGlassIcon />
               {cartItemCount > 0 && (
                 <span className="absolute -top-2 -right-3 flex items-center justify-center w-5 h-5 bg-amber-500 text-white text-xs font-bold rounded-full">
@@ -60,7 +66,7 @@ export default function Navbar() {
             {/* ----------------------------------------------------------------- */}
 
             <a href="/chat">
-              <button className="bg-amber-500 text-white px-6 py-2 rounded-full font-bold hover:bg-amber-600 transition-colors shadow">
+              <button className="bg-green-800 text-white px-6 py-2 rounded-full font-bold hover:bg-green-800 transition-colors shadow">
                 สั่งกับ AI เลย!
               </button>
             </a>
