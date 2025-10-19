@@ -42,7 +42,7 @@ export default function Navbar() {
               Menu
             </a>
             <a
-              href="#"
+              href="/member"
               className="text-gray-700 hover:text-blue-600 transition-colors duration-300"
             >
               Member
@@ -102,7 +102,7 @@ export default function Navbar() {
                 onClick={() => setMobileMenuOpen(false)} 
                 className="text-gray-700 hover:text-amber-600 font-medium text-lg text-center py-2"
               >
-                เมนู
+                Menu
               </a>
 
               {/* ------------ ลิงก์ไปยังหน้าตะกร้าสินค้าสำหรับ Mobile ที่เพิ่มเข้ามา ------------ */}
@@ -111,7 +111,7 @@ export default function Navbar() {
                 onClick={() => setMobileMenuOpen(false)} 
                 className="text-gray-700 hover:text-amber-600 font-medium text-lg text-center py-2 relative flex justify-center items-center"
               >
-                รายการของฉัน
+                Member
                 {cartItemCount > 0 && (
                   <span className="ml-2 flex items-center justify-center w-6 h-6 bg-amber-500 text-white text-xs font-bold rounded-full">
                     {cartItemCount}
