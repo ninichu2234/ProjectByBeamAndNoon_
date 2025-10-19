@@ -1,6 +1,5 @@
 "use client";
 import React, { useState, useEffect, useMemo } from 'react';
-import Link from 'next/link';
 
 // คอมโพเนนต์เล็กๆ สำหรับแสดงผลเมื่อตะกร้าว่าง
 const EmptyCart = () => (
@@ -10,16 +9,16 @@ const EmptyCart = () => (
         </svg>
         <h3 className="mt-4 text-xl font-semibold text-gray-700">ตะกร้าของคุณว่างเปล่า</h3>
         <p className="text-gray-500 mt-2">ดูเหมือนว่าคุณยังไม่ได้เพิ่มเมนูใดๆ</p>
-        <Link href="/chat" className="mt-6 inline-block bg-[#4A3728] text-white px-6 py-3 rounded-lg font-bold hover:bg-green-800 transition-colors shadow">
+        <a href="/chat" className="mt-6 inline-block bg-[#4A3728] text-white px-6 py-3 rounded-lg font-bold hover:bg-green-800 transition-colors shadow">
             กลับไปเลือกเมนู
-        </Link>
+        </a>
     </div>
 );
 
 export default function BasketPage() {
     const [cartItems, setCartItems] = useState([]);
 
-    // ดึงข้อมูลจาก localStorage เมื่อคอมโพเนนต์เริ่มทำงาน
+    // [สำคัญที่สุด] -> ดึงข้อมูลจาก localStorage แค่ครั้งเดียวตอนเปิดหน้านี้
     useEffect(() => {
         try {
             const savedCartJSON = localStorage.getItem('myCafeCart');
@@ -29,33 +28,30 @@ export default function BasketPage() {
             console.error("Failed to parse cart from localStorage", error);
             setCartItems([]);
         }
-    }, []);
+    }, []); // [] ทำให้โค้ดส่วนนี้ทำงานแค่ครั้งเดียวตอนโหลดหน้า
 
-    // บันทึกข้อมูลลง localStorage ทุกครั้งที่ state ของตะกร้าเปลี่ยน
+    // ฟังก์ชันสำหรับอัปเดต localStorage เมื่อมีการเปลี่ยนแปลงในหน้านี้
     useEffect(() => {
         try {
             if (cartItems.length > 0) {
                 localStorage.setItem('myCafeCart', JSON.stringify(cartItems));
             } else {
-                // ถ้าตะกร้าว่าง ให้ลบข้อมูลออกจาก localStorage
                 localStorage.removeItem('myCafeCart');
             }
-            // ส่ง event บอก component อื่น (เช่น Navbar) ว่าตะกร้าเปลี่ยนแล้ว
             window.dispatchEvent(new Event('local-storage'));
         } catch (error) {
             console.error("Failed to save cart to localStorage", error);
         }
     }, [cartItems]);
-    
 
-    // ฟังก์ชันจัดการตะกร้า
+    // ฟังก์ชันจัดการตะกร้า (เพิ่ม/ลด/ลบ)
     const handleQuantityChange = (menuId, change) => {
         setCartItems(currentItems =>
             currentItems.map(item =>
                 item.menuId === menuId
                     ? { ...item, quantity: Math.max(0, item.quantity + change) }
                     : item
-            ).filter(item => item.quantity > 0) // กรองสินค้าที่จำนวนเป็น 0 ออก
+            ).filter(item => item.quantity > 0)
         );
     };
 
@@ -64,7 +60,6 @@ export default function BasketPage() {
     };
 
     const clearCart = () => {
-        // ใช้ UI ที่สวยงามแทน window.confirm
         if (confirm('คุณต้องการล้างตะกร้าสินค้าทั้งหมดใช่หรือไม่?')) {
             setCartItems([]);
         }
@@ -129,7 +124,15 @@ export default function BasketPage() {
                                     <div className="flex justify-between font-bold text-lg text-[#4A3728]"><span>ยอดรวมสุทธิ</span><span>฿{summary.total.toFixed(2)}</span></div>
                                 </div>
                             </div>
-                             <a href="/checkout" className={`block w-full text-center mt-8 py-3 rounded-lg font-bold text-lg text-white transition-colors ${cartItems.length === 0 ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-800 hover:bg-green-900'}`}>ดำเนินการชำระเงิน</a>
+                            {/* [แก้ไข] เพิ่มปุ่ม "เลือกซื้อสินค้าต่อ" */}
+                             <div className="mt-8 space-y-3">
+                                <a href="/checkout" className={`block w-full text-center py-3 rounded-lg font-bold text-lg text-white transition-colors ${cartItems.length === 0 ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-800 hover:bg-green-900'}`}>
+                                    ดำเนินการชำระเงิน
+                                </a>
+                                <a href="/chat" className="block w-full text-center py-3 rounded-lg font-bold text-lg text-[#4A3728] bg-gray-100 hover:bg-gray-200 transition-colors">
+                                    เลือกซื้อต่อ
+                                </a>
+                             </div>
                         </div>
                     </div>
                 </div>
@@ -137,3 +140,4 @@ export default function BasketPage() {
         </div>
     );
 }
+

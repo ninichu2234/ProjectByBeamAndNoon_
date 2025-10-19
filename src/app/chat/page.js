@@ -34,6 +34,7 @@ export default function ChatPage() {
                 console.error("Error fetching all menu items:", error);
             } else {
                 setAllMenuItems(data || []);
+                console.log("เมนูทั้งหมดถูกโหลดเรียบร้อยแล้ว:", data);
             }
         };
 
@@ -46,6 +47,7 @@ export default function ChatPage() {
 
         if (cartItems.length > 0) {
             localStorage.setItem('myCafeCart', JSON.stringify(cartItems));
+            console.log("ตะกร้าถูกบันทึกlง LocalStorage แล้ว:", cartItems);
         } else {
             localStorage.removeItem('myCafeCart');
         }
@@ -55,21 +57,31 @@ export default function ChatPage() {
     
     // --- ฟังก์ชันจัดการตะกร้า (แก้ไขแล้ว) ---
     const handleOrderClick = (menuDataFromRec) => {
-        // [แก้ไข] เปลี่ยนมาค้นหาด้วย menuId เพื่อความแม่นยำ 100%
-        const menuToAdd = allMenuItems.find(item => item.menuId === menuDataFromRec.menuId);
+        console.log("--- เริ่มกระบวนการเพิ่มสินค้า ---");
+        console.log("1. ข้อมูลที่ได้รับจาก AI:", menuDataFromRec);
+        console.log("2. เมนูทั้งหมดที่มีในระบบ:", allMenuItems);
+
+        if (!menuDataFromRec.menuId) {
+            console.error("ข้อผิดพลาด: AI ไม่ได้ส่ง menuId กลับมา!", menuDataFromRec);
+            alert("เกิดข้อผิดพลาด: AI ไม่ได้ส่ง ID ของเมนูกลับมา");
+            return;
+        }
+
+        const menuToAdd = allMenuItems.find(item => 
+            // เปรียบเทียบแบบแปลงเป็นข้อความเพื่อความแน่นอน
+            String(item.menuId) === String(menuDataFromRec.menuId)
+        );
+        
+        console.log("3. ผลลัพธ์การค้นหาเมนูในระบบ:", menuToAdd);
 
         if (menuToAdd) {
             _updateCart(menuToAdd);
-            // แจ้งเตือนผู้ใช้ว่าเพิ่มสินค้าสำเร็จแล้ว
             alert(`เพิ่ม "${menuToAdd.menuName}" ลงในตะกร้าแล้ว!`);
         } else {
-            // กรณีนี้ไม่ควรจะเกิดขึ้นแล้ว แต่ใส่ไว้เพื่อความปลอดภัย
             alert(`ขออภัยค่ะ ไม่พบข้อมูลสำหรับเมนู ID: "${menuDataFromRec.menuId}" ในระบบ`);
-            console.error("Could not find full menu details for:", menuDataFromRec);
         }
-        window.location.href = '/basket';
     };
-
+    
     const _updateCart = (menuToAdd) => {
         setCartItems(prevItems => {
             const existingItem = prevItems.find(item => item.menuId === menuToAdd.menuId);
@@ -83,6 +95,16 @@ export default function ChatPage() {
                 return [...prevItems, { ...menuToAdd, quantity: 1 }];
             }
         });
+    };
+
+    // [เพิ่ม] ฟังก์ชันสำหรับปุ่ม Checkout
+    const handleCheckout = () => {
+        // ฟังก์ชันนี้จะถูกเรียกเมื่อกดปุ่ม Checkout
+        // ในทางเทคนิคแล้ว เราไม่จำเป็นต้องทำอะไรในนี้เลย
+        // เพราะ useEffect คอยบันทึกข้อมูลตะกร้าล่าสุดให้เราโดยอัตโนมัติอยู่แล้ว
+        // แต่เราสามารถใส่ console.log ไว้เพื่อยืนยันการทำงานได้
+        console.log("ปุ่ม Checkout ถูกกด กำลังจะไปที่หน้า /basket...");
+        console.log("ข้อมูลในตะกร้าที่จะถูกส่งต่อไปผ่าน LocalStorage คือ:", cartItems);
     };
 
     // --- ฟังก์ชันส่งคำถามหา AI (แก้ไขแล้ว) ---
@@ -105,10 +127,8 @@ export default function ChatPage() {
             return;
         }
     
-        // สำคัญ: ต้อง setAllMenuItems ที่นี่ด้วยเพื่อให้ข้อมูลล่าสุดเสมอ
         setAllMenuItems(menuItems || []);
 
-        // [แก้ไข] เพิ่ม menuId เข้าไปใน Context เพื่อให้ AI รู้จัก
         let menuContext = "Here is the cafe's menu from the database:\n";
         menuItems.forEach(item => {
             menuContext += `- ID: ${item.menuId}, Name: ${item.menuName}, Description: ${item.menuDescription}, Price: ${item.menuPrice} baht.\n`;
@@ -118,7 +138,6 @@ export default function ChatPage() {
         const MODEL_NAME = 'gemini-2.5-pro';
         const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${API_KEY}`;
         
-        // [แก้ไข] ปรับ Prompt ให้ AI ส่ง menuId กลับมาด้วย
         const promptText = `
             You are a helpful cafe assistant. Your task is to answer the user's question based on the menu.
             ALWAYS respond in a valid JSON format.
@@ -157,6 +176,7 @@ export default function ChatPage() {
                 if (jsonMatch) {
                     try {
                         const parsedResponse = JSON.parse(jsonMatch[0]);
+                        console.log("AI ตอบกลับมาว่า:", parsedResponse);
                         setAnswer(parsedResponse.text || "นี่คือเมนูที่แนะนำค่ะ");
                         setRecommendedMenus(parsedResponse.recommendations || []);
                     } catch (e) {
@@ -215,8 +235,8 @@ export default function ChatPage() {
                     />
                     <div className="mt-3 flex flex-wrap gap-2">
                         <button onClick={() => setQuestion("มีเมนูอะไรใหม่บ้าง?")} className="text-xs bg-white/20 hover:bg-white/30 text-white py-1 px-3 rounded-full transition">มีอะไรใหม่?</button>
-                        <button onClick={() => setQuestion("แนะนำกาแฟไม่เปรี้ยวหน่อย")} className="text-xs bg-white/20 hover:bg-white/30 text-white py-1 px-3 rounded-full transition">กาแฟไม่เปรี้ยว</button>
-                        <button onClick={() => setQuestion("เครื่องดื่มที่ไม่ใช่กาแฟมีอะไรบ้าง?")} className="text-xs bg-white/20 hover:bg-white/30 text-white py-1 px-3 rounded-full transition">ไม่ใช่กาแฟ</button>
+                        <button onClick={() => setQuestion("แนะนำกาแฟไม่เปรี้ยวหน่อย")} className="text-xs bg-white/20 hover:bg-white/30 text-white py-1 px-3 rounded-full transition">หวนคืนสู่วานร</button>
+                        <button onClick={() => setQuestion("เครื่องดื่มที่ไม่ใช่กาแฟมีอะไรบ้าง?")} className="text-xs bg-white/20 hover:bg-white/30 text-white py-1 px-3 rounded-full transition">wokovjv</button>
                     </div>
                     <div className="mt-4">
                         <button
@@ -289,12 +309,13 @@ export default function ChatPage() {
                                     className="w-full bg-white/10 hover:bg-white/20 text-white font-bold py-3 rounded-full transition">
                                     สั่งเพิ่มกับ AI
                                 </button>
-                                <Link href="/basket" className="w-full">
-                                    <button
+                                {/* [แก้ไข] เพิ่ม onClick ให้กับ <a> tag */}
+                                <a href="/basket" className="w-full" onClick={handleCheckout}>
+                                    <button 
                                     className="w-full bg-green-800 hover:bg-green-900 text-white font-bold py-3 rounded-full transition">
                                         Checkout
                                     </button>
-                                </Link>
+                                </a>
                             </div>
                         </>
                     ) : (
@@ -305,3 +326,4 @@ export default function ChatPage() {
         </div>
     );
 }
+
