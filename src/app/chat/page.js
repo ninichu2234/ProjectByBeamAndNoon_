@@ -47,7 +47,7 @@ export default function ChatPage() {
 
         if (cartItems.length > 0) {
             localStorage.setItem('myCafeCart', JSON.stringify(cartItems));
-            console.log("ตะกร้าถูกบันทึกlง LocalStorage แล้ว:", cartItems);
+            console.log("ตะกร้าถูกบันทึก LocalStorage แล้ว:", cartItems);
         } else {
             localStorage.removeItem('myCafeCart');
         }
@@ -76,7 +76,7 @@ export default function ChatPage() {
 
         if (menuToAdd) {
             _updateCart(menuToAdd);
-            alert(`เพิ่ม "${menuToAdd.menuName}" ลงในตะกร้าแล้ว!`);
+            
         } else {
             alert(`ขออภัยค่ะ ไม่พบข้อมูลสำหรับเมนู ID: "${menuDataFromRec.menuId}" ในระบบ`);
         }
@@ -103,8 +103,7 @@ export default function ChatPage() {
         // ในทางเทคนิคแล้ว เราไม่จำเป็นต้องทำอะไรในนี้เลย
         // เพราะ useEffect คอยบันทึกข้อมูลตะกร้าล่าสุดให้เราโดยอัตโนมัติอยู่แล้ว
         // แต่เราสามารถใส่ console.log ไว้เพื่อยืนยันการทำงานได้
-        console.log("ปุ่ม Checkout ถูกกด กำลังจะไปที่หน้า /basket...");
-        console.log("ข้อมูลในตะกร้าที่จะถูกส่งต่อไปผ่าน LocalStorage คือ:", cartItems);
+        
     };
 
     // --- ฟังก์ชันส่งคำถามหา AI (แก้ไขแล้ว) ---
@@ -113,7 +112,7 @@ export default function ChatPage() {
             return;
         }
         setIsLoading(true);
-        setAnswer("กำลังดึงข้อมูลเมนูและสอบถาม AI... กรุณารอสักครู่ ✨");
+        setAnswer("กำลังคิดมนูให้ค่าสุดหล่อ รอสักครู่น้า ✨");
         setRecommendedMenus([]);
 
         const { data: menuItems, error: supabaseError } = await supabase
@@ -200,14 +199,8 @@ export default function ChatPage() {
             <div className="container mx-auto p-4 sm:p-8 max-w-5xl">
                 {/* ส่วนหัว */}
                 <div className="text-center mb-8">
-                    <div className="inline-block bg-green-800 rounded-full p-2 mb-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.657 7.343A8 8 0 0117.657 18.657z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 16.121A3 3 0 1014.12 11.88a3 3 0 00-4.242 4.242z" />
-                        </svg>
-                    </div>
-                    <h1 className="text-[#4A3728] font-bold text-3xl tracking-tight">AI Barista</h1>
-                    <p className="text-[#4A3728] font-bold">พร้อมแนะนำเครื่องดื่มแก้วโปรดให้คุณ</p>
+                    <h1 className="text-[#4A3728] font-bold text-3xl tracking-tight">Barista สำหรับสุดหล่อ</h1>
+                    <p className="text-[#4A3728] font-bold">พร้อมแนะนำเมนูโปรดให้สุดหล่อ</p>
                 </div>
 
                 {/* ส่วนโปรโมชั่น */}
