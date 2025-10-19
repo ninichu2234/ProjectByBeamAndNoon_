@@ -84,7 +84,7 @@ return (
            <div className="text-xl font-bold my-5">{post.title}</div>
            <div className="text-black line-clamp-2">{post.description}</div>
            <button
-           className="border-2 border-red-500 py-1 px-1 cursor-pointer
+           className="border-2- border-red-500 py-1 px-1 cursor-pointer
            hover:bg-fray-300 rounded-lg "
            onClick={() => deletePosts(post.id)}>
             Delete
