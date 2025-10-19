@@ -97,7 +97,7 @@ export default function Header() {
                         </a>
                     </nav>
 
-                    {icon}
+                    
                     <div className="md:hidden flex items-center space-x-4">
                         <a href="/basket" className={`relative ${isScrolled ? 'text-white' : 'text-gray-700'}`}>
                             <WaterGlassIcon />
