@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect, useMemo } from 'react';
+import Link from 'next/link';
 
 // คอมโพเนนต์เล็กๆ สำหรับแสดงผลเมื่อตะกร้าว่าง
 const EmptyCart = () => (
@@ -9,9 +10,9 @@ const EmptyCart = () => (
         </svg>
         <h3 className="mt-4 text-xl font-semibold text-gray-700">ตะกร้าของคุณว่างเปล่า</h3>
         <p className="text-gray-500 mt-2">ดูเหมือนว่าคุณยังไม่ได้เพิ่มเมนูใดๆ</p>
-        <a href="/chat" className="mt-6 inline-block bg-amber-500 text-white px-6 py-3 rounded-lg font-bold hover:bg-amber-600 transition-colors shadow">
-            เลือกดูเมนู
-        </a>
+        <Link href="/chat" className="mt-6 inline-block bg-[#4A3728] text-white px-6 py-3 rounded-lg font-bold hover:bg-green-800 transition-colors shadow">
+            กลับไปเลือกเมนู
+        </Link>
     </div>
 );
 
@@ -36,12 +37,16 @@ export default function BasketPage() {
             if (cartItems.length > 0) {
                 localStorage.setItem('myCafeCart', JSON.stringify(cartItems));
             } else {
+                // ถ้าตะกร้าว่าง ให้ลบข้อมูลออกจาก localStorage
                 localStorage.removeItem('myCafeCart');
             }
+            // ส่ง event บอก component อื่น (เช่น Navbar) ว่าตะกร้าเปลี่ยนแล้ว
+            window.dispatchEvent(new Event('local-storage'));
         } catch (error) {
             console.error("Failed to save cart to localStorage", error);
         }
     }, [cartItems]);
+    
 
     // ฟังก์ชันจัดการตะกร้า
     const handleQuantityChange = (menuId, change) => {
@@ -50,7 +55,7 @@ export default function BasketPage() {
                 item.menuId === menuId
                     ? { ...item, quantity: Math.max(0, item.quantity + change) }
                     : item
-            ).filter(item => item.quantity > 0)
+            ).filter(item => item.quantity > 0) // กรองสินค้าที่จำนวนเป็น 0 ออก
         );
     };
 
@@ -59,7 +64,8 @@ export default function BasketPage() {
     };
 
     const clearCart = () => {
-        if (window.confirm('คุณต้องการล้างตะกร้าสินค้าทั้งหมดใช่หรือไม่?')) {
+        // ใช้ UI ที่สวยงามแทน window.confirm
+        if (confirm('คุณต้องการล้างตะกร้าสินค้าทั้งหมดใช่หรือไม่?')) {
             setCartItems([]);
         }
     };
@@ -75,13 +81,13 @@ export default function BasketPage() {
 
 
     return (
-        <div className="bg-gray-50 min-h-screen">
+        <div className="bg-white min-h-screen">
             <div className="container mx-auto px-4 py-8 md:py-12">
                 <div className="text-center md:text-left mb-8">
-                    <h1 className="text-3xl md:text-4xl font-bold text-gray-800">ตะกร้าสินค้าของคุณ</h1>
+                    <h1 className="text-3xl md:text-4xl font-bold text-[#4A3728]">ตะกร้าสินค้าของคุณ</h1>
                 </div>
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <div className="lg:col-span-2 bg-white rounded-xl shadow-md p-6">
+                    <div className="lg:col-span-2 bg-white rounded-xl shadow-md p-6 border">
                         <div className="flex justify-between items-center border-b pb-4 mb-6">
                             <h2 className="text-xl font-semibold text-gray-700">รายการเมนู ({summary.totalItems})</h2>
                             {cartItems.length > 0 && (
@@ -91,21 +97,21 @@ export default function BasketPage() {
                         {cartItems.length === 0 ? <EmptyCart /> : (
                             <div className="space-y-6">
                                 {cartItems.map(item => (
-                                    <div key={item.menuId} className="flex items-center gap-4 border-b border-gray-100 pb-4">
-                                        <img src={item.menuImageUrl || 'https://placehold.co/100x100/E2D6C8/4A3F35?text=Item'} alt={item.menuName} className="w-24 h-24 object-cover rounded-lg shadow-sm" />
-                                        <div className="flex-grow">
+                                    <div key={item.menuId} className="flex items-center flex-wrap gap-4 border-b border-gray-100 pb-4">
+                                        <img src={item.menuImageUrl || `https://placehold.co/100x100/E2D6C8/4A3F35?text=${encodeURIComponent(item.menuName)}`} alt={item.menuName} className="w-24 h-24 object-cover rounded-lg shadow-sm" />
+                                        <div className="flex-grow min-w-[150px]">
                                             <h3 className="font-semibold text-gray-800">{item.menuName}</h3>
-                                            <p className="text-blue-600 font-bold mt-1">฿{item.menuPrice.toFixed(2)}</p>
+                                            <p className="text-green-800 font-bold mt-1">฿{item.menuPrice.toFixed(2)}</p>
                                         </div>
                                         <div className="flex items-center gap-3">
-                                            <button onClick={() => handleQuantityChange(item.menuId, -1)} className="w-8 h-8 rounded-full border hover:bg-gray-100">-</button>
+                                            <button onClick={() => handleQuantityChange(item.menuId, -1)} className="w-8 h-8 rounded-full border hover:bg-gray-100 transition">-</button>
                                             <span className="w-8 text-center font-medium">{item.quantity}</span>
-                                            <button onClick={() => handleQuantityChange(item.menuId, 1)} className="w-8 h-8 rounded-full border hover:bg-gray-100">+</button>
+                                            <button onClick={() => handleQuantityChange(item.menuId, 1)} className="w-8 h-8 rounded-full border hover:bg-gray-100 transition">+</button>
                                         </div>
                                         <div className="text-right w-24">
                                             <p className="font-semibold text-lg text-gray-800">฿{(item.menuPrice * item.quantity).toFixed(2)}</p>
                                         </div>
-                                        <button onClick={() => removeItem(item.menuId)} className="text-gray-400 hover:text-red-500">
+                                        <button onClick={() => removeItem(item.menuId)} className="text-gray-400 hover:text-red-500 transition">
                                              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                                         </button>
                                     </div>
@@ -114,16 +120,16 @@ export default function BasketPage() {
                         )}
                     </div>
                     <div className="lg:col-span-1">
-                        <div className="bg-white rounded-xl shadow-md p-6 sticky top-8">
+                        <div className="bg-white rounded-xl shadow-md p-6 sticky top-24 border">
                             <h2 className="text-xl font-semibold text-gray-700 border-b pb-4 mb-6">สรุปรายการ</h2>
                             <div className="space-y-4">
                                 <div className="flex justify-between"><span>ราคารวม</span><span>฿{summary.subtotal.toFixed(2)}</span></div>
-                                <div className="flex justify-between text-sm"><span>ภาษี (7%)</span><span>฿{summary.vat.toFixed(2)}</span></div>
+                                <div className="flex justify-between text-sm text-gray-500"><span>ภาษี (7%)</span><span>฿{summary.vat.toFixed(2)}</span></div>
                                 <div className="border-t pt-4 mt-4">
-                                    <div className="flex justify-between font-bold text-lg"><span>ยอดรวมสุทธิ</span><span>฿{summary.total.toFixed(2)}</span></div>
+                                    <div className="flex justify-between font-bold text-lg text-[#4A3728]"><span>ยอดรวมสุทธิ</span><span>฿{summary.total.toFixed(2)}</span></div>
                                 </div>
                             </div>
-                             <a href="/checkout.html" className={`block w-full text-center mt-8 py-3 rounded-lg font-bold text-lg text-white transition-colors ${cartItems.length === 0 ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}>ดำเนินการชำระเงิน</a>
+                             <a href="/checkout" className={`block w-full text-center mt-8 py-3 rounded-lg font-bold text-lg text-white transition-colors ${cartItems.length === 0 ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-800 hover:bg-green-900'}`}>ดำเนินการชำระเงิน</a>
                         </div>
                     </div>
                 </div>
@@ -131,6 +137,3 @@ export default function BasketPage() {
         </div>
     );
 }
-
-
-

@@ -1,12 +1,38 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
+import Link from 'next/link';
+
 
 export default function Navbar() {
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
   // State สำหรับเก็บจำนวนสินค้าในตะกร้า (ตัวอย่าง)
   const [cartItemCount, setCartItemCount] = useState(3);
   const [cartCount, setCartCount] = useState(0);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  // 2. ใช้ useEffect เพื่อจัดการ Logic ที่ต้องใช้ window object
+  useEffect(() => {
+      const handleScroll = () => {
+          // ถ้า scroll ลงมามากกว่า 10px ให้ isScrolled เป็น true
+          if (window.scrollY > 10) {
+              setIsScrolled(true);
+          } else {
+              setIsScrolled(false);
+          }
+      };
+
+      // เพิ่ม event listener ตอน component โหลดเสร็จ
+      window.addEventListener('scroll', handleScroll);
+
+      // Cleanup function: ลบ event listener ออกเมื่อ component ถูก unmount
+      // เพื่อป้องกัน memory leak
+      return () => {
+          window.removeEventListener('scroll', handleScroll);
+      };
+  }, []); // dependency array ว่าง [] หมายถึงให้ useEffect นี้ทำงานแค่ครั้งเดียวตอนแรก
+
+  
 
   // ไอคอนแก้วน้ำ (SVG)
   const WaterGlassIcon = () => (
@@ -21,7 +47,7 @@ export default function Navbar() {
   );
 
   return (
-    <header className="bg-[#4A3728] shadow-sm sticky top-0 z-50">
+    <header className={`${isScrolled ? 'bg-[#4A3728]' : 'bg-white'} shadow-sm sticky top-0 z-50 transition-colors duration-300`}>
       <div className="container mx-auto px-6">
         <div className="flex items-center justify-between h-16 relative">
           {/* ส่วนที่ 1: โลโก้ (ซ้าย) */}
@@ -30,7 +56,7 @@ export default function Navbar() {
               href="/" 
               onClick={() => setMobileMenuOpen(false)}
               className="text-2xl font-bold text-gray-900">
-              <span className="text-white">My</span>Cafe
+              <span className={`text-xl font-bold ${isScrolled ? 'text-white' : 'text-gray-800'}`}>MyCafe</span>
             </a>
           </div>
 
@@ -43,8 +69,18 @@ export default function Navbar() {
               Menu
             </a>
             <a
+<<<<<<< HEAD
               href="/member"
               className="text-gray-700 hover:text-blue-600 transition-colors duration-300"
+=======
+         
+              href="/member"
+              className="text-gray-700 hover:text-blue-600 transition-colors duration-300">
+            </a>
+            <a href="/member"
+              className="text-white hover:text-green-700 transition-colors duration-300"
+
+>>>>>>> b526bea (update)
             >
               Member
             </a>
