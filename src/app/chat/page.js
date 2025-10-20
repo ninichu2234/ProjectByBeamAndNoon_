@@ -17,7 +17,7 @@ export default function ChatPage() {
     const [allMenuItems, setAllMenuItems] = useState([]);
     const [cartItems, setCartItems] = useState([]);
     const [totalPrice, setTotalPrice] = useState(0);
-
+    //const [isListening, setIsListening] = useState(false);
     // --- useEffect Hooks ---
     useEffect(() => {
         try {
@@ -54,8 +54,39 @@ export default function ChatPage() {
         window.dispatchEvent(new Event('local-storage'));
     }, [cartItems]);
 
-    
-    // --- ฟังก์ชันจัดการตะกร้า (แก้ไขแล้ว) ---
+   /* useEffect(() => {
+        // ฟังก์ชันสำหรับสั่งให้อ่านออกเสียง
+        const speak = (text) => {
+            // หยุดการพูดก่อนหน้า (ถ้ามี)
+            window.speechSynthesis.cancel();
+
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'th-TH'; // ตั้งค่าภาษาไทย
+            utterance.rate = 1.0; // ความเร็วในการพูด (ปกติ = 1)
+
+            // ลองหาเสียงผู้หญิงไทย ถ้ามีให้ใช้เสียงนั้น
+            const voices = window.speechSynthesis.getVoices();
+            const thaiFemaleVoice = voices.find(voice => voice.lang === 'th-TH' && voice.name.includes('Kanya'));
+            if (thaiFemaleVoice) {
+                utterance.voice = thaiFemaleVoice;
+            }
+
+            window.speechSynthesis.speak(utterance);
+        };
+
+        // เงื่อนไข: ต้องมีคำตอบ, ไม่ใช่ค่าเริ่มต้น และไม่ได้กำลังโหลด
+        if (answer && answer !== '... คำตอบจะแสดงที่นี่ ...' && !isLoading) {
+            speak(answer);
+        }
+
+        // Cleanup function: หยุดพูดเมื่อ component ถูก unmount
+        return () => {
+            window.speechSynthesis.cancel();
+        };
+    }, [answer, isLoading]); // ให้ useEffect ทำงานใหม่ทุกครั้งที่ answer หรือ isLoading เปลี่ยน
+    // --- ฟังก์ชันจัดการตะกร้า (แก้ไขแล้ว) --- */
+
+
     const handleOrderClick = (menuDataFromRec) => {
         console.log("--- เริ่มกระบวนการเพิ่มสินค้า ---");
         console.log("1. ข้อมูลที่ได้รับจาก AI:", menuDataFromRec);
@@ -124,8 +155,45 @@ export default function ChatPage() {
             setAnswer("เกิดข้อผิดพลาดในการดึงข้อมูลเมนู: " + supabaseError.message);
             setIsLoading(false);
             return;
-        }
+        };
+
+
+//TextToSpeech
+/*const handleListen = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+        alert("ขออภัยค่ะ เบราว์เซอร์ของคุณไม่รองรับฟังก์ชันสั่งงานด้วยเสียง");
+        return;
+    } 
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'th-TH'; // ตั้งค่าภาษาเป็นไทย
+    recognition.interimResults = false; // รอให้พูดจบประโยคก่อนค่อยแสดงผล
+
+    recognition.onstart = () => {
+        setIsListening(true);
+        setQuestion("กำลังฟัง... พูดได้เลยค่ะ 🎤");
+    };
+
+    recognition.onresult = (event) => {
+        const speechToText = event.results[0][0].transcript;
+        setQuestion(speechToText); // นำข้อความที่ได้ไปใส่ใน State
+    };
+
+    recognition.onerror = (event) => {
+        console.error("Speech recognition error", event.error);
+        alert("เกิดข้อผิดพลาดในการรับเสียง: " + event.error);
+    };
+
+    recognition.onend = () => {
+        setIsListening(false);
+    };
+
+    recognition.start(); // เริ่มการทำงาน
+}; */
     
+
+//AI
         setAllMenuItems(menuItems || []);
 
         let menuContext = "Here is the cafe's menu from the database:\n";
@@ -314,6 +382,7 @@ export default function ChatPage() {
                     ) : (
                         <p className="text-center text-gray-300 py-4">ตะกร้าของคุณยังว่างอยู่</p>
                     )}
+
                 </div>
             </div>
         </div>
