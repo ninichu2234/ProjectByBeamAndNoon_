@@ -203,12 +203,12 @@ export default function ChatPage() {
         <div className="bg-white min-h-screen">
             <div className="container mx-auto p-4 sm:p-8 max-w-5xl">
                 <div className="text-center mb-8">
-                    <h1 className="text-[#4A3728] font-bold text-3xl tracking-tight">Barista สำหรับสุดหล่อ</h1>
-                    <p className="text-[#4A3728] font-bold">พร้อมแนะนำเมนูโปรดให้สุดหล่อ</p>
+                    <h1 className="text-[#4A3728] font-bold text-3xl tracking-tight">{"Barista สำหรับสุดหล่อ"}</h1>
+                    <p className="text-[#4A3728] font-bold">{"พร้อมแนะนำเมนูโปรดให้สุดหล่อ"}</p>
                 </div>
                 <div className="bg-[#4A3728] p-6 rounded-xl mb-8 border-l-4 border-[#4A3728]">
-                     <h2 className="text-2xl font-bold text-white mb-2">Today's Special</h2>
-                     <p className="text-white mb-4">ลองเมนูใหม่ล่าสุดของเรา! "Iced Oat Milk Hazelnut Latte" ความหอมของเฮเซลนัทผสมผสานกับความนุ่มของนมโอ๊ตอย่างลงตัว</p>
+                     <h2 className="text-2xl font-bold text-white mb-2">{"Today's Special"}</h2>
+                     <p className="text-white mb-4">{"ลองเมนูใหม่ล่าสุดของเรา! Iced Oat Milk Hazelnut Latte ความหอมของเฮเซลนัทผสมผสานกับความนุ่มของนมโอ๊ตอย่างลงตัว"}</p>
                      <button 
                         onClick={() => setQuestion("ขอลอง Iced Oat Milk Hazelnut Latte ครับ")}
                         className="bg-green-800 hover:bg-green-900 text-white font-bold py-2 px-5 rounded-full transition-colors duration-300 text-sm">
@@ -261,19 +261,19 @@ export default function ChatPage() {
                             </svg>
                         </div>
                         <div className="w-full">
-                            <h2 className="text-xl font-bold text-white mb-2">Here's my recommendation:</h2>
+                            <h2 className="text-xl font-bold text-white mb-2">{"Here's my recommendation:"}</h2>
                             <div className="text-white whitespace-pre-wrap prose prose-invert">{answer}</div>
                         </div>
                     </div>
                     {recommendedMenus.length > 0 && (
                         <div className="mt-6 border-t border-white/20 pt-6">
-                            <h3 className="text-lg font-semibold text-white mb-4">Just for you:</h3>
+                            <h3 className="text-lg font-semibold text-white mb-4">{"Just for you:"}</h3>
                             <div className="space-y-3">
                                 {recommendedMenus.map((menu, index) => (
                                     <div key={index} className="bg-white/10 p-4 rounded-lg border border-white/20 flex items-center justify-between transition hover:shadow-md hover:border-green-500">
                                         <div>
                                             <p className="font-bold text-white">{menu.menuName}</p>
-                                            <p className="text-sm text-gray-300">{menu.menuPrice} บาท</p>
+                                            <p className="text-sm text-gray-300">{menu.menuPrice} {"บาท"}</p>
                                         </div>
                                         <button onClick={() => handleOrderClick(menu)} className="bg-green-800 hover:bg-green-900 text-white font-bold py-2 px-5 rounded-full transition-colors duration-300 text-sm">Add</button>
                                     </div>

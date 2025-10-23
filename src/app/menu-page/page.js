@@ -3,6 +3,7 @@
 
 import { supabase } from '../lib/supabaseClient';
 import Link from 'next/link';
+import Image from 'next/image';
 // 1. ✨ Import Hooks ที่จำเป็น ✨
 import { useState, useEffect } from 'react';
 
@@ -145,7 +146,7 @@ export default function MenuPage() {
                       .map(item => (
                         // 3. ✨ แก้ไขส่วนแสดงผลเมนูให้มีปุ่ม Add ✨
                         <div key={item.menuId} className="flex items-center space-x-4 group">
-                          <img 
+                          <Image
                             src={item.publicImageUrl || 'https://placehold.co/100x100/FFF/333?text=No+Image'} 
                             alt={item.menuName} 
                             className="w-24 h-24 rounded-full object-cover shadow-md transform group-hover:scale-110 transition-transform duration-300"

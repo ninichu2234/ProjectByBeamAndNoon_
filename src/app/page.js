@@ -1,5 +1,5 @@
 import Link from 'next/link';
-
+import Image from 'next/image';
 export default function Home() {
   return (
     <main>
@@ -13,11 +13,13 @@ export default function Home() {
           <source src="/videos/cafe-ambience.mp4" type="video/mp4" />
           Your browser does not support the video tag.
         </video> */}
-        <img
-          src="https://images.unsplash.com/photo-1554118811-1e0d58224f24?q=80&w=2940&auto=format&fit=crop"
-          alt="Cafe ambience"
-          className="absolute z-0 w-full h-full object-cover"
-        />
+       <Image
+    src=""
+    alt="Cafe ambience"
+    fill={true} // <-- Add this
+    priority={true} // <-- Add this
+    className="absolute z-0 w-full h-full object-cover"
+/>
         <div className="absolute inset-0 bg-black/60 z-10"></div> {/* Overlay สีดำโปร่งแสง */}
 
         {/* --- ส่วนเนื้อหา --- */}

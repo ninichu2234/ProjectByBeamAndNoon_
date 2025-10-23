@@ -50,7 +50,7 @@ export default function BasketPage() {
     const handleQuantityChange = (menuId, change) => {
         setCartItems(currentItems =>
             currentItems.map(item =>
-                item.menuId === menuId
+                item.menu_id === menuId // <-- ✅ FIX: แก้ชื่อ Key ให้ตรงกับฐานข้อมูล
                     ? { ...item, quantity: Math.max(0, item.quantity + change) }
                     : item
             ).filter(item => item.quantity > 0)
@@ -58,7 +58,7 @@ export default function BasketPage() {
     };
 
     const removeItem = (menuId) => {
-        setCartItems(currentItems => currentItems.filter(item => item.menuId !== menuId));
+        setCartItems(currentItems => currentItems.filter(item => item.menu_id !== menuId)); // <-- ✅ FIX: แก้ชื่อ Key
     };
 
     const clearCart = () => {
@@ -68,7 +68,7 @@ export default function BasketPage() {
     };
 
     const summary = useMemo(() => {
-        const subtotal = cartItems.reduce((sum, item) => sum + (item.menuPrice * item.quantity), 0);
+        const subtotal = cartItems.reduce((sum, item) => sum + (item.menu_price * item.quantity), 0); // <-- ✅ FIX: แก้ชื่อ Key
         const vat = subtotal * 0.07;
         const total = subtotal + vat;
         const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
@@ -92,27 +92,27 @@ export default function BasketPage() {
                         {cartItems.length === 0 ? <EmptyCart /> : (
                             <div className="space-y-6">
                                 {cartItems.map(item => (
-                                    <div key={item.menuId} className="flex items-center flex-wrap gap-4 border-b border-gray-100 pb-4">
+                                    <div key={item.menu_id} className="flex items-center flex-wrap gap-4 border-b border-gray-100 pb-4">
                                         <Image
-                                            src={item.publicImageUrl || `https://placehold.co/100x100/E2D6C8/4A3F35?text=${encodeURIComponent(item.menuName)}`}
-                                            alt={item.menuName}
+                                            src={item.public_image_url || `https://placehold.co/100x100/E2D6C8/4A3F35?text=${encodeURIComponent(item.menu_name)}`}
+                                            alt={item.menu_name}
                                             width={96}
                                             height={96}
                                             className="object-cover rounded-lg shadow-sm"
                                         />
                                         <div className="flex-grow min-w-[150px]">
-                                            <h3 className="font-semibold text-gray-800">{item.menuName}</h3>
-                                            <p className="text-green-800 font-bold mt-1">฿{item.menuPrice.toFixed(2)}</p>
+                                            <h3 className="font-semibold text-gray-800">{item.menu_name}</h3>
+                                            <p className="text-green-800 font-bold mt-1">฿{item.menu_price.toFixed(2)}</p>
                                         </div>
                                         <div className="flex items-center gap-3">
-                                            <button onClick={() => handleQuantityChange(item.menuId, -1)} className="w-8 h-8 rounded-full border hover:bg-gray-100 transition">-</button>
+                                            <button onClick={() => handleQuantityChange(item.menu_id, -1)} className="w-8 h-8 rounded-full border hover:bg-gray-100 transition">-</button>
                                             <span className="w-8 text-center font-medium">{item.quantity}</span>
-                                            <button onClick={() => handleQuantityChange(item.menuId, 1)} className="w-8 h-8 rounded-full border hover:bg-gray-100 transition">+</button>
+                                            <button onClick={() => handleQuantityChange(item.menu_id, 1)} className="w-8 h-8 rounded-full border hover:bg-gray-100 transition">+</button>
                                         </div>
                                         <div className="text-right w-24">
-                                            <p className="font-semibold text-lg text-gray-800">฿{(item.menuPrice * item.quantity).toFixed(2)}</p>
+                                            <p className="font-semibold text-lg text-gray-800">฿{(item.menu_price * item.quantity).toFixed(2)}</p>
                                         </div>
-                                        <button onClick={() => removeItem(item.menuId)} className="text-gray-400 hover:text-red-500 transition">
+                                        <button onClick={() => removeItem(item.menu_id)} className="text-gray-400 hover:text-red-500 transition">
                                             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                                         </button>
                                     </div>
