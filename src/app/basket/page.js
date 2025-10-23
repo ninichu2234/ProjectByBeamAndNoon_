@@ -1,8 +1,8 @@
 "use client";
 import Link from 'next/link';
+import Image from 'next/image';
 import React, { useState, useEffect, useMemo } from 'react';
 
-// คอมโพเนนต์เล็กๆ สำหรับแสดงผลเมื่อตะกร้าว่าง
 const EmptyCart = () => (
     <div className="text-center py-16">
         <svg xmlns="http://www.w3.org/2000/svg" className="mx-auto h-16 w-16 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -19,8 +19,7 @@ const EmptyCart = () => (
 export default function BasketPage() {
     const [cartItems, setCartItems] = useState([]);
 
-    // [สำคัญที่สุด] -> ดึงข้อมูลจาก localStorage แค่ครั้งเดียวตอนเปิดหน้านี้
-    useEffect(() => {
+    const loadCartItems = () => {
         try {
             const savedCartJSON = localStorage.getItem('myCafeCart');
             const savedItems = savedCartJSON ? JSON.parse(savedCartJSON) : [];
@@ -29,23 +28,25 @@ export default function BasketPage() {
             console.error("Failed to parse cart from localStorage", error);
             setCartItems([]);
         }
-    }, []); // [] ทำให้โค้ดส่วนนี้ทำงานแค่ครั้งเดียวตอนโหลดหน้า
+    };
 
-    // ฟังก์ชันสำหรับอัปเดต localStorage เมื่อมีการเปลี่ยนแปลงในหน้านี้
     useEffect(() => {
-        try {
-            if (cartItems.length > 0) {
-                localStorage.setItem('myCafeCart', JSON.stringify(cartItems));
-            } else {
-                localStorage.removeItem('myCafeCart');
-            }
-            window.dispatchEvent(new Event('local-storage'));
-        } catch (error) {
-            console.error("Failed to save cart to localStorage", error);
+        loadCartItems();
+        window.addEventListener('local-storage', loadCartItems);
+        return () => {
+            window.removeEventListener('local-storage', loadCartItems);
+        };
+    }, []);
+
+    useEffect(() => {
+        if (cartItems.length > 0) {
+            localStorage.setItem('myCafeCart', JSON.stringify(cartItems));
+        } else {
+            localStorage.removeItem('myCafeCart');
         }
+        window.dispatchEvent(new Event('local-storage'));
     }, [cartItems]);
 
-    // ฟังก์ชันจัดการตะกร้า (เพิ่ม/ลด/ลบ)
     const handleQuantityChange = (menuId, change) => {
         setCartItems(currentItems =>
             currentItems.map(item =>
@@ -66,7 +67,6 @@ export default function BasketPage() {
         }
     };
 
-    // คำนวณยอดรวม
     const summary = useMemo(() => {
         const subtotal = cartItems.reduce((sum, item) => sum + (item.menuPrice * item.quantity), 0);
         const vat = subtotal * 0.07;
@@ -74,7 +74,6 @@ export default function BasketPage() {
         const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
         return { subtotal, vat, total, totalItems };
     }, [cartItems]);
-
 
     return (
         <div className="bg-white min-h-screen">
@@ -94,7 +93,13 @@ export default function BasketPage() {
                             <div className="space-y-6">
                                 {cartItems.map(item => (
                                     <div key={item.menuId} className="flex items-center flex-wrap gap-4 border-b border-gray-100 pb-4">
-                                        <img src={item.menuImageUrl || `https://placehold.co/100x100/E2D6C8/4A3F35?text=${encodeURIComponent(item.menuName)}`} alt={item.menuName} className="w-24 h-24 object-cover rounded-lg shadow-sm" />
+                                        <Image
+                                            src={item.publicImageUrl || `https://placehold.co/100x100/E2D6C8/4A3F35?text=${encodeURIComponent(item.menuName)}`}
+                                            alt={item.menuName}
+                                            width={96}
+                                            height={96}
+                                            className="object-cover rounded-lg shadow-sm"
+                                        />
                                         <div className="flex-grow min-w-[150px]">
                                             <h3 className="font-semibold text-gray-800">{item.menuName}</h3>
                                             <p className="text-green-800 font-bold mt-1">฿{item.menuPrice.toFixed(2)}</p>
@@ -108,7 +113,7 @@ export default function BasketPage() {
                                             <p className="font-semibold text-lg text-gray-800">฿{(item.menuPrice * item.quantity).toFixed(2)}</p>
                                         </div>
                                         <button onClick={() => removeItem(item.menuId)} className="text-gray-400 hover:text-red-500 transition">
-                                             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                                         </button>
                                     </div>
                                 ))}
@@ -125,15 +130,14 @@ export default function BasketPage() {
                                     <div className="flex justify-between font-bold text-lg text-[#4A3728]"><span>ยอดรวมสุทธิ</span><span>฿{summary.total.toFixed(2)}</span></div>
                                 </div>
                             </div>
-                            {/* [แก้ไข] เพิ่มปุ่ม "เลือกซื้อสินค้าต่อ" */}
-                             <div className="mt-8 space-y-3">
-                                <Link href="/checkout" className={`block w-full text-center py-3 rounded-lg font-bold text-lg text-white transition-colors ${cartItems.length === 0 ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-800 hover:bg-green-900'}`}>
+                            <div className="mt-8 space-y-3">
+                                <Link href="/checkout" className={`block w-full text-center py-3 rounded-lg font-bold text-lg text-white transition-colors ${cartItems.length === 0 ? 'bg-gray-400 cursor-not-allowed pointer-events-none' : 'bg-green-800 hover:bg-green-900'}`}>
                                     ดำเนินการชำระเงิน
                                 </Link>
                                 <Link href="/chat" className="block w-full text-center py-3 rounded-lg font-bold text-lg text-[#4A3728] bg-gray-100 hover:bg-gray-200 transition-colors">
                                     เลือกซื้อต่อ
                                 </Link>
-                             </div>
+                            </div>
                         </div>
                     </div>
                 </div>

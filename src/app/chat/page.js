@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import Link from 'next/link';
 
-// --- ใส่ข้อมูล Supabase ของคุณ ---
+// --- ⚠️ คำเตือน: เพื่อความปลอดภัย ควรย้าย Key ไปเก็บไว้ใน Environment Variables (.env.local) ---
 const supabaseUrl = 'https://rcrntadwwvhyojmjrmzh.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjcm50YWR3d3ZoeW9qbWpybXpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgxNjU2MzAsImV4cCI6MjA3Mzc0MTYzMH0.sMK4cdz4iB95ZycKg3srZQZm_orBEq45az5pkObPGnA';
 const supabase = createClient(supabaseUrl, supabaseKey);
@@ -16,9 +16,9 @@ export default function ChatPage() {
     const [allMenuItems, setAllMenuItems] = useState([]);
     const [cartItems, setCartItems] = useState([]);
     const [totalPrice, setTotalPrice] = useState(0);
-    const [isListening, setIsListening] = useState(false); // State สำหรับการฟัง
+    const [isListening, setIsListening] = useState(false);
 
-    // --- useEffect Hooks ---
+    // Effect: โหลดข้อมูลเมนูทั้งหมด และตะกร้าสินค้าครั้งแรก
     useEffect(() => {
         try {
             const savedCart = JSON.parse(localStorage.getItem('myCafeCart') || '[]');
@@ -30,6 +30,7 @@ export default function ChatPage() {
 
         const fetchAllMenus = async () => {
             const { data, error } = await supabase.from('menuItems').select('*');
+            console.log('ข้อมูลเมนูทั้งหมดจาก Supabase:', data);
             if (error) {
                 console.error("Error fetching all menu items:", error);
             } else {
@@ -39,18 +40,24 @@ export default function ChatPage() {
         fetchAllMenus();
     }, []);
 
+    // Effect: อัปเดตตะกร้า, คำนวณราคา, และส่งสัญญาณ
     useEffect(() => {
         const newTotal = cartItems.reduce((sum, item) => sum + (item.menuPrice * item.quantity), 0);
         setTotalPrice(newTotal);
+        
         if (cartItems.length > 0) {
             localStorage.setItem('myCafeCart', JSON.stringify(cartItems));
         } else {
             localStorage.removeItem('myCafeCart');
         }
+        
+        // ✅✅✅ ส่วนนี้คือ "ตัวส่งสัญญาณ" ที่สำคัญที่สุด ✅✅✅
+        // เมื่อ cartItems เปลี่ยนแปลง จะส่งสัญญาณบอกหน้าอื่นเสมอ
         window.dispatchEvent(new Event('local-storage'));
+
     }, [cartItems]);
 
-    // [เปิดใช้งาน] Text-to-Speech useEffect (อ่านคำตอบของ AI)
+    // ... (โค้ดส่วน Text-to-Speech และ Speech-to-Text ไม่ต้องแก้ไข) ...
     useEffect(() => {
         const speak = (text) => {
             window.speechSynthesis.cancel();
@@ -59,21 +66,13 @@ export default function ChatPage() {
             utterance.rate = 1.0;
             const voices = window.speechSynthesis.getVoices();
             const thaiFemaleVoice = voices.find(voice => voice.lang === 'th-TH' && voice.name.includes('Kanya'));
-            if (thaiFemaleVoice) {
-                utterance.voice = thaiFemaleVoice;
-            }
+            if (thaiFemaleVoice) utterance.voice = thaiFemaleVoice;
             window.speechSynthesis.speak(utterance);
         };
-
-        if (answer && answer !== 'สวัสดีค่ะ ให้ AI Barista แนะนำเมนูอะไรดีคะ?' && !isLoading) {
-            speak(answer);
-        }
-        return () => {
-            window.speechSynthesis.cancel();
-        };
+        if (answer && answer !== 'สวัสดีค่ะ ให้ AI Barista แนะนำเมนูอะไรดีคะ?' && !isLoading) speak(answer);
+        return () => window.speechSynthesis.cancel();
     }, [answer, isLoading]);
 
-    // [เปิดใช้งาน] ฟังก์ชัน Speech-to-Text (ฟังเสียงผู้ใช้)
     const handleListen = () => {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SpeechRecognition) {
@@ -87,10 +86,7 @@ export default function ChatPage() {
             setIsListening(true);
             setQuestion("กำลังฟัง... พูดได้เลยค่ะ 🎤");
         };
-        recognition.onresult = (event) => {
-            const speechToText = event.results[0][0].transcript;
-            setQuestion(speechToText);
-        };
+        recognition.onresult = (event) => setQuestion(event.results[0][0].transcript);
         recognition.onerror = (event) => {
             console.error("Speech recognition error", event.error);
             setQuestion('');
@@ -103,7 +99,7 @@ export default function ChatPage() {
         recognition.start();
     };
     
-    // --- ฟังก์ชันจัดการตะกร้าสินค้า (คงเดิม) ---
+    // ฟังก์ชันจัดการตะกร้า
     const handleOrderClick = (menuDataFromRec) => {
         if (!menuDataFromRec.menuId) {
             alert("เกิดข้อผิดพลาด: AI ไม่ได้ส่ง ID ของเมนูกลับมา");
@@ -116,6 +112,7 @@ export default function ChatPage() {
             alert(`ขออภัยค่ะ ไม่พบข้อมูลสำหรับเมนู ID: "${menuDataFromRec.menuId}" ในระบบ`);
         }
     };
+
     const _updateCart = (menuToAdd) => {
         setCartItems(prevItems => {
             const existingItem = prevItems.find(item => item.menuId === menuToAdd.menuId);
@@ -130,16 +127,13 @@ export default function ChatPage() {
             }
         });
     };
-    const handleCheckout = () => {};
 
-    // --- ฟังก์ชันส่งคำถามหา AI ---
+    // ... (โค้ดส่วน handleSubmit และ JSX ทั้งหมดไม่ต้องแก้ไข) ...
     const handleSubmit = async () => {
         if (!question.trim() || question === "กำลังฟัง... พูดได้เลยค่ะ 🎤") return;
-        
         setIsLoading(true);
         setAnswer("กำลังคิดเมนูให้ค่าสุดหล่อ รอสักครู่น้า ✨");
         setRecommendedMenus([]);
-
         const { data: menuItems, error: supabaseError } = await supabase.from('menuItems').select('*').order('menuId');
         if (supabaseError) {
             setAnswer("เกิดข้อผิดพลาดในการดึงข้อมูลเมนู: " + supabaseError.message);
@@ -151,12 +145,9 @@ export default function ChatPage() {
         menuItems.forEach(item => {
             menuContext += `- ID: ${item.menuId}, Name: ${item.menuName}, Description: ${item.menuDescription}, Price: ${item.menuPrice} baht.\n`;
         });
-
-        //  !!!!!!!!!!! ใส่ KEY สำหรับแชท AI ของคุณที่นี่ !!!!!!!!!!!
-        const API_KEY = 'AIzaSyBKc_6DmN-5YZWtnKqRzjGCdqb7txWsv3I'; // <--- KEY เดิมของคุณ
+        const API_KEY = 'AIzaSyBKc_6DmN-5YZWtnKqRzjGCdqb7txWsv3I';
         const MODEL_NAME = 'gemini-2.5-pro';
         const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${API_KEY}`;
-        
         const promptText = `
             You are a helpful cafe assistant. Your task is to answer the user's question based on the menu.
             ALWAYS respond in a valid JSON format.
@@ -175,7 +166,6 @@ export default function ChatPage() {
             Menu from Database: ${menuContext}
             User's question: "${question}"
         `;
-
         const requestBody = { contents: [{ parts: [{ text: promptText }] }] };
         try {
             const response = await fetch(API_URL, {
@@ -212,7 +202,6 @@ export default function ChatPage() {
     return (
         <div className="bg-white min-h-screen">
             <div className="container mx-auto p-4 sm:p-8 max-w-5xl">
-                {/* ... ส่วนหัวและโปรโมชั่น (คงเดิม) ... */}
                 <div className="text-center mb-8">
                     <h1 className="text-[#4A3728] font-bold text-3xl tracking-tight">Barista สำหรับสุดหล่อ</h1>
                     <p className="text-[#4A3728] font-bold">พร้อมแนะนำเมนูโปรดให้สุดหล่อ</p>
@@ -227,7 +216,6 @@ export default function ChatPage() {
                      </button>
                 </div>
 
-                {/* กล่องสำหรับพิมพ์คำถาม */}
                 <div className="bg-[#4A3728] p-6 rounded-xl shadow-lg mb-8">
                     <label htmlFor="question" className="block text-white font-bold mb-6">What can I get started for you?</label>
                     <textarea
@@ -244,7 +232,6 @@ export default function ChatPage() {
                         <button onClick={() => setQuestion("แนะนำกาแฟไม่เปรี้ยวหน่อย")} className="text-xs bg-white/20 hover:bg-white/30 text-white py-1 px-3 rounded-full transition">กาแฟไม่เปรี้ยว</button>
                         <button onClick={() => setQuestion("เครื่องดื่มที่ไม่ใช่กาแฟมีอะไรบ้าง?")} className="text-xs bg-white/20 hover:bg-white/30 text-white py-1 px-3 rounded-full transition">ไม่ใช่กาแฟ</button>
                     </div>
-                    {/* [อัปเดต] เพิ่มปุ่มไมโครโฟน */}
                     <div className="mt-4 flex items-center gap-3">
                         <button
                             onClick={handleSubmit}
@@ -259,14 +246,13 @@ export default function ChatPage() {
                             className={`p-3 rounded-full transition-colors duration-300 ${isListening ? 'bg-red-600 animate-pulse' : 'bg-white/20 hover:bg-white/30'} disabled:bg-gray-400 disabled:cursor-not-allowed`}
                             title="สั่งงานด้วยเสียง"
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <svg xmlns="http://www.w.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-14 0m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
                             </svg>
                         </button>
                     </div>
                 </div>
                 
-                {/* ... ส่วนที่เหลือของ UI (คงเดิม) ... */}
                 <div className="bg-[#4A3728] p-6 rounded-xl shadow-lg min-h-[100px] mb-8">
                     <div className="flex items-start space-x-4">
                          <div className="bg-green-800 rounded-full p-2 flex-shrink-0">
@@ -315,7 +301,7 @@ export default function ChatPage() {
                             </div>
                             <div className="mt-6 flex flex-col sm:flex-row gap-3">
                                 <button onClick={() => document.getElementById('question')?.focus()} className="w-full bg-white/10 hover:bg-white/20 text-white font-bold py-3 rounded-full transition">สั่งเพิ่มกับ AI</button>
-                                <Link href="/basket" className="w-full" onClick={handleCheckout}>
+                                <Link href="/basket" className="w-full">
                                     <button className="w-full bg-green-800 hover:bg-green-900 text-white font-bold py-3 rounded-full transition">Checkout</button>
                                 </Link>
                             </div>

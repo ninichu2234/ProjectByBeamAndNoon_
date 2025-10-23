@@ -10,7 +10,6 @@ const nextConfig = {
                 protocol: 'https',
                 hostname: 'rcrntadwwvhyojmjrmzh.supabase.co', // << ใส่ hostname ของ Supabase Storage ของคุณ
             },
-            // เพิ่ม hostname อื่นๆ ที่คุณใช้ได้ที่นี่
         ],
     },
 };
