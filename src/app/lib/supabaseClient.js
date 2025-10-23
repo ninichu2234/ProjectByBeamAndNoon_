@@ -10,4 +10,7 @@ const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 // ‼️ แก้ไข: สร้าง client ด้วย createBrowserClient()
 // นี่คือ "เวอร์ชันที่ฉลาด" ที่สามารถอ่าน/เขียน "คุกกี้" session
 // ใน Next.js App Router ได้
+
 export const supabase = createBrowserClient(supabaseUrl, supabaseKey)
+console.log('Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL)
+console.log('Supabase Key:', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
