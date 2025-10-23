@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect, useMemo } from 'react';
-
+import Image from 'next/image';
+import Link from 'next/link';
 // คอมโพเนนต์เล็กๆ สำหรับแสดงผลเมื่อตะกร้าว่าง
 const EmptyCart = () => (
     <div className="text-center py-16">
@@ -93,7 +94,13 @@ export default function BasketPage() {
                             <div className="space-y-6">
                                 {cartItems.map(item => (
                                     <div key={item.menuId} className="flex items-center flex-wrap gap-4 border-b border-gray-100 pb-4">
-                                        <img src={item.menuImageUrl || `https://placehold.co/100x100/E2D6C8/4A3F35?text=${encodeURIComponent(item.menuName)}`} alt={item.menuName} className="w-24 h-24 object-cover rounded-lg shadow-sm" />
+                                       <img
+                                            src={item.menuImageUrl || `https://placehold.co/100x100/E2D6C8/4A3F35?text=${encodeURIComponent(item.menuName)}`} 
+                                            alt={item.menuName} 
+                                            width={96}  // ขนาด w-24 ใน Tailwind คือ 96px
+                                            height={96} // ขนาด h-24 ใน Tailwind คือ 96px
+                                            className="object-cover rounded-lg shadow-sm" 
+                                        />
                                         <div className="flex-grow min-w-[150px]">
                                             <h3 className="font-semibold text-gray-800">{item.menuName}</h3>
                                             <p className="text-green-800 font-bold mt-1">฿{item.menuPrice.toFixed(2)}</p>

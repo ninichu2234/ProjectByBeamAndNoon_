@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabaseClient';
 import Link from 'next/link';
 // 1. ✨ Import Hooks ที่จำเป็น ✨
 import { useState, useEffect } from 'react';
-
+import Image from 'next/image';
 // --- ฟังก์ชัน getMenuItems (เหมือนเดิม) ---
 async function getMenuItems() {
   const { data: menuItems, error } = await supabase
