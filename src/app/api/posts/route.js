@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
-import {supabase} from "../lib/supabaseClient";
+/*import { NextResponse } from "next/server";
+import {supabase} from "../../lib/supabaseClient";
 
 export async function GET() {
     const { data } = await supabase
@@ -7,4 +7,4 @@ export async function GET() {
     .select("*")
     .order("id", {ascending: false}); //น้อยไปมาก
  return NextResponse.json(data);
-}
+} */

@@ -1,7 +1,7 @@
 "use client";
 
 import {useState, useEffect} from "react";
-import {supabase} from "../lib/supabaseClient.js";
+import {supabase} from "../lib/supabaseClient";
 
 export default function CMS(){
 const [posts, setPosts]=useState([]);
