@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-
+import Link from 'next/link';
 // ไอคอนสำหรับเมนู (Hamburger & Close)
 const Bars3Icon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-7 h-7">
@@ -66,21 +66,21 @@ export default function Header() {
                 <div className="flex items-center justify-between h-16 relative">
                     {/* ส่วนที่ 1: โลโก้ (ซ้าย) */}
                     <div className="flex items-center">
-                        <a href="/" onClick={() => setMobileMenuOpen(false)} className="text-2xl font-bold">
+                        <Link href="/" onClick={() => setMobileMenuOpen(false)} className="text-2xl font-bold">
                             <span className={`text-xl font-bold ${isScrolled ? 'text-white' : 'text-gray-800'}`}>MyCafe</span>
-                        </a>
+                        </Link>
                     </div>
 
                     {/* ส่วนที่ 2: เมนูและปุ่ม (ขวา) - สำหรับ Desktop */}
                     <nav className="hidden md:flex items-center space-x-8">
-                        <a href="/menu-page" className={`${isScrolled ? 'text-white' : 'text-gray-700'} hover:text-green-700 transition-colors duration-300`}>
+                        <Link href="/menu-page" className={`${isScrolled ? 'text-white' : 'text-gray-700'} hover:text-green-700 transition-colors duration-300`}>
                             Menu
-                        </a>
-                        <a href="/member" className={`${isScrolled ? 'text-white' : 'text-gray-700'} hover:text-green-700 transition-colors duration-300`}>
+                        </Link>
+                        <Link href="/member" className={`${isScrolled ? 'text-white' : 'text-gray-700'} hover:text-green-700 transition-colors duration-300`}>
                             Member
-                        </a>
+                        </Link>
                         
-                        <a href="/basket" className={`relative ${isScrolled ? 'text-white' : 'text-gray-700'} hover:text-green-700 transition-colors duration-300`}>
+                        <Link href="/basket" className={`relative ${isScrolled ? 'text-white' : 'text-gray-700'} hover:text-green-700 transition-colors duration-300`}>
                             <WaterGlassIcon />
                             {/* [แก้ไข] ใช้ cartCount ที่เป็น dynamic state */}
                             {cartCount > 0 && (
@@ -88,18 +88,18 @@ export default function Header() {
                                     {cartCount}
                                 </span>
                             )}
-                        </a>
+                        </Link>
                         
-                        <a href="/chat">
+                        <Link href="/chat">
                             <button className="bg-green-800 text-white px-6 py-2 rounded-full font-bold hover:bg-green-700 transition-colors shadow">
                                 สั่งกับ AI เลย!
                             </button>
-                        </a>
+                        </Link>
                     </nav>
 
                     
                     <div className="md:hidden flex items-center space-x-4">
-                        <a href="/basket" className={`relative ${isScrolled ? 'text-white' : 'text-gray-700'}`}>
+                        <Link href="/basket" className={`relative ${isScrolled ? 'text-white' : 'text-gray-700'}`}>
                             <WaterGlassIcon />
                              {/* [แก้ไข] ใช้ cartCount ที่เป็น dynamic state สำหรับ Mobile ด้วย */}
                             {cartCount > 0 && (
@@ -107,7 +107,7 @@ export default function Header() {
                                     {cartCount}
                                 </span>
                             )}
-                        </a>
+                        </Link>
                         <button onClick={() => setMobileMenuOpen(!isMobileMenuOpen)} className={`${isScrolled ? 'text-white' : 'text-gray-700'}`}>
                             {isMobileMenuOpen ? <XMarkIcon /> : <Bars3Icon />}
                         </button>
@@ -118,15 +118,15 @@ export default function Header() {
                 {isMobileMenuOpen && (
                     <div className="md:hidden absolute top-full left-0 w-full bg-white shadow-lg">
                         <div className="flex flex-col space-y-4 p-5">
-                            <a href="/chat" onClick={() => setMobileMenuOpen(false)} className="w-full bg-green-800 text-white text-center py-3 rounded-lg font-bold hover:bg-green-700 transition-colors">
+                            <Link  href="/chat" onClick={() => setMobileMenuOpen(false)} className="w-full bg-green-800 text-white text-center py-3 rounded-lg font-bold hover:bg-green-700 transition-colors">
                                 สั่งกับ AI เลย!
-                            </a>
-                            <a href="/menu-page" onClick={() => setMobileMenuOpen(false)} className="text-gray-700 hover:text-green-700 font-medium text-lg text-center py-2">
+                            </Link>
+                            <Link href="/menu-page" onClick={() => setMobileMenuOpen(false)} className="text-gray-700 hover:text-green-700 font-medium text-lg text-center py-2">
                                 Menu
-                            </a>
-                            <a href="/member" onClick={() => setMobileMenuOpen(false)} className="text-gray-700 hover:text-green-700 font-medium text-lg text-center py-2">
+                            </Link>
+                            <Link href="/member" onClick={() => setMobileMenuOpen(false)} className="text-gray-700 hover:text-green-700 font-medium text-lg text-center py-2">
                                 Member
-                            </a>
+                            </Link>
                         </div>
                     </div>
                 )}

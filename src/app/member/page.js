@@ -5,7 +5,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient'; 
-
+import Link from 'next/link';
 // --- (ส่วน MemberDashboard และ GuestLandingPage เหมือนเดิม) ---
 const MemberDashboard = ({ user, profile, onLogout }) => {
     // ... (โค้ดเหมือนเดิม) ...

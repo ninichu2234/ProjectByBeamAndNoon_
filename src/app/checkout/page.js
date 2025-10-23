@@ -1,4 +1,5 @@
 "use client";
+import Link from 'next/link';
 import React, { useState, useEffect, useMemo } from 'react';
 
 // ไอคอนสำหรับสถานะต่างๆ
@@ -84,9 +85,9 @@ export default function CheckoutPage() {
                     <h1 className="text-3xl font-bold text-green-600 mt-4">สั่งซื้อสำเร็จ!</h1>
                     <p className="text-gray-600 mt-2">ขอบคุณที่ใช้บริการ AI Barista ครับ</p>
                     <p className="text-gray-600">คำสั่งซื้อของคุณกำลังถูกจัดเตรียม</p>
-                    <a href="/" className="mt-8 inline-block bg-[#4A3728] text-white px-8 py-3 rounded-lg font-bold hover:bg-green-800 transition-colors shadow">
+                    <Link href="/" className="mt-8 inline-block bg-[#4A3728] text-white px-8 py-3 rounded-lg font-bold hover:bg-green-800 transition-colors shadow">
                         กลับสู่หน้าหลัก
-                    </a>
+                    </Link>
                 </div>
             </div>
         );
@@ -100,9 +101,9 @@ export default function CheckoutPage() {
                     <EmptyCartIcon />
                     <h3 className="mt-4 text-xl font-semibold text-gray-700">ไม่มีสินค้าสำหรับชำระเงิน</h3>
                     <p className="text-gray-500 mt-2">ตะกร้าของคุณว่างเปล่าในขณะนี้</p>
-                    <a href="/chat" className="mt-6 inline-block bg-[#4A3728] text-white px-6 py-3 rounded-lg font-bold hover:bg-green-800 transition-colors shadow">
+                    <Link href="/chat" className="mt-6 inline-block bg-[#4A3728] text-white px-6 py-3 rounded-lg font-bold hover:bg-green-800 transition-colors shadow">
                         กลับไปเลือกเมนู
-                    </a>
+                    </Link>
                 </div>
             </div>
         );
@@ -173,9 +174,9 @@ export default function CheckoutPage() {
                                 <button type="submit" disabled={isProcessing} className="w-full text-center py-3 rounded-lg font-bold text-lg text-white bg-green-800 hover:bg-green-900 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed">
                                     {isProcessing ? 'กำลังดำเนินการ...' : `ยืนยันคำสั่งซื้อ (฿${summary.total.toFixed(2)})`}
                                 </button>
-                                <a href="/basket" className="block w-full text-center py-3 rounded-lg font-bold text-lg text-[#4A3728] bg-gray-100 hover:bg-gray-200 transition-colors">
+                                <Link href="/basket" className="block w-full text-center py-3 rounded-lg font-bold text-lg text-[#4A3728] bg-gray-100 hover:bg-gray-200 transition-colors">
                                     กลับไปแก้ไขตะกร้า
-                                </a>
+                                </Link>
                              </div>
                         </div>
                     </div>

@@ -1,4 +1,5 @@
 "use client";
+import Link from 'next/link';
 import React, { useState, useEffect, useMemo } from 'react';
 
 // คอมโพเนนต์เล็กๆ สำหรับแสดงผลเมื่อตะกร้าว่าง
@@ -9,9 +10,9 @@ const EmptyCart = () => (
         </svg>
         <h3 className="mt-4 text-xl font-semibold text-gray-700">ตะกร้าของคุณว่างเปล่า</h3>
         <p className="text-gray-500 mt-2">ดูเหมือนว่าคุณยังไม่ได้เพิ่มเมนูใดๆ</p>
-        <a href="/chat" className="mt-6 inline-block bg-[#4A3728] text-white px-6 py-3 rounded-lg font-bold hover:bg-green-800 transition-colors shadow">
+        <Link href="/chat" className="mt-6 inline-block bg-[#4A3728] text-white px-6 py-3 rounded-lg font-bold hover:bg-green-800 transition-colors shadow">
             กลับไปเลือกเมนู
-        </a>
+        </Link>
     </div>
 );
 
@@ -126,12 +127,12 @@ export default function BasketPage() {
                             </div>
                             {/* [แก้ไข] เพิ่มปุ่ม "เลือกซื้อสินค้าต่อ" */}
                              <div className="mt-8 space-y-3">
-                                <a href="/checkout" className={`block w-full text-center py-3 rounded-lg font-bold text-lg text-white transition-colors ${cartItems.length === 0 ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-800 hover:bg-green-900'}`}>
+                                <Link href="/checkout" className={`block w-full text-center py-3 rounded-lg font-bold text-lg text-white transition-colors ${cartItems.length === 0 ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-800 hover:bg-green-900'}`}>
                                     ดำเนินการชำระเงิน
-                                </a>
-                                <a href="/chat" className="block w-full text-center py-3 rounded-lg font-bold text-lg text-[#4A3728] bg-gray-100 hover:bg-gray-200 transition-colors">
+                                </Link>
+                                <Link href="/chat" className="block w-full text-center py-3 rounded-lg font-bold text-lg text-[#4A3728] bg-gray-100 hover:bg-gray-200 transition-colors">
                                     เลือกซื้อต่อ
-                                </a>
+                                </Link>
                              </div>
                         </div>
                     </div>

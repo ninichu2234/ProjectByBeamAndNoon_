@@ -315,9 +315,9 @@ export default function ChatPage() {
                             </div>
                             <div className="mt-6 flex flex-col sm:flex-row gap-3">
                                 <button onClick={() => document.getElementById('question')?.focus()} className="w-full bg-white/10 hover:bg-white/20 text-white font-bold py-3 rounded-full transition">สั่งเพิ่มกับ AI</button>
-                                <a href="/basket" className="w-full" onClick={handleCheckout}>
+                                <Link href="/basket" className="w-full" onClick={handleCheckout}>
                                     <button className="w-full bg-green-800 hover:bg-green-900 text-white font-bold py-3 rounded-full transition">Checkout</button>
-                                </a>
+                                </Link>
                             </div>
                         </>
                     ) : (

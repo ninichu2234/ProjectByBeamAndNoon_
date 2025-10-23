@@ -117,9 +117,9 @@ export default function MenuPage() {
               <h2 className="text-xl font-bold text-gray-800 mb-4">หมวดหมู่</h2>
               <nav className="flex flex-col space-y-3">
                 {categories.map(category => (
-                  <a key={category} href={`#${category.replace(/\s+/g, '-')}`} className="text-gray-600 hover:text-amber-600 font-medium transition-colors text-lg">
+                  <Link key={category} href={`#${category.replace(/\s+/g, '-')}`} className="text-gray-600 hover:text-amber-600 font-medium transition-colors text-lg">
                     {category}
-                  </a>
+                  </Link>
                 ))}
               </nav>
             </div>
