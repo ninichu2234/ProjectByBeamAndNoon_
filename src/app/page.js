@@ -14,7 +14,7 @@ export default function Home() {
           Your browser does not support the video tag.
         </video> */}
        <Image
-    src=""
+    src="https://share.google/images/M8dQaNdcSLalP1UMW"
     alt="Cafe ambience"
     fill={true} // <-- Add this
     priority={true} // <-- Add this

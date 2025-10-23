@@ -18,6 +18,16 @@ const nextConfig = {
 // (เพิ่ม pathname เพื่อความปลอดภัยและถูกต้อง)
           pathname: '/storage/v1/object/public/**', 
         },
+        
+       {
+              protocol: 'https',
+              hostname: 'share.google',
+            },
+        {
+              protocol: 'https',
+              hostname: '**.supabase.co', // ✅ เพื่อให้โหลดรูปจาก Supabase ได้
+        },
+        
       ],
     },
 
