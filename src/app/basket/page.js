@@ -2,10 +2,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-// [FIX] 1. Import 'supabase' จากไฟล์ส่วนกลาง (ถ้ามี)
-// ถ้าคุณยังไม่มี supabaseClient.js คุณต้องสร้างก่อน
-// import { supabase } from '../../lib/supabaseClient'; 
-// *** แต่เนื่องจากไฟล์ Basket เดิมไม่มีการใช้ supabase เลย ผมจะคอมเมนต์ไว้ก่อน ***
 
 // คอมโพเนนต์เล็กๆ สำหรับแสดงผลเมื่อตะกร้าว่าง
 const EmptyCart = () => (
@@ -23,93 +19,126 @@ const EmptyCart = () => (
 
 export default function BasketPage() {
     const [cartItems, setCartItems] = useState([]);
-    // [FIX] สร้าง "ธง"
+    // [FIX] สร้าง "ธง" - เริ่มต้นเป็น true
     const isInitialMount = useRef(true);
 
-    // [1] Effect "โหลด" (ทำงานครั้งเดียว)
+    // [1] Effect "โหลด" (ทำงานครั้งเดียวเมื่อ Component Mount)
     useEffect(() => {
+        console.log("BasketPage: useEffect [Mount] - Starting to load cart...");
         try {
-            // [FIX] อ่านจาก localStorage ก่อนเสมอ
+            // อ่านจาก localStorage
             const savedCartJSON = localStorage.getItem('myCafeCart');
             const savedItems = savedCartJSON ? JSON.parse(savedCartJSON) : [];
-            setCartItems(savedItems);
-            console.log("BasketPage: Initial cart loaded:", savedItems); // Log เพิ่มเติม
+            setCartItems(savedItems); // อัปเดต state ตะกร้า
+            console.log("BasketPage: useEffect [Mount] - Cart loaded from localStorage:", savedItems);
         } catch (error) {
-            console.error("BasketPage: Failed to parse cart from localStorage", error);
-            setCartItems([]);
+            console.error("BasketPage: useEffect [Mount] - Failed to parse cart from localStorage", error);
+            setCartItems([]); // ถ้ามีปัญหา ให้เป็นตะกร้าว่าง
+        } finally {
+            // [EDIT] ตั้งค่าธงเป็น false ทันทีหลังจากโหลด (ไม่ใช้ setTimeout)
+            isInitialMount.current = false;
+            console.log("BasketPage: useEffect [Mount] - Initial mount flag set to false.");
+            // [เพิ่ม] บังคับให้ re-render เล็กน้อยเพื่อให้ UI อัปเดตทันที (อาจไม่จำเป็นเสมอไป)
+            // ลองเอาคอมเมนต์ออกถ้ายังเจอปัญหา
+            // forceUpdate({}); 
         }
-        
-        // [FIX] ตั้งค่าธงหลังโหลดเสร็จ
-        // ใช้ setTimeout เล็กน้อยเพื่อให้แน่ใจว่า state update เสร็จก่อน
-        const timer = setTimeout(() => {
-             isInitialMount.current = false;
-             console.log("BasketPage: Initial mount flag set to false."); // Log เพิ่มเติม
-        }, 0); 
-       
-       return () => clearTimeout(timer); // Cleanup timer
 
-    }, []); // [] ทำให้ทำงานครั้งเดียว
-
-    // [2] Effect "บันทึก" (ทำงานทุกครั้งที่ cartItems เปลี่ยน)
-    useEffect(() => {
-        // [FIX] ตรวจสอบ "ธง" - จะไม่ทำงานตอนโหลดครั้งแรก
-        if (!isInitialMount.current) {
+        // [เพิ่ม] สร้าง Listener เพื่อรับสัญญาณ 'local-storage' จากหน้าอื่น
+        const handleStorageChange = () => {
+            console.log("BasketPage: Received 'local-storage' event. Reloading cart...");
             try {
-                if (cartItems.length > 0) {
-                    localStorage.setItem('myCafeCart', JSON.stringify(cartItems));
-                     console.log("BasketPage: Cart saved to localStorage:", cartItems); // Log เพิ่มเติม
-                } else {
-                    localStorage.removeItem('myCafeCart');
-                    console.log("BasketPage: Cart removed from localStorage."); // Log เพิ่มเติม
-                }
-                // [FIX] ส่งสัญญาณบอก Navbar
-                window.dispatchEvent(new Event('local-storage'));
-                console.log("BasketPage: 'local-storage' event dispatched."); // Log เพิ่มเติม
+                const updatedCartJSON = localStorage.getItem('myCafeCart');
+                const updatedItems = updatedCartJSON ? JSON.parse(updatedCartJSON) : [];
+                setCartItems(updatedItems); // อัปเดตตะกร้าเมื่อได้รับสัญญาณ
+                console.log("BasketPage: Cart updated via event listener:", updatedItems);
             } catch (error) {
-                console.error("BasketPage: Failed to save cart to localStorage", error);
+                 console.error("BasketPage: Failed to parse updated cart from localStorage via event", error);
             }
-        } else {
-             console.log("BasketPage: Initial mount, skipping save to localStorage."); // Log เพิ่มเติม
+        };
+
+        window.addEventListener('local-storage', handleStorageChange);
+        console.log("BasketPage: useEffect [Mount] - Added 'local-storage' event listener.");
+
+        // Cleanup function: ลบ Listener ออกเมื่อ Component Unmount
+        return () => {
+            window.removeEventListener('local-storage', handleStorageChange);
+            console.log("BasketPage: useEffect [Cleanup] - Removed 'local-storage' event listener.");
+        };
+
+    }, []); // [] ทำให้ Effect นี้ทำงานครั้งเดียวตอน Mount
+
+    // [2] Effect "บันทึก" (ทำงานทุกครั้งที่ cartItems เปลี่ยน ***ยกเว้นตอน Mount***)
+    // เราไม่จำเป็นต้องมี Effect นี้แล้ว เพราะการบันทึกทำที่ ChatPage
+    // useEffect(() => {
+    //     // ... โค้ดบันทึกลง localStorage ...
+    // }, [cartItems]);
+
+
+    // ฟังก์ชันจัดการตะกร้า (เพิ่ม/ลด/ลบ) - ย้ายการบันทึกมาไว้ที่นี่
+    const updateCartAndStorage = (newCartItems) => {
+        // กรองเอา item ที่ quantity > 0 ออก
+        const validCartItems = newCartItems.filter(item => item.quantity > 0);
+        setCartItems(validCartItems); // อัปเดต State
+        console.log("BasketPage: Updating cart state and storage:", validCartItems);
+
+        // บันทึกลง localStorage
+        try {
+            if (validCartItems.length > 0) {
+                localStorage.setItem('myCafeCart', JSON.stringify(validCartItems));
+                console.log("BasketPage: Cart saved to localStorage.");
+            } else {
+                localStorage.removeItem('myCafeCart');
+                console.log("BasketPage: Cart removed from localStorage.");
+            }
+            // ส่งสัญญาณบอกหน้าอื่น (เช่น Navbar)
+            window.dispatchEvent(new Event('local-storage'));
+            console.log("BasketPage: Dispatched 'local-storage' event after update.");
+        } catch (error) {
+             console.error("BasketPage: Failed to save updated cart to localStorage", error);
         }
-    }, [cartItems]); 
+    };
 
 
-    // ฟังก์ชันจัดการตะกร้า (เพิ่ม/ลด/ลบ)
     const handleQuantityChange = (menuId, change) => {
-         console.log(`BasketPage: handleQuantityChange called for menuId ${menuId}, change ${change}`); // Log เพิ่มเติม
-        setCartItems(currentItems =>
-            currentItems.map(item =>
-                item.menuId === menuId
-                    ? { ...item, quantity: Math.max(0, item.quantity + change) } // ป้องกันจำนวนติดลบ
-                    : item
-            ).filter(item => item.quantity > 0) // กรองเอาอันที่จำนวนเป็น 0 ออก
-        );
+         console.log(`BasketPage: handleQuantityChange called for menuId ${menuId}, change ${change}`);
+         const newCart = cartItems.map(item =>
+            item.menuId === menuId
+                ? { ...item, quantity: Math.max(0, (item.quantity ?? 0) + change) } // ป้องกันจำนวนติดลบ
+                : item
+         );
+         updateCartAndStorage(newCart); // เรียกฟังก์ชันกลาง
     };
 
     const removeItem = (menuId) => {
-         console.log(`BasketPage: removeItem called for menuId ${menuId}`); // Log เพิ่มเติม
-        setCartItems(currentItems => currentItems.filter(item => item.menuId !== menuId));
+         console.log(`BasketPage: removeItem called for menuId ${menuId}`);
+         const newCart = cartItems.filter(item => item.menuId !== menuId);
+         updateCartAndStorage(newCart); // เรียกฟังก์ชันกลาง
     };
 
     const clearCart = () => {
-        // [FIX] เพิ่มการตรวจสอบ window object
+        // เพิ่มการตรวจสอบ window object
         if (typeof window !== 'undefined' && window.confirm('คุณต้องการล้างตะกร้าสินค้าทั้งหมดใช่หรือไม่?')) {
-             console.log("BasketPage: Clearing cart."); // Log เพิ่มเติม
-            setCartItems([]);
+             console.log("BasketPage: Clearing cart.");
+             updateCartAndStorage([]); // เรียกฟังก์ชันกลางด้วย Array ว่าง
         }
     };
 
-    // คำนวณยอดรวม
+    // คำนวณยอดรวม (ใช้ useMemo เพื่อประสิทธิภาพ)
     const summary = useMemo(() => {
-        const subtotal = cartItems.reduce((sum, item) => sum + (item.menuPrice * item.quantity), 0);
-        const vat = subtotal * 0.07;
-        const total = subtotal + vat;
-        const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
-         console.log("BasketPage: Summary calculated:", { subtotal, vat, total, totalItems }); // Log เพิ่มเติม
+        // ตรวจสอบ cartItems ก่อน reduce
+        const currentCart = Array.isArray(cartItems) ? cartItems : [];
+        const subtotal = currentCart.reduce((sum, item) => sum + ((item.menuPrice ?? 0) * (item.quantity ?? 0)), 0);
+        const vat = subtotal * 0.07; // คำนวณ VAT 7%
+        const total = subtotal + vat; // ราคารวม VAT
+        const totalItems = currentCart.reduce((sum, item) => sum + (item.quantity ?? 0), 0); // รวมจำนวนชิ้น
+         console.log("BasketPage: Summary calculated:", { subtotal, vat, total, totalItems });
         return { subtotal, vat, total, totalItems };
-    }, [cartItems]);
+    }, [cartItems]); // คำนวณใหม่เมื่อ cartItems เปลี่ยน
 
+    // [เพิ่ม] Log state ก่อน return เพื่อดูค่าสุดท้าย
+    console.log("BasketPage: Rendering with state:", { isInitialMount: isInitialMount.current, cartItems });
 
+    // --- ส่วน Return (UI) ---
     return (
         <div className="bg-white min-h-screen">
             <div className="container mx-auto px-4 py-8 md:py-12">
@@ -117,63 +146,70 @@ export default function BasketPage() {
                     <h1 className="text-3xl md:text-4xl font-bold text-[#4A3728]">ตะกร้าสินค้าของคุณ</h1>
                 </div>
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    {/* ส่วนแสดงรายการสินค้า */}
                     <div className="lg:col-span-2 bg-white rounded-xl shadow-md p-6 border">
                         <div className="flex justify-between items-center border-b pb-4 mb-6">
+                            {/* แสดงจำนวน item ที่ถูกต้อง */}
                             <h2 className="text-xl font-semibold text-gray-700">รายการเมนู ({summary.totalItems})</h2>
-                            {cartItems.length > 0 && (
+                            {/* ปุ่มล้างตะกร้า (จะแสดงเมื่อมีของ) */}
+                            {Array.isArray(cartItems) && cartItems.length > 0 && (
                                 <button onClick={clearCart} className="text-sm text-red-500 hover:text-red-700 font-medium">ล้างตะกร้า</button>
                             )}
                         </div>
-                        {/* [FIX] รอให้โหลดเสร็จก่อนค่อยเช็กว่าว่าง */}
-                        {isInitialMount.current ? (
+                        {/* เงื่อนไขการแสดงผล: โหลด / ว่าง / มีของ */}
+                        {isInitialMount.current ? ( // ใช้ .current เพื่ออ่านค่าล่าสุดของ ref
                             <div className="text-center py-16 text-gray-500">กำลังโหลดรายการในตะกร้า...</div>
-                        ) : cartItems.length === 0 ? (
-                            <EmptyCart /> 
+                        ) : !Array.isArray(cartItems) || cartItems.length === 0 ? ( // ถ้าไม่ใช่ Array หรือ Array ว่าง
+                            <EmptyCart /> // แสดงคอมโพเนนต์ตะกร้าว่าง
                         ) : (
+                            // ถ้ามีของในตะกร้า
                             <div className="space-y-6">
-                                {/* [FIX] ตรวจสอบ cartItems ก่อน map อีกชั้น */}
-                                {Array.isArray(cartItems) && cartItems.map(item => (
-                                    <div key={item.menuId} className="flex items-center flex-wrap gap-4 border-b border-gray-100 pb-4">
-                                       {/* [FIX] Vercel Warning: <img> -> <Image> */}
-                                       <Image
-                                            // [FIX] ใช้ ?? เพื่อให้มี fallback ที่แน่นอน และ URL ที่ถูกต้อง
-                                            src={item.menuImageUrl || `https://placehold.co/96x96/E2D6C8/4A3F35?text=${encodeURIComponent(item.menuName ?? 'Menu')}`} 
-                                            alt={item.menuName ?? 'Menu item'} 
-                                            width={96}
-                                            height={96}
-                                            className="object-cover rounded-lg shadow-sm" 
-                                            // [FIX] เพิ่ม onError fallback เผื่อรูปโหลดไม่ได้
-                                            onError={(e) => { e.target.src = `https://placehold.co/96x96/CCCCCC/FFFFFF?text=Error`; }}
-                                        />
-                                        <div className="flex-grow min-w-[150px]">
-                                            <h3 className="font-semibold text-gray-800">{item.menuName ?? 'Unknown Item'}</h3>
-                                            <p className="text-green-800 font-bold mt-1">฿{(item.menuPrice ?? 0).toFixed(2)}</p>
-                                        </div>
-                                        <div className="flex items-center gap-3">
-                                            <button 
-                                                onClick={() => handleQuantityChange(item.menuId, -1)} 
-                                                className="w-8 h-8 rounded-full border hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                                                // [FIX] Disable ปุ่มลบถ้าจำนวน = 1 (หรือน้อยกว่า)
-                                                disabled={item.quantity <= 1} 
-                                            >
-                                                -
+                                {cartItems.map(item => {
+                                    // [เพิ่ม] Log ข้อมูล item ก่อน render
+                                    console.log("BasketPage: Rendering item:", item); 
+                                    // ตรวจสอบข้อมูล item ก่อนแสดงผล
+                                    if (!item || !item.menuId) {
+                                         console.warn("BasketPage: Skipping invalid item in map:", item);
+                                         return null; // ข้าม item ที่ข้อมูลไม่ถูกต้อง
+                                    }
+                                    return (
+                                        <div key={item.menuId} className="flex items-center flex-wrap gap-4 border-b border-gray-100 pb-4">
+                                           
+                                            {/* ชื่อและราคาต่อหน่วย */}
+                                            <div className="flex-grow min-w-[150px]">
+                                                <h3 className="font-semibold text-gray-800">{item.menuName ?? 'Unknown Item'}</h3>
+                                                <p className="text-green-800 font-bold mt-1">฿{(item.menuPrice ?? 0).toFixed(2)}</p>
+                                            </div>
+                                            {/* ปุ่มปรับจำนวน */}
+                                            <div className="flex items-center gap-3 flex-shrink-0"> {/* เพิ่ม flex-shrink-0 */}
+                                                <button 
+                                                    onClick={() => handleQuantityChange(item.menuId, -1)} 
+                                                    className="w-8 h-8 rounded-full border hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    // ปิดใช้งานปุ่มลบถ้าจำนวน = 1
+                                                    // disabled={(item.quantity ?? 0) <= 1} // เอาออกก่อน ให้ลบได้เสมอ
+                                                >
+                                                    -
+                                                </button>
+                                                <span className="w-8 text-center font-medium">{item.quantity ?? 0}</span>
+                                                <button onClick={() => handleQuantityChange(item.menuId, 1)} className="w-8 h-8 rounded-full border hover:bg-gray-100 transition">+</button>
+                                            </div>
+                                            {/* ราคา รวม */}
+                                            <div className="text-right w-24 flex-shrink-0"> {/* เพิ่ม flex-shrink-0 */}
+                                                <p className="font-semibold text-lg text-gray-800">฿{((item.menuPrice ?? 0) * (item.quantity ?? 0)).toFixed(2)}</p>
+                                            </div>
+                                            {/* ปุ่มลบ Item */}
+                                            <button onClick={() => removeItem(item.menuId)} className="text-gray-400 hover:text-red-500 transition ml-auto sm:ml-4 flex-shrink-0"> {/* เพิ่ม flex-shrink-0 */}
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                                             </button>
-                                            <span className="w-8 text-center font-medium">{item.quantity}</span>
-                                            <button onClick={() => handleQuantityChange(item.menuId, 1)} className="w-8 h-8 rounded-full border hover:bg-gray-100 transition">+</button>
                                         </div>
-                                        <div className="text-right w-24">
-                                            <p className="font-semibold text-lg text-gray-800">฿{((item.menuPrice ?? 0) * (item.quantity ?? 0)).toFixed(2)}</p>
-                                        </div>
-                                        <button onClick={() => removeItem(item.menuId)} className="text-gray-400 hover:text-red-500 transition ml-auto sm:ml-0"> {/* จัดตำแหน่งปุ่มลบ */}
-                                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                                        </button>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         )}
                     </div>
+                    {/* ส่วนสรุปรายการ */}
                     <div className="lg:col-span-1">
-                        <div className="bg-white rounded-xl shadow-md p-6 sticky top-24 border">
+                        <div className="bg-white rounded-xl shadow-md p-6 sticky top-24 border"> {/* ทำให้ติดขอบบน */}
                             <h2 className="text-xl font-semibold text-gray-700 border-b pb-4 mb-6">สรุปรายการ</h2>
                             <div className="space-y-4">
                                 <div className="flex justify-between"><span>ราคารวม</span><span>฿{summary.subtotal.toFixed(2)}</span></div>
@@ -182,12 +218,20 @@ export default function BasketPage() {
                                     <div className="flex justify-between font-bold text-lg text-[#4A3728]"><span>ยอดรวมสุทธิ</span><span>฿{summary.total.toFixed(2)}</span></div>
                                 </div>
                             </div>
+                            {/* ปุ่ม Actions */}
                              <div className="mt-8 space-y-3">
-                                {/* [FIX] Vercel Error: <a> -> <Link> */}
-                                <Link href="/checkout" className={`block w-full text-center py-3 rounded-lg font-bold text-lg text-white transition-colors ${cartItems.length === 0 || isInitialMount.current ? 'bg-gray-400 cursor-not-allowed pointer-events-none' : 'bg-green-800 hover:bg-green-900'}`} aria-disabled={cartItems.length === 0 || isInitialMount.current}>
+                                {/* ปุ่มชำระเงิน (จะกดได้เมื่อมีของและโหลดเสร็จแล้ว) */}
+                                <Link 
+                                    href="/checkout" 
+                                    // ใช้ pointer-events-none และ aria-disabled เพื่อความเข้าถึงที่ดีขึ้น
+                                    className={`block w-full text-center py-3 rounded-lg font-bold text-lg text-white transition-colors ${!Array.isArray(cartItems) || cartItems.length === 0 || isInitialMount.current ? 'bg-gray-400 cursor-not-allowed pointer-events-none' : 'bg-green-800 hover:bg-green-900'}`} 
+                                    aria-disabled={!Array.isArray(cartItems) || cartItems.length === 0 || isInitialMount.current}
+                                    // ป้องกันการคลิกถ้า disable
+                                    onClick={(e) => { if (!Array.isArray(cartItems) || cartItems.length === 0 || isInitialMount.current) e.preventDefault(); }} 
+                                >
                                     ดำเนินการชำระเงิน
                                 </Link>
-                                {/* [FIX] Vercel Error: <a> -> <Link> */}
+                                {/* ปุ่มเลือกซื้อต่อ */}
                                 <Link href="/chat" className="block w-full text-center py-3 rounded-lg font-bold text-lg text-[#4A3728] bg-gray-100 hover:bg-gray-200 transition-colors">
                                     เลือกซื้อต่อ
                                 </Link>
@@ -199,4 +243,3 @@ export default function BasketPage() {
         </div>
     );
 }
-
