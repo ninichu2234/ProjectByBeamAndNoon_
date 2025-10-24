@@ -88,13 +88,13 @@ export default function ChatPage() {
 
         fetchAllMenus();
 
-        // [FIX] ตั้งค่าธงหลังโหลดเสร็จใน Effect แรก
-        const timer = setTimeout(() => {
-            isInitialMount.current = false;
-            console.log("ChatPage: Initial mount flag set to false.");
-        }, 150);
-
-        return () => clearTimeout(timer);
+        // ‼️ [FIX] 1. ตั้งค่าธง isInitialMount ที่นี่ ‼️
+        // ไม่จำเป็นต้องใช้ setTimeout เพราะการโหลด cart (sync) เสร็จแล้ว
+        // การ save cart (useEffect) จะเช็คธงนี้ในการรันครั้งแรก และข้ามไป
+        isInitialMount.current = false;
+        console.log("ChatPage: Initial mount flag set to false.");
+        
+        // (เราลบ return () => clearTimeout(timer); ออกไป)
 
     }, []); // [] ทำให้ทำงานครั้งเดียว
 
@@ -164,7 +164,7 @@ export default function ChatPage() {
         };
     }, [answer, isLoading]);
 
-    // ... (handleListen - Speech-to-Text - เหมือนเดิม) ...
+    // ... (handleListen - Speech-to-Text - แก้ไข) ...
     const handleListen = () => {
         if (typeof window === 'undefined') return;
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -184,7 +184,13 @@ export default function ChatPage() {
 
         recognition.onresult = (event) => {
             const speechToText = event.results[0][0].transcript;
-            setQuestion(speechToText);
+            setQuestion(speechToText); // อัปเดต state เพื่อให้ผู้ใช้เห็น
+            
+            // ‼️ [FIX] 2. เรียก handleSubmit จากที่นี่ ‼️
+            // เรียก handleSubmit พร้อมส่ง text ที่ได้ยินไปเลย
+            // ไม่ต้องรอ state 'question' อัปเดตใน onend
+            console.log("ChatPage: Speech recognized:", speechToText);
+            handleSubmit(speechToText); // ส่ง text ที่เพิ่งได้ยินไปเลย
         };
 
         recognition.onerror = (event) => {
@@ -202,11 +208,12 @@ export default function ChatPage() {
 
         recognition.onend = () => {
             setIsListening(false);
-            if (!question && document.getElementById('question')) {
-                document.getElementById('question').focus();
-            } else if (question && question !== "กำลังฟัง... พูดได้เลยค่ะ 🎤") {
-                handleSubmit();
+            // เราย้าย handleSubmit ไปไว้ที่ onresult แล้ว
+            // onend แค่คืน focus กลับไปถ้าผู้ใช้ไม่ได้พูดอะไร
+            if (question === "กำลังฟัง... พูดได้เลยค่ะ 🎤") {
+                setQuestion(''); // ล้าง "กำลังฟัง..." ออก
             }
+            console.log("ChatPage: Speech recognition ended.");
         };
 
         recognition.start();
@@ -281,6 +288,7 @@ export default function ChatPage() {
 
     // ‼️ 3. อัปเกรด handleSubmit ให้ค้นหา URL รูปภาพ ‼️
     const handleSubmit = async (textFromSpeech = null) => {
+        // ใช้ textFromSpeech ถ้ามี, หรือใช้ state 'question' ถ้าไม่มี
         const currentQuestion = textFromSpeech || question;
 
         if (!currentQuestion.trim() || currentQuestion === "กำลังฟัง... พูดได้เลยค่ะ 🎤") {
@@ -411,6 +419,8 @@ export default function ChatPage() {
         } finally {
             setIsLoading(false);
             if (textFromSpeech) {
+                // ‼️ [FIX] 2.1 ล้างกล่องข้อความ ‼️
+                // ถ้าเป็น text จากเสียงพูด ให้ล้างกล่องข้อความหลังส่ง
                 setQuestion('');
             }
         }
@@ -464,7 +474,7 @@ export default function ChatPage() {
                     <div className="mt-4 flex items-center gap-3">
                         <button
                             onClick={() => handleSubmit()}
-                            disabled={isLoading || !question.trim() || isListening}
+                            disabled={isLoading || !question.trim() || isListening || question === "กำลังฟัง... พูดได้เลยค่ะ 🎤"}
                             className="w-full bg-green-800 hover:bg-green-900 text-white font-bold py-3 px-8 rounded-full transition-all duration-300 shadow-md transform hover:scale-105 disabled:bg-gray-400 disabled:shadow-none disabled:transform-none disabled:cursor-not-allowed"
                         >
                             {isLoading ? 'Brewing your answer...' : '✨ Ask Barista'}
@@ -508,8 +518,10 @@ export default function ChatPage() {
                                 {recommendedMenus.map((menu, index) => (
                                     // ‼️ 5. แสดงผลรูปภาพ ‼️
                                     <div key={menu.menuId || index} className="bg-white/10 p-4 rounded-lg border border-white/20 flex items-center justify-between transition hover:shadow-md hover:border-green-500">
-                                        {/* ‼️ สร้าง Container สี่เหลี่ยมจัตุรัสสำหรับรูปภาพ ‼️ */}
-                                        <div className="w-20 h-20 rounded-full overflow-hidden mr-4 flex-shrink-0">
+                                        
+                                        {/* ‼️ [FIX] 3. เปลี่ยนจาก rounded-full เป็น rounded-lg ‼️ */}
+                                        {/* (เพื่อให้เข้ากับกรอบสี่เหลี่ยม หรือเปลี่ยนกลับได้ถ้าชอบวงกลม) */}
+                                        <div className="w-20 h-20 rounded-lg overflow-hidden mr-4 flex-shrink-0 bg-gray-700">
                                             <Image
                                                 src={menu.publicImageUrl || 'https://placehold.co/100x100/FFF/333?text=No+Image'}
                                                 alt={menu.menuName || 'Menu Image'}
@@ -517,7 +529,10 @@ export default function ChatPage() {
                                                 height={80}
                                                 // ‼️ ใช้ object-cover เพื่อให้รูปเต็มกรอบ ‼️
                                                 className="w-full h-full object-cover"
-                                                unoptimized={true} // ยังคงไว้เผื่อกรณี SVG
+                                                
+                                                // ‼️ [FIX] 4. (แนะนำ) ลบ unoptimized={true} ‼️
+                                                // (ดูคำอธิบายด้านล่างสุด)
+                                                // unoptimized={true} 
                                             />
                                         </div>
 
@@ -577,4 +592,3 @@ export default function ChatPage() {
         </div>
     );
 }
-
