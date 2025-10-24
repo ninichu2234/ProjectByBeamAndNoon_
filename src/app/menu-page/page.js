@@ -1,211 +1,209 @@
-// 1. ✨ ต้องมี "use client" และ Import Hooks ✨
 "use client";
+ 
+import { supabase } from '../lib/supabaseClient';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useState, useEffect } from 'react'; // ‼️ ต้องมี useEffect ‼️
-
-// 4. ✨ Component "How It Works" (ฉบับสลับรูปอัตโนมัติ) ✨
-const HowItWorksSection = () => {
-  const [activeStep, setActiveStep] = useState(1);
-
-  const steps = [
-    {
-      id: 1,
-      title: '1. คุยกับ AI หรือเลือกเมนู',
-      description: 'บอก AI ว่าคุณอยากดื่มอะไร เช่น "ขอกาแฟนมที่ไม่หวาน" หรือเลือกดูเมนูทั้งหมดด้วยตัวเอง',
-      // ‼️ (สำคัญ) คุณต้องเอารูปจริง (800x600) ไปอัปโหลดที่ Supabase แล้วเอา URL มาใส่ตรงนี้
-      imageUrl: 'https://placehold.co/800x600/333/FFF?text=Step+1:+Chat+Mockup'
-    },
-    {
-      id: 2,
-      title: '2. ตรวจสอบและปรับแต่ง',
-      description: 'AI จะเสนอเมนูที่ใช่ให้คุณ คุณสามารถเพิ่ม/ลด ความหวาน, เปลี่ยนเมล็ดกาแฟ, หรือเพิ่มท็อปปิ้งได้ในตะกร้า',
-      // ‼️ (สำคัญ) คุณต้องเอารูปจริง (800x600) ไปอัปโหลดที่ Supabase แล้วเอา URL มาใส่ตรงนี้
-      imageUrl: 'https://placehold.co/800x600/555/FFF?text=Step+2:+Cart+Mockup'
-    },
-    {
-      id: 3,
-      title: '3. ชำระเงิน & รอรับที่โต๊ะ',
-      description: 'ชำระเงินออนไลน์ง่ายๆ แล้วนั่งรอสบายๆ ที่โต๊ะของคุณ บาริสต้าจะนำออเดอร์ไปเสิร์ฟให้ทันที',
-      // ‼️ (สำคัญ) คุณต้องเอารูปจริง (800x600) ไปอัปโหลดที่ Supabase แล้วเอา URL มาใส่ตรงนี้
-      imageUrl: 'https://placehold.co/800x600/777/FFF?text=Step+3:+Success+Mockup'
+import { useState, useEffect } from 'react';
+ 
+// --- ดึงข้อมูลจาก Supabase ---
+async function getMenuItems() {
+  const { data: menuItems, error } = await supabase
+    .from('menuItems')
+    .select('*')
+    .order('menuId', { ascending: true });
+ 
+  if (error) {
+    console.error('Error fetching menu items:', error.message);
+    return [];
+  }
+ 
+  // ฟังก์ชันแยกโฟลเดอร์เก็บรูป
+  const getFolderName = (category) => {
+    switch (category) {
+      case 'Coffee':
+      case 'Tea':
+      case 'Milk':
+      case 'Refreshers':
+        return 'Drink';
+      case 'Bakery':
+      case 'Cake':
+      case 'Dessert':
+        return 'Bakery';
+      case 'Other':
+        return 'Other';
+      default:
+        return category;
     }
-  ];
-
-  // ‼️ นี่คือส่วนที่เพิ่มเข้ามา: Logic การสลับรูปอัตโนมัติ ‼️
+  };
+ 
+  // แปลงข้อมูลจากฐานข้อมูลให้มี public URL ของรูป
+  const itemsWithImages = menuItems.map(item => {
+    if (item.menuImage && item.menuCategory) {
+      const folderName = getFolderName(item.menuCategory);
+      const imagePath = `${folderName}/${item.menuImage}`;
+ 
+      // ดึง public URL จาก Supabase storage
+      const { data } = supabase
+        .storage
+        .from('menu-images')
+        .getPublicUrl(imagePath);
+ 
+      const publicImageUrl = data?.publicUrl || '';
+ 
+      return { ...item, publicImageUrl };
+    }
+ 
+    return { ...item, publicImageUrl: '' };
+  });
+ 
+  return itemsWithImages;
+}
+ 
+// --- ดึงหมวดหมู่ทั้งหมด ---
+async function getCategories() {
+  const desiredOrder = ['Coffee', 'Tea', 'Milk', 'Refreshers', 'Bakery', 'Cake', 'Dessert', 'Other'];
+  const { data, error } = await supabase.from('menuItems').select('menuCategory');
+ 
+  if (error) {
+    console.error('Error fetching categories:', error.message);
+    return [];
+  }
+ 
+  const uniqueCategories = [...new Set(data.map(item => item.menuCategory))];
+  uniqueCategories.sort((a, b) => {
+    const indexA = desiredOrder.indexOf(a) === -1 ? Infinity : desiredOrder.indexOf(a);
+    const indexB = desiredOrder.indexOf(b) === -1 ? Infinity : desiredOrder.indexOf(b);
+    return indexA - indexB;
+  });
+ 
+  return uniqueCategories;
+}
+ 
+// --- Component หลัก ---
+export default function MenuPage() {
+  const [menuItems, setMenuItems] = useState([]);
+  const [categories, setCategories] = useState([]);
+ 
   useEffect(() => {
-    // ตั้งเวลาให้เปลี่ยน step ทุก 4 วินาที (4000 ms)
-    const timer = setInterval(() => {
-      setActiveStep((prevStep) => {
-        // (prevStep % 3) + 1 จะวนลูป 1 -> 2 -> 3 -> 1
-        return (prevStep % 3) + 1;
-      });
-    }, 4000); // 4 วินาที
-
-    // Cleanup function: หยุด timer เมื่อ component หายไป (ป้องกัน memory leak)
-    return () => {
-      clearInterval(timer);
-    };
-  }, []); // [] หมายถึงให้ทำงานแค่ครั้งเดียวตอนโหลด
-
-
+    async function fetchData() {
+      const items = await getMenuItems();
+      const cats = await getCategories();
+      setMenuItems(items);
+      setCategories(cats);
+    }
+    fetchData();
+  }, []);
+ 
+  // --- เพิ่มสินค้าในตะกร้า ---
+  const handleAddToCart = (itemToAdd) => {
+    try {
+      const savedCartJSON = localStorage.getItem('myCafeCart');
+      const currentCart = savedCartJSON ? JSON.parse(savedCartJSON) : [];
+ 
+      const existingItemIndex = currentCart.findIndex(item => item.menuId === itemToAdd.menuId);
+ 
+      if (existingItemIndex > -1) {
+        currentCart[existingItemIndex].quantity += 1;
+      } else {
+        currentCart.push({ ...itemToAdd, quantity: 1 });
+      }
+ 
+      localStorage.setItem('myCafeCart', JSON.stringify(currentCart));
+      alert(`${itemToAdd.menuName} ถูกเพิ่มลงในตะกร้าแล้ว!`);
+    } catch (error) {
+      console.error("Failed to update cart in localStorage", error);
+      alert("เกิดข้อผิดพลาดในการเพิ่มสินค้าลงตะกร้า");
+    }
+  };
+ 
   return (
-    <section className="bg-white py-20 md:py-24">
-      <div className="container mx-auto px-6">
-        {/* --- หัวข้อของ Section --- */}
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-800">ใช้งานง่ายๆ ใน 3 ขั้นตอน</h2>
-          <p className="mt-3 text-gray-600 text-lg">
-            สั่งเครื่องดื่มแก้วโปรดของคุณได้ง่ายกว่าที่เคย
-          </p>
-        </div>
-
-        {/* --- Layout 2 คอลัมน์ (Text ซ้าย, Image ขวา) --- */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-          
-          {/* คอลัมน์ซ้าย: Text Steps (ตอนนี้จะ highlight อัตโนมัติ) */}
-          <div className="space-y-6">
-            {steps.map((step) => (
-              <div
-                key={step.id}
-                // (ลบ onClick และ cursor-pointer ออกแล้ว)
-                className={`p-6 rounded-lg border-2 transition-all duration-300 ${
-                  activeStep === step.id
-                    ? 'bg-amber-50 border-amber-500 shadow-lg' // สไตล์ตอน Active
-                    : 'bg-gray-50 border-gray-200' // สไตล์ปกติ
-                }`}
-              >
-                <h3 className="text-2xl font-bold text-gray-800">{step.title}</h3>
-                <p className="mt-2 text-gray-600">{step.description}</p>
+    <div className="bg-white min-h-screen">
+      <div className="container mx-auto px-4 sm:px-6 py-8">
+        <div className="flex flex-col md:flex-row gap-8">
+          {/* Sidebar */}
+          <aside className="md:w-1/4 lg:w-1/5">
+            <div className="sticky top-24">
+              <h2 className="text-xl font-bold text-gray-800 mb-4">หมวดหมู่</h2>
+              <nav className="flex flex-col space-y-3">
+                {categories.map(category => (
+                  <Link
+                    key={category}
+                    href={`#${category.replace(/\s+/g, '-')}`}
+                    className="text-gray-600 hover:text-amber-600 font-medium transition-colors text-lg"
+                  >
+                    {category}
+                  </Link>
+                ))}
+              </nav>
+            </div>
+          </aside>
+ 
+          {/* Main Content */}
+          <main className="flex-1">
+            {/* โปรโมชั่น */}
+            <section className="mb-12">
+              <h2 className="text-2xl font-bold text-gray-800 mb-4">โปรโมชั่นพิเศษ</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-amber-100 rounded-lg p-6 flex items-center shadow-sm">
+                  <div className="flex-1">
+                    <h3 className="font-bold text-lg text-amber-800">จับคู่สุดคุ้ม</h3>
+                    <p className="text-amber-700">เครื่องดื่ม + เบเกอรี่ ลด 15%</p>
+                  </div>
+                </div>
+                <div className="bg-green-100 rounded-lg p-6 flex items-center shadow-sm">
+                  <div className="flex-1">
+                    <h3 className="font-bold text-lg text-green-800">เมนูใหม่ต้องลอง!</h3>
+                    <p className="text-green-700">Yuzu Cold Brew สดชื่นรับวันใหม่</p>
+                  </div>
+                </div>
               </div>
-            ))}
-          </div>
-
-          {/* คอลัมน์ขวา: Image (สลับตาม Active) */}
-          <div className="relative w-full h-80 md:h-96"> {/* Container สำหรับรูป */}
-            {steps.map((step) => (
-              <Image
-                key={step.id}
-                src={step.imageUrl}
-                alt={step.title}
-                fill={true}
-                className={`absolute inset-0 w-full h-full object-cover rounded-lg shadow-md transition-all duration-500 ease-in-out ${
-                  activeStep === step.id
-                    ? 'opacity-100 scale-100' // โชว์
-                    : 'opacity-0 scale-95 pointer-events-none' // ซ่อน
-                }`}
-              />
-            ))}
-          </div>
+            </section>
+ 
+            {/* แสดงเมนูตามหมวดหมู่ */}
+            <div className="space-y-12">
+              {categories.map(category => (
+                <section key={category} id={category.replace(/\s+/g, '-')} className="scroll-mt-24">
+                  <h2 className="text-3xl font-bold text-gray-800 mb-6 pb-2 border-b-2 border-gray-200">
+                    {category}
+                  </h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {menuItems
+                      .filter(item => item.menuCategory === category)
+                      .map(item => (
+                        <div key={item.menuId} className="flex items-center space-x-4 group">
+                          <Image
+                            src={item.publicImageUrl || 'https://placehold.co/100x100/FFF/333?text=No+Image'}
+                            alt={item.menuName}
+                            width={100}
+                            height={100}
+                            className="w-24 h-24 rounded-full object-cover shadow-md transform group-hover:scale-110 transition-transform duration-300"
+                          />
+                          <div className="flex-1">
+                            <h3 className="text-lg font-bold text-gray-800">{item.menuName}</h3>
+                            <p className="text-sm text-gray-500">{item.menuDescription}</p>
+                            <p className="text-md font-bold text-amber-600 mt-1">{item.menuPrice} ฿</p>
+                          </div>
+                          <div className="flex-shrink-0">
+                            <button
+                              onClick={() => handleAddToCart(item)}
+                              className="bg-amber-500 text-white rounded-full w-10 h-10 flex items-center justify-center hover:bg-amber-600 transition-colors shadow"
+                              aria-label={`Add ${item.menuName} to cart`}
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                </section>
+              ))}
+            </div>
+          </main>
         </div>
       </div>
-    </section>
-  );
-};
-
-
-export default function Home() {
-  return (
-    <main>
-      {/* ======================================= */}
-      {/* Section 1: Hero Section (ส่วนต้อนรับ)    */}
-      {/* ======================================= */}
-      <section className="relative flex items-center justify-center h-screen bg-gray-800">
-        {/* --- ส่วน Background --- */}
-        
-        {/* 2. ✨ แก้ไข Section 1 Image ✨ */}
-        {/* (อย่าลืมใส่รูปของคุณใน public/images/cafe-hero-bg.jpg) */}
-       <Image
-          src="/images/cafe-hero-bg.jpg"
-          alt="Cafe ambience"
-          fill={true} 
-          priority={true} 
-          className="absolute z-0 w-full h-full object-cover"
-      />
-        <div className="absolute inset-0 bg-black/60 z-10"></div> {/* Overlay สีดำโปร่งแสง */}
-
-        {/* --- ส่วนเนื้อหา --- */}
-        <div className="relative z-20 text-center text-white p-4">
-          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight">
-            สั่งกาแฟ... <span className="text-amber-400">ในแบบของคุณ</span>
-          </h1>
-          <p className="mt-4 max-w-2xl mx-auto text-lg md:text-xl text-gray-200">
-            ให้ AI ช่วยแนะนำเมนูที่ใช่สำหรับคุณ หรือเลือกดูเมนูทั้งหมดด้วยตัวคุณเอง
-          </p>
-
-          {/* --- ปุ่ม CTA คู่ --- */}
-          <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/chat">
-              <button className="w-full sm:w-auto bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 px-8 rounded-full transition-all duration-300 shadow-lg transform hover:scale-105">
-                ✨ คุยกับ AI แนะนำเมนู
-              </button>
-            </Link>
-            <Link href="/menu-page">
-              <button className="w-full sm:w-auto bg-transparent hover:bg-white/20 text-white font-semibold py-3 px-8 border-2 border-white rounded-full transition-all duration-300">
-                ดูเมนูทั้งหมด
-              </button>
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* ================================================= */}
-      {/* Section 2: Reassurance Section (ส่วนอธิบาย)      */}
-      {/* ================================================= */}
-      <section className="bg-gray-50 py-20 md:py-24">
-        <div className="container mx-auto px-6">
-          {/* --- หัวข้อของ Section --- */}
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-800">ไม่ต้องกังวล เราช่วยได้</h2>
-            <p className="mt-3 text-gray-600 text-lg">
-              ไม่ว่าคุณจะอยากลองอะไรใหม่ๆ หรือแค่อยากได้กาแฟที่ถูกใจ
-            </p>
-          </div>
-          
-          {/* --- Layout 2 คอลัมน์ --- */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-            
-            {/* คอลัมน์ซ้าย: ปัญหา */}
-            <div className="text-center md:text-left">
-              {/* 3. ✨ แก้ไข Section 2 (ซ้าย) Image ✨ */}
-              {/* ‼️ (สำคัญ) คุณต้องเอารูปจริง (600x400) จาก Supabase มาใส่แทน placehold */}
-              <Image 
-                src="https://placehold.co/600x400/EEE/777?text=รูปคนเลือกเมนูไม่ถูก" 
-                alt="เลือกเมนูไม่ถูก"
-                width={600}
-                height={400}
-                className="w-full h-auto object-cover rounded-lg shadow-md mb-6"
-              />
-              <h3 className="text-2xl font-bold text-gray-800">เลือกไม่ถูกใช่ไหม?</h3>
-              <p className="mt-2 text-gray-600">
-                เมนูเยอะไปหมด? อยากลองอะไรใหม่ๆ แต่ไม่รู้จะเริ่มยังไง? ปัญหานี้จะหมดไป
-              </p>
-            </div>
-
-            {/* คอลัมน์ขวา: ทางออก */}
-            <div className="text-center md:text-left">
-               {/* 3. ✨ แก้ไข Section 2 (ขวา) Image ✨ */}
-               {/* ‼️ (สำคัญ) คุณต้องเอารูปจริง (600x400) จาก Supabase มาใส่แทน placehold */}
-               <Image 
-                src="https://placehold.co/600x400/EEE/777?text=รูปตัวอย่างแชทกับ+AI" 
-                alt="ตัวอย่างแชทกับ AI"
-                width={600}
-                height={400}
-                className="w-full h-auto object-cover rounded-lg shadow-md mb-6"
-              />
-              <h3 className="text-2xl font-bold text-amber-600">ให้เราช่วยแนะนำ!</h3>
-              <p className="mt-2 text-gray-600">
-                แค่บอกความรู้สึกของคุณ AI ของเราพร้อมช่วยเลือกเครื่องดื่มที่ใช่ที่สุดสำหรับคุณ
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 5. ✨ เรียกใช้ Section ใหม่ที่นี่ ✨ */}
-      <HowItWorksSection />
-
-    </main>
+    </div>
   );
 }
-
+ 
