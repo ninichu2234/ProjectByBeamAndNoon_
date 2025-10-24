@@ -1,11 +1,9 @@
-// src/app/member/page.js
-// ‼️ ฉบับแก้ไข "กันเหนียว" (Robust) ‼️
-
 "use client";
 
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient'; 
 import Link from 'next/link';
+import NextImage from 'next/image';
 // --- (ส่วน MemberDashboard และ GuestLandingPage เหมือนเดิม) ---
 const MemberDashboard = ({ user, profile, onLogout }) => {
     // ... (โค้ดเหมือนเดิม) ...
@@ -14,25 +12,25 @@ const MemberDashboard = ({ user, profile, onLogout }) => {
         <div className="container mx-auto max-w-4xl p-4 md:p-8">
             <header className="mb-8 flex justify-between items-center">
                 <h1 className="text-3xl md:text-4xl font-extrabold text-gray-800">
-                    สวัสดี, <span className="text-amber-600">{profile?.fullName || user.email}!</span>
+                    Hello, <span className="text-amber-600">{profile?.fullName || user.email}!</span>
                 </h1>
                 <button onClick={onLogout} className="text-sm text-red-600 hover:text-red-800 font-semibold py-2 px-4 rounded-lg bg-red-100 hover:bg-red-200">
-                    ออกจากระบบ
+                    Log Out
                 </button>
             </header>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <aside className="md:col-span-1 space-y-6">
                     <div className="bg-white p-6 rounded-lg shadow-md text-center">
-                        <h2 className="text-xl font-bold text-gray-800 mb-4">คะแนนสะสม</h2>
+                        <h2 className="text-xl font-bold text-gray-800 mb-4">Loyalty Points</h2>
                         <p className="text-5xl font-bold text-amber-500">
                             ⭐ {profile?.loyaltyPoints || 0}
                         </p>
-                        <p className="text-gray-500 mt-1">คะแนน</p>
+                        <p className="text-gray-500 mt-1">Point</p>
                     </div>
                 </aside>
                 <main className="md:col-span-2">
                     <div className="bg-white p-6 rounded-lg shadow-md">
-                        <h2 className="text-2xl font-bold text-gray-800 mb-5">ประวัติการสั่งซื้อ</h2>
+                        <h2 className="text-2xl font-bold text-gray-800 mb-5">Order History</h2>
                         <div className="space-y-4">
                             {mockOrderHistory.map((order) => (
                                 <div key={order.id} className="border border-gray-200 rounded-lg p-4">
@@ -53,27 +51,25 @@ const GuestLandingPage = ({ onLogin }) => {
     return (
         <div className="container mx-auto max-w-3xl p-4 md:p-8 text-center">
             <h1 className="text-3xl md:text-5xl font-extrabold text-gray-800 mb-4">
-                สมัครสมาชิก MyCafe ฟรี!
+                Join MyCafe for Free!
             </h1>
             <p className="text-lg text-gray-600 mb-8">
-                สะสมคะแนนจากทุกยอดการสั่งซื้อ เพื่อแลกรับเครื่องดื่มและสิทธิพิเศษมากมาย
+                Collect points from every order to redeem drinks and special privileges.
             </p>
-            <div className="bg-white p-6 rounded-xl shadow-md border border-amber-200 mb-8">
-                <div className="mb-4">
-                    <span className="inline-block bg-amber-500 text-white text-2xl font-bold px-6 py-2 rounded-full shadow">
-                        ทุก 25 บาท = 1 คะแนน
-                    </span>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-left">
-                    <div className="p-4 bg-gray-50 rounded-lg"><h3 className="font-bold text-amber-600">40 คะแนน</h3><p className="text-sm text-gray-700">แลกเครื่องดื่ม ร้อน/เย็น (เล็ก)</p></div>
-                    <div className="p-4 bg-gray-50 rounded-lg"><h3 className="font-bold text-amber-600">50 คะแนน</h3><p className="text-sm text-gray-700">แลกเครื่องดื่มปั่น (เล็ก)</p></div>
-                    <div className="p-4 bg-gray-50 rounded-lg"><h3 className="font-bold text-amber-600">60 คะแนน</h3><p className="text-sm text-gray-700">แลกเครื่องดื่มปั่น (ใหญ่)</p></div>
-                </div>
+            <div className="mb-8 max-w-md mx-auto"> {/* จัดให้อยู่ตรงกลางและไม่กว้างเกินไป */}
+                <NextImage
+                    src="https://rcrntadwwvhyojmjrmzh.supabase.co/storage/v1/object/public/pic-other/Promotion-member.png" // ‼️ URL ของคุณ ‼️
+                    alt="MyCafe Rewards Program"
+                    width={900}  // ‼️ (สำคัญ) แก้ไขตัวเลขนี้ให้ตรงกับ "ความกว้าง" จริงของรูป
+                    height={1200} // ‼️ (สำคัญ) แก้ไขตัวเลขนี้ให้ตรงกับ "ความสูง" จริงของรูป
+                    className="w-full h-auto rounded-xl shadow-lg" // Style ให้อัตโนมัติ
+                    priority // (แนะนำ) บอก Next.js ให้โหลดรูปนี้ก่อน
+                />
             </div>
             <button onClick={onLogin} className="w-full max-w-sm bg-blue-600 hover:bg-blue-700 text-white text-lg font-bold py-4 px-6 rounded-lg shadow-lg transition-transform transform hover:scale-105">
-                สมัคร / เข้าสู่ระบบด้วย Google
+                Sign Up / Log In with Google
             </button>
-            <p className="text-gray-500 text-sm mt-4">สมัครสมาชิกง่ายๆ ใน 10 วินาที ไม่ต้องใช้รหัสผ่าน</p>
+            <p className="text-gray-500 text-sm mt-4">Sign up easily in 10 seconds. No password required.</p>
         </div>
     );
 };
@@ -175,7 +171,7 @@ export default function MemberPage() {
     if (loading) {
         return (
             <div className="flex justify-center items-center min-h-screen">
-                <p className="text-lg">กำลังตรวจสอบสถานะ...</p>
+                <p className="text-lg">Checking status...</p>
             </div>
         );
     }

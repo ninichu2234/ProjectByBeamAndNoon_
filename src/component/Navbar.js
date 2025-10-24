@@ -1,7 +1,8 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-// ไอคอนสำหรับเมนู 
+
+// --- (ส่วนของไอคอนต่างๆ เหมือนเดิม) ---
 const Bars3Icon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-7 h-7">
         <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
@@ -12,8 +13,6 @@ const XMarkIcon = () => (
         <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
     </svg>
 );
-
-// ไอคอนแก้วน้ำ (ตะกร้าสินค้า)
 const WaterGlassIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M15.2 3.2a.5.5 0 0 0-.6.4L13 10h6l-1.6-6.4a.5.5 0 0 0-.6-.4Z" />
@@ -22,13 +21,15 @@ const WaterGlassIcon = () => (
         <path d="M6 10v10c0 .6.4 1 1 1h10c.6 0 1-.4 1-1V10" />
     </svg>
 );
+// --- (จบส่วนไอคอน) ---
+
 
 export default function Header() {
     const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
-    const [isScrolled, setIsScrolled] = useState(false);
+    // [!! ลบออก !!] ไม่ต้องใช้ isScrolled แล้ว
+    // const [isScrolled, setIsScrolled] = useState(false); 
     const [cartCount, setCartCount] = useState(0);
 
-    // ฟังก์ชันสำหรับอัปเดตจำนวนสินค้าในตะกร้าจาก localStorage
     const updateCartCount = () => {
         try {
             const savedCartJSON = localStorage.getItem('myCafeCart');
@@ -41,48 +42,46 @@ export default function Header() {
         }
     };
 
-    // useEffect สำหรับจัดการ event listeners ทั้งหมด
     useEffect(() => {
+        // [!! ลบออก !!] ลบส่วนของ handleScroll ออกไป
         // --- 1. จัดการการ scroll ของ header ---
-        const handleScroll = () => {
-            setIsScrolled(window.scrollY > 10);
-        };
-        window.addEventListener('scroll', handleScroll);
-
+        
         // --- 2. จัดการการอัปเดตจำนวนสินค้าในตะกร้า ---
-        updateCartCount(); // อัปเดตครั้งแรกตอนโหลด
-        window.addEventListener('local-storage', updateCartCount); // "ฟัง" การเปลี่ยนแปลงจากหน้าอื่น
+        updateCartCount(); 
+        window.addEventListener('local-storage', updateCartCount); 
 
-        // Cleanup function: ลบ event listeners ทั้งหมดออกเมื่อ component ถูกปิด
         return () => {
-            window.removeEventListener('scroll', handleScroll);
+            // [!! ลบออก !!]
+            // window.removeEventListener('scroll', handleScroll); 
             window.removeEventListener('local-storage', updateCartCount);
         };
-    }, []); // [] ทำให้โค้ดส่วนนี้ทำงานแค่ครั้งเดียว
+    }, []); 
 
     return (
-        <header className={`${isScrolled ? 'bg-[#4A3728]' : 'bg-white'} shadow-sm sticky top-0 z-50 transition-colors duration-300`}>
+        // ลบ logic การเปลี่ยนสีออก ใส่สีน้ำตาล 'bg-[#4A3728]' ไปตรงๆ เลย
+        <header className="bg-[#4A3728] shadow-sm sticky top-0 z-50">
             <div className="container mx-auto px-6">
                 <div className="flex items-center justify-between h-16 relative">
                     {/* ส่วนที่ 1: โลโก้ (ซ้าย) */}
                     <div className="flex items-center">
                         <Link href="/" onClick={() => setMobileMenuOpen(false)} className="text-2xl font-bold">
-                            <span className={`text-xl font-bold ${isScrolled ? 'text-white' : 'text-gray-800'}`}>MyCafe</span>
+                            {/* [!! แก้ไข !!] เปลี่ยนเป็น 'text-white' ถาวร */}
+                            <span className="text-xl font-bold text-white">MyCafe</span>
                         </Link>
                     </div>
 
                     {/* ส่วนที่ 2: เมนูและปุ่ม (ขวา) - สำหรับ Desktop */}
                     <nav className="hidden md:flex items-center space-x-8">
-                        <Link href="/menu-page" className={`${isScrolled ? 'text-white' : 'text-gray-700'} hover:text-green-700 transition-colors duration-300`}>
+                        {/* [!! แก้ไข !!] เปลี่ยนเป็น 'text-white' ถาวร */}
+                        <Link href="/menu-page" className="text-white hover:text-green-700 transition-colors duration-300">
                             Menu
                         </Link>
-                        <Link href="/member" className={`${isScrolled ? 'text-white' : 'text-gray-700'} hover:text-green-700 transition-colors duration-300`}>
+                        <Link href="/member" className="text-white hover:text-green-700 transition-colors duration-300">
                             Member
                         </Link>
                         
-                        <Link href="/basket" className={`relative ${isScrolled ? 'text-white' : 'text-gray-700'} hover:text-green-700 transition-colors duration-300`}>
+                        <Link href="/basket" className="relative text-white hover:text-green-700 transition-colors duration-300">
                             <WaterGlassIcon />
-                            {/* [แก้ไข] ใช้ cartCount ที่เป็น dynamic state */}
                             {cartCount > 0 && (
                                 <span className="absolute -top-2 -right-3 flex items-center justify-center w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full">
                                     {cartCount}
@@ -99,16 +98,17 @@ export default function Header() {
 
                     
                     <div className="md:hidden flex items-center space-x-4">
-                        <Link href="/basket" className={`relative ${isScrolled ? 'text-white' : 'text-gray-700'}`}>
+                        {/* [!! แก้ไข !!] เปลี่ยนเป็น 'text-white' ถาวร */}
+                        <Link href="/basket" className="relative text-white">
                             <WaterGlassIcon />
-                             {/* [แก้ไข] ใช้ cartCount ที่เป็น dynamic state สำหรับ Mobile ด้วย */}
-                            {cartCount > 0 && (
+                             {cartCount > 0 && (
                                 <span className="absolute -top-2 -right-2 flex items-center justify-center w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full">
                                     {cartCount}
                                 </span>
                             )}
                         </Link>
-                        <button onClick={() => setMobileMenuOpen(!isMobileMenuOpen)} className={`${isScrolled ? 'text-white' : 'text-gray-700'}`}>
+                        {/* [!! แก้ไข !!] เปลี่ยนเป็น 'text-white' ถาวร */}
+                        <button onClick={() => setMobileMenuOpen(!isMobileMenuOpen)} className="text-white">
                             {isMobileMenuOpen ? <XMarkIcon /> : <Bars3Icon />}
                         </button>
                     </div>
@@ -116,6 +116,8 @@ export default function Header() {
 
                 {/* เมนูสำหรับ Mobile (เปิด/ปิด) */}
                 {isMobileMenuOpen && (
+                    // [!! แก้ไขจุดนี้ !!]
+                    // ส่วนนี้เป็นสีขาว ถูกต้องแล้ว เพราะเป็นเมนูที่เด้งลงมา
                     <div className="md:hidden absolute top-full left-0 w-full bg-white shadow-lg">
                         <div className="flex flex-col space-y-4 p-5">
                             <Link  href="/chat" onClick={() => setMobileMenuOpen(false)} className="w-full bg-green-800 text-white text-center py-3 rounded-lg font-bold hover:bg-green-700 transition-colors">

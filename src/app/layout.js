@@ -27,7 +27,7 @@ export default function RootLayout({ children }) {
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         {/* 2. วาง Component Navbar ไว้ตรงนี้ */}
-        <Navbar />
+        <Navbar/>
 
         {/* เนื้อหาของแต่ละหน้าจะมาแสดงต่อจาก Navbar */}
         {children}
