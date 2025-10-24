@@ -12,5 +12,3 @@ const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 // ใน Next.js App Router ได้
 
 export const supabase = createBrowserClient(supabaseUrl, supabaseKey)
-console.log('Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL)
-console.log('Supabase Key:', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)

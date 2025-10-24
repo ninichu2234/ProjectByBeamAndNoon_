@@ -1,8 +1,10 @@
 "use client";
+// [FIX] เพิ่ม useRef
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
-import React, { useState, useEffect, useMemo } from 'react';
+// [FIX] ไม่ต้อง import Image เพราะไม่ได้ใช้ในไฟล์นี้
 
-// ไอคอนสำหรับสถานะต่างๆ
+// ไอคอนสำหรับสถานะต่างๆ (เหมือนเดิม)
 const CheckCircleIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-16 h-16 text-green-500 mx-auto">
         <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
@@ -25,28 +27,50 @@ export default function CheckoutPage() {
     });
     const [isProcessing, setIsProcessing] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
+    // [FIX] สร้าง "ธง"
+    const isInitialMount = useRef(true);
 
-    // ดึงข้อมูลตะกร้าจาก localStorage เมื่อโหลดหน้า
+    // [1] Effect "โหลด" (ทำงานครั้งเดียว)
     useEffect(() => {
         try {
+            // [FIX] อ่านจาก localStorage ก่อนเสมอ
             const savedCartJSON = localStorage.getItem('myCafeCart');
             const savedItems = savedCartJSON ? JSON.parse(savedCartJSON) : [];
             setCartItems(savedItems);
+            console.log("CheckoutPage: Initial cart loaded:", savedItems); // Log เพิ่มเติม
         } catch (error) {
-            console.error("Failed to parse cart from localStorage", error);
+            console.error("CheckoutPage: Failed to parse cart from localStorage", error);
             setCartItems([]);
         }
-    }, []);
 
-    // คำนวณยอดรวม (เหมือนในหน้าตะกร้า)
+        // [FIX] ตั้งค่าธงหลังโหลดเสร็จ
+        const timer = setTimeout(() => {
+             isInitialMount.current = false;
+             console.log("CheckoutPage: Initial mount flag set to false."); // Log เพิ่มเติม
+        }, 0); 
+       
+       return () => clearTimeout(timer); // Cleanup timer
+
+    }, []); // [] ทำให้ทำงานครั้งเดียว
+
+    // [2] Effect "บันทึก" (หน้านี้จริงๆ ไม่ได้บันทึก แต่ใส่ไว้กันเหนียว)
+    // เราไม่จำเป็นต้องมี Effect นี้ในหน้า Checkout เพราะหน้านี้ไม่แก้ไข cartItems
+    // useEffect(() => {
+    //     if (!isInitialMount.current) {
+    //         // ... โค้ดบันทึก ... (แต่หน้านี้ไม่มี)
+    //     }
+    // }, [cartItems]); 
+
+    // คำนวณยอดรวม (เหมือนเดิม)
     const summary = useMemo(() => {
-        const subtotal = cartItems.reduce((sum, item) => sum + (item.menuPrice * item.quantity), 0);
+        const subtotal = cartItems.reduce((sum, item) => sum + ((item.menuPrice ?? 0) * (item.quantity ?? 0)), 0);
         const vat = subtotal * 0.07;
         const total = subtotal + vat;
+        console.log("CheckoutPage: Summary calculated:", { subtotal, vat, total }); // Log เพิ่มเติม
         return { subtotal, vat, total };
     }, [cartItems]);
 
-    // จัดการการเปลี่ยนแปลงในฟอร์ม
+    // จัดการการเปลี่ยนแปลงในฟอร์ม (เหมือนเดิม)
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
@@ -55,25 +79,36 @@ export default function CheckoutPage() {
     // จัดการการยืนยันคำสั่งซื้อ
     const handleSubmitOrder = (e) => {
         e.preventDefault();
-        if (cartItems.length === 0) {
-            alert("ตะกร้าของคุณว่างเปล่า");
+        // [FIX] ตรวจสอบ cartItems อีกครั้งก่อน submit
+        if (!Array.isArray(cartItems) || cartItems.length === 0) {
+            alert("ตะกร้าของคุณว่างเปล่า ไม่สามารถดำเนินการต่อได้");
             return;
         }
 
-        console.log("Submitting order with data:", formData, cartItems);
+        console.log("CheckoutPage: Submitting order with data:", formData, cartItems);
         setIsProcessing(true);
 
-        // จำลองการทำงานของ Backend (เช่น การยิง API)
+        // จำลองการทำงานของ Backend
         setTimeout(() => {
             setIsProcessing(false);
             setIsSuccess(true);
             
-            // ล้างตะกร้าสินค้า
-            localStorage.removeItem('myCafeCart');
-            // ส่งสัญญาณบอก Header ให้อัปเดตตัวเลข
-            window.dispatchEvent(new Event('local-storage'));
+            try { // [FIX] เพิ่ม try-catch ตอนลบ localStorage
+                // ล้างตะกร้าสินค้า
+                localStorage.removeItem('myCafeCart');
+                console.log("CheckoutPage: Cart removed from localStorage after success."); // Log เพิ่มเติม
+                
+                // [FIX] ส่งสัญญาณบอก Header ให้อัปเดตตัวเลข (เฉพาะเมื่อไม่ใช่ initial mount)
+                // ถึงแม้จะลบ แต่ก็ควรเช็คธงอยู่ดี
+                if (!isInitialMount.current) { 
+                    window.dispatchEvent(new Event('local-storage'));
+                    console.log("CheckoutPage: 'local-storage' event dispatched after success."); // Log เพิ่มเติม
+                }
+            } catch (error) {
+                 console.error("CheckoutPage: Failed to remove cart or dispatch event after success", error);
+            }
 
-        }, 2000); // จำลองการทำงาน 2 วินาที
+        }, 2000); 
     };
 
     // --- ส่วนแสดงผลตอนสั่งซื้อสำเร็จ ---
@@ -85,6 +120,7 @@ export default function CheckoutPage() {
                     <h1 className="text-3xl font-bold text-green-600 mt-4">สั่งซื้อสำเร็จ!</h1>
                     <p className="text-gray-600 mt-2">ขอบคุณที่ใช้บริการ AI Barista ครับ</p>
                     <p className="text-gray-600">คำสั่งซื้อของคุณกำลังถูกจัดเตรียม</p>
+                    {/* [FIX] Vercel Error: <a> -> <Link> */}
                     <Link href="/" className="mt-8 inline-block bg-[#4A3728] text-white px-8 py-3 rounded-lg font-bold hover:bg-green-800 transition-colors shadow">
                         กลับสู่หน้าหลัก
                     </Link>
@@ -94,13 +130,15 @@ export default function CheckoutPage() {
     }
 
     // --- ส่วนแสดงผลตอนตะกร้าว่าง ---
-    if (cartItems.length === 0 && !isProcessing) {
+    // [FIX] รอให้โหลดเสร็จก่อนค่อยเช็กว่าว่าง
+    if (!isInitialMount.current && (!Array.isArray(cartItems) || cartItems.length === 0) && !isProcessing) {
         return (
             <div className="bg-white min-h-screen">
                  <div className="container mx-auto px-4 py-12 max-w-2xl text-center">
                     <EmptyCartIcon />
                     <h3 className="mt-4 text-xl font-semibold text-gray-700">ไม่มีสินค้าสำหรับชำระเงิน</h3>
                     <p className="text-gray-500 mt-2">ตะกร้าของคุณว่างเปล่าในขณะนี้</p>
+                    {/* [FIX] Vercel Error: <a> -> <Link> */}
                     <Link href="/chat" className="mt-6 inline-block bg-[#4A3728] text-white px-6 py-3 rounded-lg font-bold hover:bg-green-800 transition-colors shadow">
                         กลับไปเลือกเมนู
                     </Link>
@@ -108,6 +146,16 @@ export default function CheckoutPage() {
             </div>
         );
     }
+    
+     // [FIX] เพิ่มหน้า Loading ขณะรอโหลดตะกร้าครั้งแรก
+     if (isInitialMount.current) {
+         return (
+             <div className="bg-white min-h-screen flex items-center justify-center">
+                 <p className="text-gray-500">กำลังโหลดข้อมูลตะกร้า...</p>
+             </div>
+         );
+     }
+
 
     // --- ส่วนแสดงผลหลัก (ฟอร์มชำระเงิน) ---
     return (
@@ -145,6 +193,7 @@ export default function CheckoutPage() {
                                 <input type="radio" name="paymentMethod" value="card" checked={formData.paymentMethod === 'card'} onChange={handleInputChange} className="h-4 w-4 text-green-600 focus:ring-green-500" />
                                 <span className="ml-3 font-medium text-gray-700">บัตรเครดิต / เดบิต</span>
                             </label>
+                            {/* เพิ่มช่องทางอื่นๆ ได้ตามต้องการ */}
                         </div>
                     </div>
 
@@ -152,14 +201,16 @@ export default function CheckoutPage() {
                     <div className="lg:col-span-1">
                         <div className="bg-white rounded-xl shadow-md p-6 sticky top-24 border">
                             <h2 className="text-xl font-semibold text-gray-700 border-b pb-4 mb-6">สรุปคำสั่งซื้อ</h2>
+                            {/* [FIX] ตรวจสอบ cartItems ก่อน map */}
                             <div className="space-y-3 max-h-60 overflow-y-auto mb-4 border-b pb-4">
-                                {cartItems.map(item => (
+                                {Array.isArray(cartItems) && cartItems.map(item => (
                                     <div key={item.menuId} className="flex justify-between items-center text-sm">
                                         <div className="text-gray-600">
-                                            <p>{item.menuName}</p>
-                                            <p className="text-xs text-gray-400">x {item.quantity}</p>
+                                            {/* [FIX] เพิ่ม ?? fallback */}
+                                            <p>{item.menuName ?? 'Unknown Item'}</p>
+                                            <p className="text-xs text-gray-400">x {item.quantity ?? 0}</p>
                                         </div>
-                                        <p className="font-medium text-gray-800">฿{(item.menuPrice * item.quantity).toFixed(2)}</p>
+                                        <p className="font-medium text-gray-800">฿{((item.menuPrice ?? 0) * (item.quantity ?? 0)).toFixed(2)}</p>
                                     </div>
                                 ))}
                             </div>
@@ -171,9 +222,10 @@ export default function CheckoutPage() {
                                 </div>
                             </div>
                              <div className="mt-8 space-y-3">
-                                <button type="submit" disabled={isProcessing} className="w-full text-center py-3 rounded-lg font-bold text-lg text-white bg-green-800 hover:bg-green-900 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed">
+                                <button type="submit" disabled={isProcessing || cartItems.length === 0 || isInitialMount.current} className="w-full text-center py-3 rounded-lg font-bold text-lg text-white bg-green-800 hover:bg-green-900 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed">
                                     {isProcessing ? 'กำลังดำเนินการ...' : `ยืนยันคำสั่งซื้อ (฿${summary.total.toFixed(2)})`}
                                 </button>
+                                {/* [FIX] Vercel Error: <a> -> <Link> */}
                                 <Link href="/basket" className="block w-full text-center py-3 rounded-lg font-bold text-lg text-[#4A3728] bg-gray-100 hover:bg-gray-200 transition-colors">
                                     กลับไปแก้ไขตะกร้า
                                 </Link>
@@ -185,3 +237,4 @@ export default function CheckoutPage() {
         </div>
     );
 }
+
