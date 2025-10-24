@@ -23,13 +23,9 @@ const WaterGlassIcon = () => (
 );
 // --- (จบส่วนไอคอน) ---
 
-
 export default function Header() {
     const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
-    // [!! ลบออก !!] ไม่ต้องใช้ isScrolled แล้ว
-    // const [isScrolled, setIsScrolled] = useState(false); 
     const [cartCount, setCartCount] = useState(0);
-
     const updateCartCount = () => {
         try {
             const savedCartJSON = localStorage.getItem('myCafeCart');
@@ -43,16 +39,10 @@ export default function Header() {
     };
 
     useEffect(() => {
-        // [!! ลบออก !!] ลบส่วนของ handleScroll ออกไป
-        // --- 1. จัดการการ scroll ของ header ---
-        
-        // --- 2. จัดการการอัปเดตจำนวนสินค้าในตะกร้า ---
         updateCartCount(); 
         window.addEventListener('local-storage', updateCartCount); 
 
         return () => {
-            // [!! ลบออก !!]
-            // window.removeEventListener('scroll', handleScroll); 
             window.removeEventListener('local-storage', updateCartCount);
         };
     }, []); 
@@ -90,12 +80,11 @@ export default function Header() {
                         </Link>
                         
                         <Link href="/chat">
-                            <button className="bg-green-800 text-white px-6 py-2 rounded-full font-bold hover:bg-green-700 transition-colors shadow">
+                            <button className="bg-[#2c8160] text-white px-6 py-2 rounded-full font-bold hover:bg-[#7ea566] transition-colors shadow">
                                 สั่งกับ AI เลย!
                             </button>
                         </Link>
                     </nav>
-
                     
                     <div className="md:hidden flex items-center space-x-4">
                         {/* [!! แก้ไข !!] เปลี่ยนเป็น 'text-white' ถาวร */}
@@ -116,11 +105,9 @@ export default function Header() {
 
                 {/* เมนูสำหรับ Mobile (เปิด/ปิด) */}
                 {isMobileMenuOpen && (
-                    // [!! แก้ไขจุดนี้ !!]
-                    // ส่วนนี้เป็นสีขาว ถูกต้องแล้ว เพราะเป็นเมนูที่เด้งลงมา
                     <div className="md:hidden absolute top-full left-0 w-full bg-white shadow-lg">
                         <div className="flex flex-col space-y-4 p-5">
-                            <Link  href="/chat" onClick={() => setMobileMenuOpen(false)} className="w-full bg-green-800 text-white text-center py-3 rounded-lg font-bold hover:bg-green-700 transition-colors">
+                            <Link  href="/chat" onClick={() => setMobileMenuOpen(false)} className="w-full bg-[#2c8160] text-white text-center py-3 rounded-lg font-bold hover:bg-[#7ea566] transition-colors">
                                 สั่งกับ AI เลย!
                             </Link>
                             <Link href="/menu-page" onClick={() => setMobileMenuOpen(false)} className="text-gray-700 hover:text-green-700 font-medium text-lg text-center py-2">
