@@ -1,5 +1,4 @@
 "use client";
-// [FIX] เพิ่ม useRef
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
 // ‼️ 1. Import useUser และ supabase ‼️
@@ -41,6 +40,7 @@ export default function CheckoutPage() {
                 console.error("CheckoutPage: Failed to parse cart from localStorage", error);
                 setCartItems([]);
             } finally {
+                 // ย้ายการตั้งค่า isInitialMount.current มาไว้ที่นี่
                 isInitialMount.current = false;
                 console.log("CheckoutPage: Initial mount flag set to false.");
             }
@@ -103,7 +103,7 @@ export default function CheckoutPage() {
             alert("ตะกร้าของคุณว่างเปล่า ไม่สามารถดำเนินการต่อได้");
             return;
         }
-        // ตรวจสอบว่ามี userId หรือ guestId หรือยัง
+        // ‼️ 3. เช็ค userLoading ก่อน ‼️
         if (userLoading) {
             alert("กำลังโหลดข้อมูลผู้ใช้ กรุณารอสักครู่...");
             return;
@@ -130,18 +130,18 @@ export default function CheckoutPage() {
                 // userId ถ้ามี (ล็อกอิน), guestId ถ้าไม่มี userId (เป็น Guest)
                 userId: userId || null,
                 guestId: userId ? null : guestId,
-                // กำหนดสถานะเริ่มต้น
-                orderStatus: 'รับออเดอร์แล้ว', // ใช้ค่าตาม Schema ของคุณ
-                paymentStatus: formData.paymentMethod === 'counter' ? 'Pay At Counter' : 'รอชำระเงิน', // ใช้ค่าตาม Schema ของคุณ
+                // กำหนดสถานะเริ่มต้น (ตรวจสอบกับ Schema ของคุณ)
+                orderStatus: 'รับออเดอร์แล้ว', // หรือ 'Pending'
+                paymentStatus: formData.paymentMethod === 'counter' ? 'Pay At Counter' : 'รอชำระเงิน', // หรือ 'Pending'
                 specialInstructions: null // อาจจะเพิ่มช่องให้กรอกได้
             };
 
             console.log("CheckoutPage: Inserting into 'order' table:", orderData);
 
             const { data: newOrder, error: orderError } = await supabase
-                .from('order') // ‼️ ตรวจสอบชื่อตาราง 'order' ‼️
+                .from('order') // ‼️ ตรวจสอบชื่อตาราง ‼️
                 .insert(orderData)
-                .select() // ขอข้อมูลที่เพิ่ง insert กลับมา (รวมถึง orderId ที่ถูกสร้าง)
+                .select() // ขอข้อมูลที่เพิ่ง insert กลับมา
                 .single(); // คาดหวังว่าจะได้แค่ record เดียว
 
             if (orderError) {
@@ -155,7 +155,7 @@ export default function CheckoutPage() {
             }
 
             const createdOrderId = newOrder.orderId;
-            setCreatedOrderId(createdOrderId); // เก็บ ID ไว้แสดงผล
+            setCreatedOrderId(createdOrderId);
             console.log("CheckoutPage: Order created successfully with ID:", createdOrderId);
 
             // --- 2. สร้าง Order Details Records ---
@@ -170,13 +170,12 @@ export default function CheckoutPage() {
             console.log("CheckoutPage: Inserting into 'orderDetails' table:", orderDetailsData);
 
             const { error: detailsError } = await supabase
-                .from('orderDetails') // ‼️ ตรวจสอบชื่อตาราง 'orderDetails' ‼️
+                .from('orderDetails') // ‼️ ตรวจสอบชื่อตาราง ‼️
                 .insert(orderDetailsData);
 
             if (detailsError) {
                 console.error("CheckoutPage: Error inserting order details:", detailsError);
                 // ควรจะ Rollback Order ที่สร้างไปก่อนหน้าหรือไม่? (ซับซ้อนขึ้น)
-                // สำหรับตอนนี้ แสดง Error ไปก่อน
                 throw new Error(`ไม่สามารถบันทึกรายละเอียดคำสั่งซื้อได้: ${detailsError.message}. ตรวจสอบชื่อตาราง คอลัมน์ และ Policy`);
             }
 
@@ -200,10 +199,8 @@ export default function CheckoutPage() {
             setIsSuccess(true); // แสดงหน้า Success
 
         } catch (error) {
-            // ถ้ามี Error เกิดขึ้นระหว่างการบันทึก
             console.error("CheckoutPage: Overall error during handleSubmitOrder:", error);
             alert(`เกิดข้อผิดพลาดในการยืนยันคำสั่งซื้อ: ${error.message}`);
-            // ไม่ต้องเปลี่ยน isSuccess
         } finally {
             setIsProcessing(false); // หยุด Loading เสมอ
         }
@@ -211,7 +208,7 @@ export default function CheckoutPage() {
 
     // --- ส่วนแสดงผลตอนสั่งซื้อสำเร็จ ---
     if (isSuccess) {
-        return (
+        return ( /* ... โค้ดหน้า Success ... */
             <div className="bg-white min-h-screen">
                 <div className="container mx-auto px-4 py-12 max-w-2xl text-center">
                     <CheckCircleIcon />
@@ -228,21 +225,22 @@ export default function CheckoutPage() {
 
     // --- ส่วนแสดงผลตอนตะกร้าว่าง ---
     if (!isInitialMount.current && (!Array.isArray(cartItems) || cartItems.length === 0) && !isProcessing) {
-        return (
-            <div className="bg-white min-h-screen">
-                <div className="container mx-auto px-4 py-12 max-w-2xl text-center">
-                    <EmptyCartIcon />
-                    <h3 className="mt-4 text-xl font-semibold text-gray-700">ไม่มีสินค้าสำหรับชำระเงิน</h3>
-                    <p className="text-gray-500 mt-2">ตะกร้าของคุณว่างเปล่าในขณะนี้</p>
-                    <Link href="/chat" className="mt-6 inline-block bg-[#4A3728] text-white px-6 py-3 rounded-lg font-bold hover:bg-green-800 transition-colors shadow">
-                        กลับไปเลือกเมนู
-                    </Link>
-                </div>
-            </div>
-        );
+         return ( /* ... โค้ดหน้า Empty Cart ... */
+             <div className="bg-white min-h-screen">
+                 <div className="container mx-auto px-4 py-12 max-w-2xl text-center">
+                     <EmptyCartIcon />
+                     <h3 className="mt-4 text-xl font-semibold text-gray-700">ไม่มีสินค้าสำหรับชำระเงิน</h3>
+                     <p className="text-gray-500 mt-2">ตะกร้าของคุณว่างเปล่าในขณะนี้</p>
+                     <Link href="/chat" className="mt-6 inline-block bg-[#4A3728] text-white px-6 py-3 rounded-lg font-bold hover:bg-green-800 transition-colors shadow">
+                         กลับไปเลือกเมนู
+                     </Link>
+                 </div>
+             </div>
+         );
     }
 
     // --- ส่วนแสดงผล Loading (เพิ่ม: รอ UserContext โหลดด้วย) ---
+     // ‼️ 4. แก้ไขเงื่อนไข Loading ‼️
     if (isInitialMount.current || userLoading) { // รอทั้งตะกร้าและ User โหลดเสร็จ
         return (
             <div className="bg-white min-h-screen flex items-center justify-center">
@@ -334,7 +332,7 @@ export default function CheckoutPage() {
                             <div className="mt-8 space-y-3">
                                 <button
                                     type="submit"
-                                    // ปุ่มจะกดได้เมื่อ: ไม่ใช่ isProcessing, ตะกร้าไม่ว่าง, User โหลดเสร็จแล้ว, และไม่ใช่ initial mount
+                                    // ‼️ 5. แก้ไขเงื่อนไข disabled ‼️
                                     disabled={isProcessing || !Array.isArray(cartItems) || cartItems.length === 0 || isInitialMount.current || userLoading}
                                     className="w-full text-center py-3 rounded-lg font-bold text-lg text-white bg-green-800 hover:bg-green-900 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
                                 >

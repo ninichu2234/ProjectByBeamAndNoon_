@@ -2,17 +2,25 @@
 
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { supabase } from '../lib/supabaseClient';
-import { v4 as uuidv4 } from 'uuid'; // Library สำหรับสร้าง UUID
+import { v4 as uuidv4 } from 'uuid';
 
-// สร้าง Context
-const UserContext = createContext(null);
+// ‼️ 1. กำหนดค่าเริ่มต้นเป็น Object เสมอ ‼️
+const initialUserState = {
+    session: null,
+    userId: null,
+    guestId: null,
+    loading: true, // เริ่มต้น loading เป็น true
+};
+
+// สร้าง Context พร้อมค่าเริ่มต้น
+const UserContext = createContext(initialUserState);
 
 // สร้าง Provider Component
 export const UserProvider = ({ children }) => {
     const [session, setSession] = useState(null);
     const [userId, setUserId] = useState(null);
     const [guestId, setGuestId] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(true); // เริ่มต้น loading เป็น true
 
     useEffect(() => {
         // --- 1. ตรวจสอบ Session การล็อกอิน ---
@@ -22,10 +30,10 @@ export const UserProvider = ({ children }) => {
             console.log("UserProvider: Initial session check:", session);
 
             // --- 2. จัดการ Guest ID (ถ้ายังไม่ล็อกอิน) ---
-            if (!session) {
+            if (!session && typeof window !== 'undefined') { // ‼️ เพิ่ม check typeof window ‼️
                 let currentGuestId = localStorage.getItem('guestUserId');
                 if (!currentGuestId) {
-                    currentGuestId = uuidv4(); // สร้าง ID ใหม่
+                    currentGuestId = uuidv4();
                     localStorage.setItem('guestUserId', currentGuestId);
                     console.log("UserProvider: Generated new guestId:", currentGuestId);
                 } else {
@@ -33,12 +41,22 @@ export const UserProvider = ({ children }) => {
                 }
                 setGuestId(currentGuestId);
             } else {
-                 // ถ้าล็อกอินแล้ว ไม่ต้องมี guestId
                  setGuestId(null);
-                 // (อาจจะลบ guestUserId ออกจาก localStorage ด้วยก็ได้)
-                 // localStorage.removeItem('guestUserId');
+                 // if (typeof window !== 'undefined') localStorage.removeItem('guestUserId');
             }
             setLoading(false); // โหลดเสร็จหลังเช็ค session และ guestId
+            console.log("UserProvider: Initial loading complete."); // Log เพิ่ม
+        }).catch(error => { // ‼️ เพิ่ม .catch() ‼️
+            console.error("UserProvider: Error fetching initial session:", error);
+            setLoading(false); // หยุด loading ถ้ามี error
+             if (typeof window !== 'undefined') { // ยังคงพยายามโหลด guestId ถ้า getSession พลาด
+                let currentGuestId = localStorage.getItem('guestUserId');
+                 if (!currentGuestId) {
+                     currentGuestId = uuidv4();
+                     localStorage.setItem('guestUserId', currentGuestId);
+                 }
+                 setGuestId(currentGuestId);
+             }
         });
 
         // --- 3. ฟังการเปลี่ยนแปลงสถานะ Auth ---
@@ -47,10 +65,10 @@ export const UserProvider = ({ children }) => {
                 console.log("UserProvider: Auth state changed:", session);
                 setSession(session);
                 setUserId(session?.user?.id ?? null);
-                setLoading(false); // โหลดเสร็จ (เผื่อกรณีกลับมาจากหน้าล็อกอิน)
+                // ไม่ต้อง setLoading(true) ตอน Auth เปลี่ยน เพราะอาจทำให้หน้ากระพริบ
+                // setLoading(true);
 
-                // อัปเดต Guest ID อีกครั้งหลัง Auth เปลี่ยน
-                if (!session) {
+                if (!session && typeof window !== 'undefined') { // ‼️ เพิ่ม check typeof window ‼️
                     let currentGuestId = localStorage.getItem('guestUserId');
                     if (!currentGuestId) {
                         currentGuestId = uuidv4();
@@ -61,9 +79,12 @@ export const UserProvider = ({ children }) => {
                     }
                     setGuestId(currentGuestId);
                 } else {
-                    setGuestId(null); // ล็อกอินแล้ว ไม่มี guestId
-                    // localStorage.removeItem('guestUserId');
+                    setGuestId(null);
+                    // if (typeof window !== 'undefined') localStorage.removeItem('guestUserId');
                 }
+                 // Set loading false หลังจากจัดการ auth state change เสร็จ
+                 setLoading(false);
+                 console.log("UserProvider: Auth change handling complete."); // Log เพิ่ม
             }
         );
 
@@ -73,6 +94,7 @@ export const UserProvider = ({ children }) => {
         };
     }, []);
 
+    // ‼️ 2. ตรวจสอบให้แน่ใจว่า value เป็น Object เสมอ ‼️
     const value = { session, userId, guestId, loading };
 
     return (
@@ -85,8 +107,11 @@ export const UserProvider = ({ children }) => {
 // สร้าง Custom Hook เพื่อให้เรียกใช้ง่าย
 export const useUser = () => {
     const context = useContext(UserContext);
-    if (context === undefined) {
-        throw new Error('useUser must be used within a UserProvider');
-    }
-    return context;
+    // ‼️ เอา check undefined ออก เพราะเรามีค่าเริ่มต้นแล้ว ‼️
+    // if (context === undefined) {
+    //     throw new Error('useUser must be used within a UserProvider');
+    // }
+    // คืนค่า context ที่มีโครงสร้าง object เสมอ
+    return context || initialUserState; // ถ้า context เป็น null (ไม่ควรเกิด) ให้คืนค่าเริ่มต้น
 };
+
