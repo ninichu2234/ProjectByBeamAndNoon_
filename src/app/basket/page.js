@@ -85,7 +85,8 @@ export default function BasketPage() {
 
     // (ข) ลบสินค้า
     const handleRemoveItem = (cartItemId) => {
-        if (!confirm("คุณต้องการลบสินค้านี้ใช่หรือไม่?")) return;
+        // ไม่ต้อง confirm ตอนกดลบ จะได้เร็วขึ้น
+        // if (!confirm("คุณต้องการลบสินค้านี้ใช่หรือไม่?")) return;
         
         const newCart = cart.filter(item => item.cartItemId !== cartItemId);
         setCart(newCart);
@@ -146,7 +147,7 @@ export default function BasketPage() {
                                         <div className="flex-1 min-w-0">
                                             <h3 className="font-semibold text-gray-800 truncate">{item.menuName}</h3>
                                             <p className="text-sm text-gray-500">
-                                                ฿{item.finalPrice.toFixed(2)} 
+                                                ฿{item.finalPrice.toFixed(2)} / unit
                                             </p>
                                             
                                             {/* แสดงตัวเลือกที่เลือก */}
@@ -155,12 +156,15 @@ export default function BasketPage() {
                                                     {item.customizations.selectedOptions.map(opt => opt.optionName).join(', ')}
                                                 </div>
                                             )}
-                                            {/* แสดงโน้ต */}
+                                            
+                                            {/* ‼️‼️ นี่คือส่วนที่แก้ไข Error ‼️‼️ */}
+                                            {/* เปลี่ยน "..." เป็น &quot;...&quot; */}
                                             {item.specialInstructions && (
                                                 <p className="text-xs text-amber-700 mt-1 truncate">
-                                                    Note: "{item.specialInstructions}"
+                                                    Note: &quot;{item.specialInstructions}&quot;
                                                 </p>
                                             )}
+                                            {/* ‼️‼️ จบส่วนที่แก้ไข ‼️‼️ */}
                                         </div>
                                         
                                         {/* ปุ่ม +/- */}
@@ -220,16 +224,15 @@ export default function BasketPage() {
                             <button
                                 onClick={handleCheckout}
                                 disabled={cart.length === 0}
-                                className="w-full bg-green-900 hover:bg-green-800 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                                className="w-full bg-green-700 hover:bg-green-800 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed"
                             >
                                 ดำเนินการชำระเงิน
                             </button>
 
-                            {/* ‼️‼️ นี่คือส่วนที่แก้ไขตามคำขอ ‼️‼️ */}
-                            {/* เปลี่ยนจาก "เลือกซื้อต่อ" ปุ่มเดียว เป็นสองปุ่มที่ลิงก์ไป /menu และ /chat */}
+                            {/* ปุ่มลิงก์ไปหน้า Menu และ Chat */}
                             <div className="flex flex-col sm:flex-row gap-3 mt-3">
                                 <Link
-                                    href="/menu-page"
+                                    href="/menu"
                                     className="flex-1 text-center bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-3 px-4 rounded-lg transition-colors duration-200 text-sm"
                                 >
                                     เลือกเมนูเพิ่ม
@@ -241,7 +244,6 @@ export default function BasketPage() {
                                     สั่งด้วย AI
                                 </Link>
                             </div>
-                            {/* ‼️‼️ จบส่วนที่แก้ไข ‼️‼️ */}
 
                         </div>
                     </aside>
