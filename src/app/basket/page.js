@@ -147,7 +147,7 @@ export default function BasketPage() {
                                         <div className="flex-1 min-w-0">
                                             <h3 className="font-semibold text-gray-800 truncate">{item.menuName}</h3>
                                             <p className="text-sm text-gray-500">
-                                                ฿{item.finalPrice.toFixed(2)} / unit
+                                                ฿{item.finalPrice.toFixed(2)} 
                                             </p>
                                             
                                             {/* แสดงตัวเลือกที่เลือก */}
