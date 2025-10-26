@@ -237,7 +237,7 @@ export default function MenuDetailPage() {
             <div className="container mx-auto px-4 sm:px-6 py-12 max-w-3xl">
                 {/* Back Button */}
                 <div className="mb-6">
-                    <Link href="/menu-page" className="text-amber-600 hover:text-amber-800 transition-colors inline-flex items-center group">
+                    <Link href="/menu-page" className="text-green-700 hover:text-amber-800 transition-colors inline-flex items-center group">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1 group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
                         กลับไปที่เมนู
                     </Link>
@@ -313,7 +313,7 @@ export default function MenuDetailPage() {
                                     onChange={(e) => setSpecialInstructions(e.target.value)}
                                     rows="3"
                                     placeholder="เช่น ไม่หวาน, แยกน้ำแข็ง..."
-                                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-amber-500 focus:border-amber-500 block w-full p-2.5 placeholder-gray-400"
+                                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-green-800 focus:border-green-800 block w-full p-2.5 placeholder-gray-400"
                                 />
                             </div>
                         </div>
