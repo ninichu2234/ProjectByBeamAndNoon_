@@ -14,7 +14,7 @@ const nextConfig = {
       {
 // ‼️ นี่คือการอนุญาต Domain ของ Supabase Storage ‼️
         protocol: 'https',
-        hostname: 'rcrntadwwvhyojmjrmzh.supabase.co',
+        hostname: 'rcrntadwwvhyojmjrmzh.supabase.co', 
 // (เพิ่ม pathname เพื่อความปลอดภัยและถูกต้อง)
         pathname: '/storage/v1/object/public/**', 
       },
