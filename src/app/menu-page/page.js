@@ -65,8 +65,6 @@ export default function MenuPage() {
     fetchData();
   }, []);
  
-  // No handleAddToCart needed here anymore
- 
   return (
     <div className="bg-gray-50 min-h-screen"> {/* Light background */}
       <div className="container mx-auto px-4 sm:px-6 py-8">
@@ -101,7 +99,6 @@ export default function MenuPage() {
                         <h3 className="font-bold text-lg text-amber-800">จับคู่สุดคุ้ม</h3>
                         <p className="text-amber-700 text-sm">เครื่องดื่ม + เบเกอรี่ ลด 15%</p>
                     </div>
-                    {/* Optional Icon */}
                      <span className="text-3xl text-amber-500 ml-4">🎉</span>
                 </div>
                 <div className="bg-green-100 rounded-lg p-6 flex items-center shadow-sm border border-green-200"> {/* Added border */}
@@ -121,40 +118,47 @@ export default function MenuPage() {
                   <h2 className="text-3xl font-bold text-gray-800 mb-6 pb-2 border-b-2 border-amber-500"> {/* Highlighted border */}
                     {category}
                   </h2>
-                  {/* Changed grid layout slightly */}
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-8"> 
                     {menuItems
                       .filter(item => item.menuCategory === category)
                       .map(item => (
-                        // ‼️‼️ Wrap the entire item presentation in a Link ‼️‼️
                         <Link 
                             key={item.menuId} 
                             href={`/menuDetail/${item.menuId}`} 
-                            className="group block bg-white p-4 rounded-lg shadow-sm border border-gray-200 hover:shadow-md hover:border-amber-400 transition-all duration-300 cursor-pointer" // Added styling to the Link
+                            className="group block bg-white p-4 rounded-lg shadow-sm border border-gray-200 hover:shadow-md hover:border-amber-400 transition-all duration-300 cursor-pointer"
                         >
                             <div className="flex items-center space-x-4">
                                 <Image
-                                    src={item.publicImageUrl || 'https://placehold.co/100x100/DDD/333?text=N/A'} // Fallback image
-                                    alt={item.menuName || 'Menu Item'} // Added fallback alt text
-                                    width={80} // Slightly smaller image
+                                    src={item.publicImageUrl || 'https://placehold.co/100x100/DDD/333?text=N/A'} 
+                                    alt={item.menuName || 'Menu Item'}
+                                    width={80} 
                                     height={80}
-                                    className="w-20 h-20 rounded-full object-cover flex-shrink-0 border-2 border-white shadow-md transform group-hover:scale-105 transition-transform duration-300" // Adjusted image style
+                                    className="w-20 h-20 rounded-full object-cover flex-shrink-0 border-2 border-white shadow-md transform group-hover:scale-105 transition-transform duration-300"
                                 />
-                                <div className="flex-1 min-w-0"> {/* Added min-w-0 for text truncation */}
-                                    <h3 className="text-lg font-semibold text-gray-800 truncate">{item.menuName || 'Unnamed Item'}</h3> {/* Added truncate */}
-                                    {/* Optional: Limit description length or hide on smaller screens */}
-                                    <p className="text-sm text-gray-500 mt-1 line-clamp-2">{item.menuDescription}</p> 
+                                <div className="flex-1 min-w-0"> 
+                                    
+                                    {/* (1. ชื่อเต็ม - เหมือนเดิม) */}
+                                    <h3 className="text-lg font-semibold text-gray-800">
+                                        {item.menuName || 'Unnamed Item'}
+                                    </h3>
+                                    
+                                    {/* ‼️ 3. แก้ไขตรงนี้: ลบคลาส 'line-clamp-2' ออก ‼️ */}
+                                    <p className="text-sm text-gray-500 mt-1">
+                                        {item.menuDescription}
+                                    </p> 
+                                    
                                     <p className="text-md font-bold text-amber-600 mt-2">{item.menuPrice} ฿</p>
                                 </div>
-                                {/* The "+" button is now just a visual indicator inside the Link */}
-                                <div className="flex-shrink-0 text-amber-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                
+                                {/* (2. ปุ่มบวกสีเขียว - เหมือนเดิม) */}
+                                <div className="flex-shrink-0 bg-green-600 text-white rounded-full h-8 w-8 flex items-center justify-center shadow-lg group-hover:bg-green-700 transition-colors duration-200">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m6-6H6" />
                                     </svg>
                                 </div>
+
                             </div>
                         </Link> 
-                        // ‼️‼️ End of Link wrapper ‼️‼️
                       ))}
                   </div>
                 </section>
