@@ -217,7 +217,7 @@ export default function MenuDetailPage() {
             localStorage.setItem('myCafeCart', JSON.stringify(currentCart));
             
             window.dispatchEvent(new Event('local-storage'));
-            alert(`${menuItem.menuName} ถูกเพิ่มลงในตะกร้าแล้ว!`);
+            
             router.push('/basket'); // ไปที่หน้าตะกร้า
 
         } catch (error) {
