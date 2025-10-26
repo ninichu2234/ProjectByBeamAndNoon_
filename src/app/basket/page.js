@@ -86,7 +86,7 @@ export default function BasketPage() {
     };
     
     const handleCheckout = () => {
-        alert("ระบบชำระเงินยังไม่เปิดให้บริการ");
+        router.push('/checkout');
     };
 
     // --- 5. Render UI (มีการแก้ไข) ---
@@ -223,7 +223,7 @@ export default function BasketPage() {
 
                             <div className="flex flex-col sm:flex-row gap-3 mt-3">
                                 <Link
-                                    href="/menu"
+                                    href="/menu-page"
                                     className="flex-1 text-center bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-3 px-4 rounded-lg transition-colors duration-200 text-sm"
                                 >
                                     เลือกเมนูเพิ่ม
