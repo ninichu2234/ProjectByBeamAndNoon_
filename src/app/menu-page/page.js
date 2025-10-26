@@ -78,7 +78,7 @@ export default function MenuPage() {
                   <Link
                     key={category}
                     href={`#${category.replace(/\s+/g, '-')}`}
-                    className="text-gray-700 hover:text-amber-600 font-medium transition-colors text-base" // Adjusted size
+                    className="text-gray-700 hover:text-green-600 font-medium transition-colors text-base" // Adjusted size
                   >
                     {category}
                   </Link>
@@ -115,7 +115,7 @@ export default function MenuPage() {
             <div className="space-y-12">
               {categories.map(category => (
                 <section key={category} id={category.replace(/\s+/g, '-')} className="scroll-mt-24">
-                  <h2 className="text-3xl font-bold text-gray-800 mb-6 pb-2 border-b-2 border-amber-500"> {/* Highlighted border */}
+                  <h2 className="text-3xl font-bold text-gray-800 mb-6 pb-2 border-b-2 border-green-800"> {/* Highlighted border */}
                     {category}
                   </h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-8"> 
@@ -125,7 +125,7 @@ export default function MenuPage() {
                         <Link 
                             key={item.menuId} 
                             href={`/menuDetail/${item.menuId}`} 
-                            className="group block bg-white p-4 rounded-lg shadow-sm border border-gray-200 hover:shadow-md hover:border-amber-400 transition-all duration-300 cursor-pointer"
+                            className="group block bg-white p-4 rounded-lg shadow-sm border border-gray-200 hover:shadow-md hover:border-green-600 transition-all duration-300 cursor-pointer"
                         >
                             <div className="flex items-center space-x-4">
                                 <Image
