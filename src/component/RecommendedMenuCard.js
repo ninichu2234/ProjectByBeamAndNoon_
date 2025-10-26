@@ -158,7 +158,7 @@ export default function RecommendedMenuCard({ menu, onAddToCart }) {
 
             {/* ‼️ 3. เพิ่มช่อง Textarea สำหรับ Special Instructions ‼️ */}
             <div className="mb-4">
-                <label htmlFor={`instructions-${menu.menuId}`} className="block text-xs text-gray-300 mb-1">Special Instructions:</label>
+                <label htmlFor={`instructions-${menu.menuId}`} className="block text-xs text-gray-300 mb-1">Notes:</label>
                 <textarea
                     id={`instructions-${menu.menuId}`}
                     value={specialInstructions}
