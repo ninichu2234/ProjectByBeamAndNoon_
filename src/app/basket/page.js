@@ -96,7 +96,7 @@ export default function BasketPage() {
     // (ค) ลบสินค้าทั้งหมด
     const handleClearCart = () => {
         if (cart.length === 0) return;
-        if (!confirm("คุณต้องการล้างตะกร้าสินค้าทั้งหมดใช่หรือไม่?")) return;
+     
 
         setCart([]);
         updateLocalStorage([]);
@@ -106,7 +106,7 @@ export default function BasketPage() {
     const handleCheckout = () => {
         // ในอนาคต: อาจจะต้องบันทึก order ลง database ก่อน
         alert("ระบบชำระเงินยังไม่เปิดให้บริการ");
-        // router.push('/checkout'); 
+         router.push('/checkout'); 
     };
 
     // --- 5. Render UI ---
@@ -224,7 +224,7 @@ export default function BasketPage() {
                             <button
                                 onClick={handleCheckout}
                                 disabled={cart.length === 0}
-                                className="w-full bg-green-700 hover:bg-green-800 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                                className="w-full bg-[#2c8160] hover:bg-green-800 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed"
                             >
                                 ดำเนินการชำระเงิน
                             </button>
@@ -232,14 +232,14 @@ export default function BasketPage() {
                             {/* ปุ่มลิงก์ไปหน้า Menu และ Chat */}
                             <div className="flex flex-col sm:flex-row gap-3 mt-3">
                                 <Link
-                                    href="/menu"
-                                    className="flex-1 text-center bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-3 px-4 rounded-lg transition-colors duration-200 text-sm"
+                                    href="/menu-page"
+                                    className="flex-1 text-center bg-gray-200 hover:bg-gray-500 text-gray-700 font-medium py-3 px-4 rounded-lg transition-colors duration-200 text-sm"
                                 >
                                     เลือกเมนูเพิ่ม
                                 </Link>
                                 <Link
                                     href="/chat"
-                                    className="flex-1 text-center bg-amber-100 hover:bg-amber-200 text-amber-800 font-medium py-3 px-4 rounded-lg transition-colors duration-200 text-sm"
+                                    className="flex-1 text-center bg-gray-200 hover:bg-gray-500 text-gray-700 font-medium py-3 px-4 rounded-lg transition-colors duration-200 text-sm"
                                 >
                                     สั่งด้วย AI
                                 </Link>

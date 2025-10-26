@@ -190,7 +190,7 @@ export default function MenuPage() {
                                     </p> 
                                     <p className="text-md font-bold text-amber-600 mt-2">{item.menuPrice} ฿</p>
                                 </div>
-                                <div className="flex-shrink-0 bg-green-600 text-white rounded-full h-8 w-8 flex items-center justify-center shadow-lg group-hover:bg-green-700 transition-colors duration-200">
+                                <div className="flex-shrink-0 bg-[#2c8160] text-white rounded-full h-8 w-8 flex items-center justify-center shadow-lg group-hover:bg-green-700 transition-colors duration-200">
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m6-6H6" />
                                     </svg>
