@@ -105,7 +105,7 @@ export default function BasketPage() {
     // (ง) ไปหน้าชำระเงิน (Placeholder)
     const handleCheckout = () => {
         // ในอนาคต: อาจจะต้องบันทึก order ลง database ก่อน
-        alert("ระบบชำระเงินยังไม่เปิดให้บริการ");
+       
          router.push('/checkout'); 
     };
 

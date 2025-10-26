@@ -398,7 +398,7 @@ export default function CheckoutPage() {
                                 <button
                                     type="submit"
                                     disabled={isProcessing || !Array.isArray(cartItems) || cartItems.length === 0 || isInitialMount.current || userLoading || profileLoading} 
-                                    className="w-full text-center py-3 rounded-lg font-bold text-lg text-white bg-green-800 hover:bg-green-900 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                                    className="w-full text-center py-3 rounded-lg font-bold text-lg text-white bg-[#2c8160] hover:bg-green-900 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
                                 >
                                     {isProcessing ? 'กำลังดำเนินการ...' : `ยืนยันคำสั่งซื้อ (฿${summary.total.toFixed(2)})`}
                                 </button>

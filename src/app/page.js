@@ -143,7 +143,7 @@ function HomePageContent() {
                     <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight">My<span className="text-amber-400">Cafe</span> </h1>
                     <p className="mt-4 max-w-2xl mx-auto text-lg md:text-xl text-gray-200"> ให้ AI ช่วยแนะนำเมนูที่ใช่สำหรับคุณ หรือเลือกดูเมนูทั้งหมดด้วยตัวคุณเอง </p>
                     <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-                        <Link href="/chat"> <button className="w-full sm:w-auto bg-[#2c8160] hover:bg-green-600 text-white font-bold py-3 px-8 rounded-full transition-all duration-300 shadow-lg transform hover:scale-105"> คุยกับ AI แนะนำเมนู </button> </Link>
+                        <Link href="/chat"> <button className="w-full sm:w-auto bg-[#2c8160] hover:bg-green-900 text-white font-bold py-3 px-8 rounded-full transition-all duration-300 shadow-lg transform hover:scale-105"> คุยกับ AI แนะนำเมนู </button> </Link>
                         <Link href="/menu-page"> <button className="w-full sm:w-auto bg-transparent hover:bg-white/20 text-white font-semibold py-3 px-8 border-2 border-white rounded-full transition-all duration-300"> ดูเมนูทั้งหมด </button> </Link>
                     </div>
                 </div>

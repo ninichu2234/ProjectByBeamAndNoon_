@@ -175,7 +175,7 @@ export default function RecommendedMenuCard({ menu, onAddToCart }) {
                     Total: {currentPrice.toFixed(2)} บาท
                 </p>
                 <div className="flex-shrink-0 w-full sm:w-auto">
-                    <button onClick={handleAddClick} disabled={!menu.menuId || isLoading} className="w-full sm:w-auto bg-green-800 hover:bg-green-900 text-white font-bold py-2 px-5 rounded-full transition-colors duration-300 text-sm disabled:bg-gray-400 disabled:cursor-not-allowed">
+                    <button onClick={handleAddClick} disabled={!menu.menuId || isLoading} className="w-full sm:w-auto bg-[#2c8160] hover:bg-green-900 text-white font-bold py-2 px-5 rounded-full transition-colors duration-300 text-sm disabled:bg-gray-400 disabled:cursor-not-allowed">
                         Add to Order
                     </button>
                 </div>

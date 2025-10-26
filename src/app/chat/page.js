@@ -173,7 +173,7 @@ export default function ChatPage() {
                  <div className="bg-[#4A3728] p-6 rounded-xl mb-8 border-l-4 border-green-700"> {/* Changed border color */}
                      <h2 className="text-2xl font-bold text-white mb-2">Today&apos;s Special</h2>
                      <p className="text-white mb-4">&quot;Iced Oat Milk Hazelnut Latte&quot; ความหอมหวานลงตัว</p>
-                     <button onClick={() => setQuestion("ขอลอง Iced Oat Milk Hazelnut Latte")} className="bg-green-800 hover:bg-green-900 text-white font-bold py-2 px-5 rounded-full text-sm">ถามเกี่ยวกับเมนูนี้</button>
+                     <button onClick={() => setQuestion("ขอลอง Iced Oat Milk Hazelnut Latte")} className="bg-[#2c8160] hover:bg-green-900 text-white font-bold py-2 px-5 rounded-full text-sm">ถามเกี่ยวกับเมนูนี้</button>
                  </div>
 
                  {/* Input Section */}
@@ -186,7 +186,7 @@ export default function ChatPage() {
                          <button onClick={() => setQuestion("เครื่องดื่มที่ไม่ใช่กาแฟ")} className="text-xs bg-white/20 hover:bg-white/30 text-white py-1 px-3 rounded-full transition">ไม่ใช่กาแฟ</button>
                      </div>
                      <div className="mt-4 flex items-center gap-3"> {/* Submit & Listen Buttons */}
-                         <button onClick={() => handleSubmit()} disabled={isLoading || !question.trim() || isListening || question === "กำลังฟัง..."} className="w-full bg-green-800 hover:bg-green-900 text-white font-bold py-3 px-8 rounded-full transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"> {isLoading ? 'กำลังคิด...' : '✨ ถาม Barista'} </button>
+                         <button onClick={() => handleSubmit()} disabled={isLoading || !question.trim() || isListening || question === "กำลังฟัง..."} className="w-full bg-[#2c8160] hover:bg-green-900 text-white font-bold py-3 px-8 rounded-full transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"> {isLoading ? 'กำลังคิด...' : '✨ ถาม Barista'} </button>
                          <button onClick={handleListen} disabled={isLoading || isListening} className={`p-3 rounded-full transition-colors ${isListening ? 'bg-red-600 animate-pulse' : 'bg-white/20 hover:bg-white/30'} disabled:bg-gray-400 disabled:cursor-not-allowed`} title="สั่งด้วยเสียง"> <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 11-14 0m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg> </button>
                      </div>
                  </div>
@@ -195,7 +195,7 @@ export default function ChatPage() {
                 <div className="bg-[#4A3728] p-6 rounded-xl shadow-lg min-h-[100px] mb-8">
                     {/* AI Answer */}
                      <div className="flex items-start space-x-4"> 
-                         <div className="bg-green-800 rounded-full p-2 flex-shrink-0"> <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a2 2 0 01-2-2V7a2 2 0 012-2h2.5a1 1 0 01.7.3l2.4 2.4a1 1 0 01.3.7V8z" /></svg> </div>
+                         <div className="bg-[#2c8160] rounded-full p-2 flex-shrink-0"> <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a2 2 0 01-2-2V7a2 2 0 012-2h2.5a1 1 0 01.7.3l2.4 2.4a1 1 0 01.3.7V8z" /></svg> </div>
                          <div className="w-full"> <h2 className="text-xl font-bold text-white mb-2">คำแนะนำ:</h2> <div className="text-white whitespace-pre-wrap prose prose-invert max-w-none">{answer}</div> </div>
                      </div>
                     
@@ -256,7 +256,7 @@ export default function ChatPage() {
                         <span className="text-2xl font-extrabold text-[#4A3728]">{totalPrice.toFixed(2)} ฿</span> 
                     </div>
                     <Link href="/basket">
-                        <button disabled={!cartItems || cartItems.length === 0} className="mt-5 w-full bg-[#4A3728] hover:bg-opacity-90 text-white font-bold py-3 px-8 rounded-full transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed">
+                        <button disabled={!cartItems || cartItems.length === 0} className="mt-5 w-full bg-[#2c8160] hover:bg-opacity-90 text-white font-bold py-3 px-8 rounded-full transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed">
                             ดำเนินการต่อ
                         </button>
                     </Link>
