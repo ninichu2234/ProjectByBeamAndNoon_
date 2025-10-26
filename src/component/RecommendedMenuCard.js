@@ -11,8 +11,6 @@ export default function RecommendedMenuCard({ menu, onAddToCart }) {
     const [selections, setSelections] = useState({}); 
     const [isLoading, setIsLoading] = useState(true);
     const [currentPrice, setCurrentPrice] = useState(menu.menuPrice || 0);
-    
-    // ‼️ 1. เพิ่ม State สำหรับเก็บข้อความเพิ่มเติม ‼️
     const [specialInstructions, setSpecialInstructions] = useState('');
 
     const addLog = (message) => console.log(`[${menu.menuName}] ${message}`);
@@ -23,7 +21,7 @@ export default function RecommendedMenuCard({ menu, onAddToCart }) {
         setOptionGroups([]);
         setSelections({});
         setCurrentPrice(menu.menuPrice || 0); 
-        setSpecialInstructions(''); // รีเซ็ตช่องข้อความเมื่อโหลดใหม่
+        setSpecialInstructions(''); 
         addLog(`(1) Fetching options...`);
         try {
             const { data, error } = await supabase.from('menuItemOptionGroups').select(`groupId, optionGroups (groupId, nameGroup, selectionType, option ( optionId, optionName, priceAdjustment ))`).eq('menuId', menuId);
@@ -45,7 +43,7 @@ export default function RecommendedMenuCard({ menu, onAddToCart }) {
             setSelections(defaultSelections);
         } catch (err) { addLog(`(!) ERROR fetching options: ${err.message}`);
         } finally { setIsLoading(false); addLog(`(4) Finished fetching.`); }
-    }, [menu.menuId, menu.menuName, menu.menuPrice]); 
+    }, [menu.menuId, menu.menuName, menu.menuPrice]); // ‼️ หมายเหตุ: ถ้า addLog ถูกสร้างนอก useCallback คุณอาจต้องเพิ่ม 'addLog' ในนี้ตามที่ Vercel เตือน
 
     useEffect(() => {
         if (menu.menuId) { fetchOptions(menu.menuId); }
@@ -72,13 +70,12 @@ export default function RecommendedMenuCard({ menu, onAddToCart }) {
         } 
     }, [selections, optionGroups, menu.menuPrice, isLoading, currentPrice]); 
 
-    // --- (Handlers - handleSelectionChange - เหมือนเดิม) ---
+    // --- (Handlers - handleSelectionChange, handleAddClick - เหมือนเดิม) ---
     const handleSelectionChange = (groupId, optionId) => {
         addLog(`(!) Selection changed: Group ${groupId} -> Option ${optionId}`);
         setSelections(prev => ({ ...prev, [groupId]: optionId }));
     };
 
-    // ‼️ 2. อัปเดต handleAddClick ให้รวม specialInstructions ‼️
     const handleAddClick = () => {
         addLog(`(+) Add clicked. Final Price: ${currentPrice}. Instructions: "${specialInstructions}"`);
         const allSelectedOptions = [];
@@ -100,23 +97,18 @@ export default function RecommendedMenuCard({ menu, onAddToCart }) {
         });
         const customizations = { selectedOptions: allSelectedOptions, priceAdjustment: priceAdjustmentTotal };
         
-        // สร้าง item ที่จะส่งไปตะกร้า
         const itemToCart = { 
             ...menu, 
             quantity: 1, 
             finalPrice: currentPrice, 
             customizations: customizations,
-            // เพิ่ม instructions ที่ลูกค้าพิมพ์
-            specialInstructions: specialInstructions.trim() || null // ถ้าไม่ได้พิมพ์อะไร ให้เป็น null
+            specialInstructions: specialInstructions.trim() || null 
         };
         
-        onAddToCart(itemToCart); // ส่งไปที่ ChatPage
-        
-        // Optional: รีเซ็ตช่องข้อความหลังจากกด Add
-        // setSpecialInstructions(''); 
+        onAddToCart(itemToCart); 
     };
 
-    // --- UI ที่แก้ไข ---
+    // --- ‼️‼️ UI ที่แก้ไข (ส่วน Dropdowns) ‼️‼️ ---
     return (
         <div className="bg-white/10 p-4 rounded-lg border border-white/20 flex flex-col transition hover:shadow-md hover:border-green-500">
             
@@ -133,18 +125,26 @@ export default function RecommendedMenuCard({ menu, onAddToCart }) {
                 </div>
             </div>
 
-            {/* แถวกลาง: Dropdowns */}
+            {/* ‼️ 1. เปลี่ยนจาก flex-wrap เป็น grid ‼️ */}
             {!isLoading && optionGroups.length > 0 && (
                 <div className="mb-4">
-                    <div className="flex flex-wrap gap-x-4 gap-y-2">
+                    {/* ใช้ grid-cols-1 (มือถือ) และ md:grid-cols-2 (เดสก์ท็อป) */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
                         {optionGroups.map(group => (
-                            <div key={group.groupId} className="flex items-center space-x-2">
-                                <label htmlFor={`select-${menu.menuId}-${group.groupId}`} className="text-xs text-gray-300 flex-shrink-0">{group.nameGroup}:</label>
+                            // ‼️ 2. เปลี่ยนเป็น flex-col เพื่อให้ Label อยู่บน Select ‼️
+                            <div key={group.groupId} className="flex flex-col space-y-1">
+                                <label 
+                                    htmlFor={`select-${menu.menuId}-${group.groupId}`} 
+                                    className="text-xs text-gray-300 flex-shrink-0"
+                                >
+                                    {group.nameGroup}:
+                                </label>
                                 <select
                                     id={`select-${menu.menuId}-${group.groupId}`}
                                     value={selections[group.groupId] || ''} 
                                     onChange={(e) => handleSelectionChange(group.groupId, e.target.value)}
-                                    className="bg-white/20 text-white text-xs rounded p-2 border border-white/30 focus:outline-none focus:ring-1 focus:ring-green-500"
+                                    // ‼️ 3. เพิ่ม w-full ให้ dropdown กว้างเต็มคอลัมน์ ‼️
+                                    className="bg-white/20 text-white text-xs rounded p-2 border border-white/30 focus:outline-none focus:ring-1 focus:ring-green-500 w-full"
                                 >
                                     {group.selectionType === 'single_optional' && (<option value="" className="text-black">None</option>)}
                                     {group.option.map(opt => (<option key={opt.optionId} value={String(opt.optionId)} className="text-black">{opt.optionName} {opt.priceAdjustment > 0 ? `(+${opt.priceAdjustment.toFixed(2)}฿)` : ''}</option>))}
@@ -154,9 +154,11 @@ export default function RecommendedMenuCard({ menu, onAddToCart }) {
                     </div>
                 </div>
             )}
+            {/* ‼️ จบส่วนที่แก้ไข ‼️ */}
+
             {isLoading && (<div className="mb-4"><p className="text-xs text-gray-400">Loading options...</p></div>)}
 
-            {/* ‼️ 3. เพิ่มช่อง Textarea สำหรับ Special Instructions ‼️ */}
+            {/* (Textarea - เหมือนเดิม) */}
             <div className="mb-4">
                 <label htmlFor={`instructions-${menu.menuId}`} className="block text-xs text-gray-300 mb-1">Notes:</label>
                 <textarea
@@ -176,7 +178,7 @@ export default function RecommendedMenuCard({ menu, onAddToCart }) {
                 </p>
                 <div className="flex-shrink-0 w-full sm:w-auto">
                     <button onClick={handleAddClick} disabled={!menu.menuId || isLoading} className="w-full sm:w-auto bg-[#2c8160] hover:bg-green-900 text-white font-bold py-2 px-5 rounded-full transition-colors duration-300 text-sm disabled:bg-gray-400 disabled:cursor-not-allowed">
-                        Add to Order
+                        Add 
                     </button>
                 </div>
             </div>

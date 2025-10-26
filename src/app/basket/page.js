@@ -12,7 +12,9 @@ export default function BasketPage() {
     const [summary, setSummary] = useState({ subtotal: 0, tax: 0, total: 0 });
     const router = useRouter();
 
-    // --- 1. โหลดข้อมูลตะกร้าจาก Local Storage ---
+    // --- (ส่วน Logic: useEffect, updateLocalStorage, Handlers - เหมือนเดิม) ---
+
+    // 1. โหลดข้อมูลตะกร้า
     useEffect(() => {
         function loadCart() {
             try {
@@ -24,92 +26,70 @@ export default function BasketPage() {
                 setCart([]);
             }
         }
-        
         loadCart();
-        
-        // เพิ่ม Event Listener เพื่อให้ตะกร้าอัปเดต ถ้ามีการเปลี่ยนแปลงจากหน้าอื่น
         window.addEventListener('local-storage', loadCart);
-
-        // Cleanup listener
         return () => {
             window.removeEventListener('local-storage', loadCart);
         };
     }, []);
 
-    // --- 2. คำนวณราคาสรุปใหม่ ทุกครั้งที่ cart เปลี่ยน ---
+    // 2. คำนวณราคา
     useEffect(() => {
         let currentSubtotal = 0;
         cart.forEach(item => {
-            // ใช้ finalPrice (ที่รวม options แล้ว) และคูณด้วย quantity
             currentSubtotal += (item.finalPrice || 0) * (item.quantity || 1);
         });
-
-        const currentTax = currentSubtotal * 0.07; // ภาษี 7%
+        const currentTax = currentSubtotal * 0.07; 
         const currentTotal = currentSubtotal + currentTax;
-
         setSummary({
             subtotal: currentSubtotal,
             tax: currentTax,
             total: currentTotal
         });
-    }, [cart]); // ทำงานใหม่ทุกครั้งที่ 'cart' state เปลี่ยน
+    }, [cart]);
 
-    // --- 3. ฟังก์ชันอัปเดตตะกร้า (ใน Local Storage) ---
+    // 3. ฟังก์ชันอัปเดต
     const updateLocalStorage = (newCart) => {
         try {
             localStorage.setItem('myCafeCart', JSON.stringify(newCart));
-            // ส่งสัญญาณบอก components อื่น (เช่น Navbar) ให้อัปเดต
             window.dispatchEvent(new Event('local-storage'));
         } catch (error) {
             console.error("Failed to save cart to local storage:", error);
         }
     };
 
-    // --- 4. Handlers สำหรับปุ่มต่างๆ ---
-
-    // (ก) อัปเดตจำนวน
+    // 4. Handlers
     const handleUpdateQuantity = (cartItemId, newQuantity) => {
         if (newQuantity < 1) {
-            // ถ้าจำนวนน้อยกว่า 1, ให้ลบออกแทน
             handleRemoveItem(cartItemId);
             return;
         }
-
         const newCart = cart.map(item => 
             item.cartItemId === cartItemId ? { ...item, quantity: newQuantity } : item
         );
-        
-        setCart(newCart); // อัปเดต State
-        updateLocalStorage(newCart); // อัปเดต Storage
+        setCart(newCart);
+        updateLocalStorage(newCart);
     };
 
-    // (ข) ลบสินค้า
     const handleRemoveItem = (cartItemId) => {
-        // ไม่ต้อง confirm ตอนกดลบ จะได้เร็วขึ้น
-        // if (!confirm("คุณต้องการลบสินค้านี้ใช่หรือไม่?")) return;
-        
         const newCart = cart.filter(item => item.cartItemId !== cartItemId);
         setCart(newCart);
         updateLocalStorage(newCart);
     };
 
-    // (ค) ลบสินค้าทั้งหมด
     const handleClearCart = () => {
         if (cart.length === 0) return;
-     
-
-        setCart([]);
-        updateLocalStorage([]);
+        if (confirm("คุณต้องการล้างตะกร้าสินค้าทั้งหมดใช่หรือไม่?")) {
+            setCart([]);
+            updateLocalStorage([]);
+        }
     };
     
-    // (ง) ไปหน้าชำระเงิน (Placeholder)
     const handleCheckout = () => {
-        // ในอนาคต: อาจจะต้องบันทึก order ลง database ก่อน
-       
-         router.push('/checkout'); 
+        alert("ระบบชำระเงินยังไม่เปิดให้บริการ");
     };
 
-    // --- 5. Render UI ---
+    // --- 5. Render UI (มีการแก้ไข) ---
     return (
         <div className="bg-gray-50 min-h-screen py-12">
             <div className="container mx-auto px-4 max-w-5xl">
@@ -131,77 +111,89 @@ export default function BasketPage() {
                         </div>
 
                         {/* --- รายการสินค้าในตะกร้า --- */}
-                        <div className="space-y-6">
+                        {/* ‼️ เปลี่ยนจาก space-y-6 เป็น divide-y (เส้นคั่น) ‼️ */}
+                        <div className="divide-y divide-gray-200">
                             {cart.length === 0 ? (
                                 <p className="text-gray-500 text-center py-8">ตะกร้าของคุณว่างเปล่า</p>
                             ) : (
                                 cart.map(item => (
-                                    <div key={item.cartItemId} className="flex items-center gap-4">
+                                    // ‼️‼️ นี่คือ Layout ใหม่สำหรับ Mobile-First ‼️‼️
+                                    <div key={item.cartItemId} className="flex gap-4 py-6">
+                                        
+                                        {/* 1. Image */}
                                         <Image
                                             src={item.publicImageUrl || 'https://placehold.co/100x100/DDD/333?text=N/A'}
                                             alt={item.menuName}
                                             width={80}
                                             height={80}
-                                            className="w-20 h-20 rounded-lg object-cover border"
+                                            className="w-20 h-20 rounded-lg object-cover border flex-shrink-0"
                                         />
-                                        <div className="flex-1 min-w-0">
-                                            <h3 className="font-semibold text-gray-800 truncate">{item.menuName}</h3>
-                                            <p className="text-sm text-gray-500">
-                                                ฿{item.finalPrice.toFixed(2)} 
-                                            </p>
-                                            
-                                            {/* แสดงตัวเลือกที่เลือก */}
-                                            {item.customizations?.selectedOptions?.length > 0 && (
-                                                <div className="text-xs text-gray-500 mt-1">
-                                                    {item.customizations.selectedOptions.map(opt => opt.optionName).join(', ')}
+                                        
+                                        {/* 2. Info (ส่วนที่เหลือทั้งหมด) */}
+                                        <div className="flex-1 flex flex-col min-w-0">
+                                            {/* 2a. แถวบน: ชื่อ, custom options, และราคารวม */}
+                                            <div className="flex justify-between items-start gap-3">
+                                                <div className="flex-1 min-w-0">
+                                                    <h3 className="font-semibold text-gray-800 truncate">{item.menuName}</h3>
+                                                    {item.customizations?.selectedOptions?.length > 0 && (
+                                                        <div className="text-xs text-gray-500 mt-1">
+                                                            {item.customizations.selectedOptions.map(opt => opt.optionName).join(', ')}
+                                                        </div>
+                                                    )}
+                                                    {item.specialInstructions && (
+                                                        <p className="text-xs text-amber-700 mt-1 truncate">
+                                                            Note: &quot;{item.specialInstructions}&quot;
+                                                        </p>
+                                                    )}
                                                 </div>
-                                            )}
-                                            
-                                            {/* ‼️‼️ นี่คือส่วนที่แก้ไข Error ‼️‼️ */}
-                                            {/* เปลี่ยน "..." เป็น &quot;...&quot; */}
-                                            {item.specialInstructions && (
-                                                <p className="text-xs text-amber-700 mt-1 truncate">
-                                                    Note: &quot;{item.specialInstructions}&quot;
+                                                {/* ราคารวม (ย้ายมาไว้บนขวา) */}
+                                                <p className="font-semibold text-gray-800 flex-shrink-0">
+                                                    ฿{(item.finalPrice * item.quantity).toFixed(2)}
                                                 </p>
-                                            )}
-                                            {/* ‼️‼️ จบส่วนที่แก้ไข ‼️‼️ */}
-                                        </div>
-                                        
-                                        {/* ปุ่ม +/- */}
-                                        <div className="flex items-center border rounded-lg">
-                                            <button 
-                                                onClick={() => handleUpdateQuantity(item.cartItemId, item.quantity - 1)}
-                                                className="w-8 h-8 text-gray-600 hover:bg-gray-100"
-                                            >
-                                                -
-                                            </button>
-                                            <span className="w-10 text-center text-sm font-medium">{item.quantity}</span>
-                                            <button 
-                                                onClick={() => handleUpdateQuantity(item.cartItemId, item.quantity + 1)}
-                                                className="w-8 h-8 text-gray-600 hover:bg-gray-100"
-                                            >
-                                                +
-                                            </button>
-                                        </div>
+                                            </div>
 
-                                        <p className="font-semibold text-gray-800 w-20 text-right">
-                                            ฿{(item.finalPrice * item.quantity).toFixed(2)}
-                                        </p>
-                                        
-                                        {/* ปุ่มลบ */}
-                                        <button 
-                                            onClick={() => handleRemoveItem(item.cartItemId)}
-                                            className="text-gray-400 hover:text-red-500 transition-colors"
-                                        >
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                                        </button>
+                                            {/* 2b. แถวล่าง: ราคาต่อหน่วย, ปุ่มปรับจำนวน, ปุ่มลบ */}
+                                            <div className="flex justify-between items-center mt-4">
+                                                <p className="text-sm text-gray-500">
+                                                    ฿{item.finalPrice.toFixed(2)} 
+                                                </p>
+                                                
+                                                <div className="flex items-center gap-3">
+                                                    {/* ปุ่ม +/- */}
+                                                    <div className="flex items-center border rounded-lg">
+                                                        <button 
+                                                            onClick={() => handleUpdateQuantity(item.cartItemId, item.quantity - 1)}
+                                                            className="w-8 h-8 text-gray-600 hover:bg-gray-100"
+                                                        >
+                                                            -
+                                                        </button>
+                                                        <span className="w-10 text-center text-sm font-medium">{item.quantity}</span>
+                                                        <button 
+                                                            onClick={() => handleUpdateQuantity(item.cartItemId, item.quantity + 1)}
+                                                            className="w-8 h-8 text-gray-600 hover:bg-gray-100"
+                                                        >
+                                                            +
+                                                        </button>
+                                                    </div>
+                                                    
+                                                    {/* ปุ่มลบ */}
+                                                    <button 
+                                                        onClick={() => handleRemoveItem(item.cartItemId)}
+                                                        className="text-gray-400 hover:text-red-500 transition-colors"
+                                                    >
+                                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
+                                    // ‼️‼️ จบ Layout ใหม่ ‼️‼️
                                 ))
                             )}
                         </div>
                     </main>
 
-                    {/* --- 5.2 ฝั่งขวา: สรุปรายการ --- */}
+                    {/* --- 5.2 ฝั่งขวา: สรุปรายการ (เหมือนเดิม) --- */}
                     <aside className="lg:w-1/3">
                         <div className="sticky top-24 bg-white p-6 rounded-lg shadow-sm border border-gray-200">
                             <h2 className="text-xl font-semibold text-gray-700 mb-4 pb-4 border-b">สรุปรายการ</h2>
@@ -229,17 +221,16 @@ export default function BasketPage() {
                                 ดำเนินการชำระเงิน
                             </button>
 
-                            {/* ปุ่มลิงก์ไปหน้า Menu และ Chat */}
                             <div className="flex flex-col sm:flex-row gap-3 mt-3">
                                 <Link
-                                    href="/menu-page"
-                                    className="flex-1 text-center bg-gray-200 hover:bg-gray-500 text-gray-700 font-medium py-3 px-4 rounded-lg transition-colors duration-200 text-sm"
+                                    href="/menu"
+                                    className="flex-1 text-center bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-3 px-4 rounded-lg transition-colors duration-200 text-sm"
                                 >
                                     เลือกเมนูเพิ่ม
                                 </Link>
                                 <Link
                                     href="/chat"
-                                    className="flex-1 text-center bg-gray-200 hover:bg-gray-500 text-gray-700 font-medium py-3 px-4 rounded-lg transition-colors duration-200 text-sm"
+                                    className="flex-1 text-center bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-3 px-4 rounded-lg transition-colors duration-200 text-sm"
                                 >
                                     สั่งด้วย AI
                                 </Link>

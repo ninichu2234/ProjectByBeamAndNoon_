@@ -81,7 +81,7 @@ export default function Header() {
                         
                         <Link href="/chat">
                             <button className="bg-[#2c8160] text-white px-6 py-2 rounded-full font-bold hover:bg-[#7ea566] transition-colors shadow">
-                                สั่งกับ AI เลย!
+                                Order with AI
                             </button>
                         </Link>
                     </nav>
