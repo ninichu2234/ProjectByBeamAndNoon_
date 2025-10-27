@@ -141,7 +141,7 @@ function HomePageContent() {
                 <div className="absolute inset-0 bg-black/60 z-10"></div>
                 <div className="relative z-20 text-center text-white p-4">
                     <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight">My<span className="text-amber-400">Cafe</span> </h1>
-                    <p className="mt-4 max-w-2xl mx-auto text-lg md:text-xl text-gray-200"> Let's AI suggest menu for you or select on the menu </p>
+                    <p className="mt-4 max-w-2xl mx-auto text-lg md:text-xl text-gray-200"> Suggest menu by AI for you or select on the menu </p>
                     <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
                         <Link href="/chat"> <button className="w-full sm:w-auto bg-[#2c8160] hover:bg-green-900 text-white font-bold py-3 px-8 rounded-full transition-all duration-300 shadow-lg transform hover:scale-105"> Talk with AI</button> </Link>
                         <Link href="/menu-page"> <button className="w-full sm:w-auto bg-transparent hover:bg-white/20 text-white font-semibold py-3 px-8 border-2 border-white rounded-full transition-all duration-300"> All menu </button> </Link>
