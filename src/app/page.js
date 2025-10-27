@@ -3,7 +3,8 @@
 
 import Link from 'next/link';
 import NextImage from 'next/image';
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+// ‼️ Import Suspense ‼️
+import React, { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { supabase } from './lib/supabaseClient'; // 👈 Correct path
 
@@ -126,13 +127,12 @@ const OrderStatusBanner = ({ orderData, onDismiss }) => {
     return ( <div className={`w-full p-4 rounded-lg shadow-md border-l-4 mb-6 flex items-center justify-between ${bgColor} ${borderColor} ${textColor}`}> <div className="flex items-center min-w-0"> {icon} <span className="font-medium flex-grow mr-2 truncate">{text}</span> </div> <button onClick={onDismiss} className={`ml-4 p-1.5 rounded-full hover:bg-black hover:bg-opacity-10 transition-colors flex-shrink-0 ${textColor}`} aria-label="Dismiss order status" > <XCircleIcon /> </button> </div> );
 };
 
-
-// --- Main Page Component (Client Component) ---
-export default function Home() {
+// ‼️ [Inner Component] Handles logic requiring Suspense ‼️
+function HomeContent() {
     // States for Order Status
     const [orderData, setOrderData] = useState(null);
     const [isLoadingStatus, setIsLoadingStatus] = useState(false);
-    const searchParams = useSearchParams();
+    const searchParams = useSearchParams(); // 👈 Use the hook here
     const router = useRouter();
 
     // States for History Recommendations
@@ -140,7 +140,7 @@ export default function Home() {
     const [historyRecs, setHistoryRecs] = useState([]);
     const [isLoadingHistory, setIsLoadingHistory] = useState(true);
 
-    // States for General Recommendations (fetched client-side)
+    // States for General Recommendations
     const [generalRecs, setGeneralRecs] = useState([]);
     const [isLoadingGeneral, setIsLoadingGeneral] = useState(true);
 
@@ -152,7 +152,7 @@ export default function Home() {
         fetchUser();
     }, []);
 
-    // Effect (2): Fetch History Recommendations (if user exists)
+    // Effect (2): Fetch History Recommendations
     useEffect(() => {
         const fetchHistoryRecommendations = async (userId) => {
             setIsLoadingHistory(true); setHistoryRecs([]);
@@ -175,7 +175,7 @@ export default function Home() {
         if (currentUser && currentUser.id) fetchHistoryRecommendations(currentUser.id);
     }, [currentUser]);
 
-    // Effect (3): Fetch General Recommendations (Client-side)
+    // Effect (3): Fetch General Recommendations
      useEffect(() => {
         const fetchGeneralRecommendations = async () => {
             setIsLoadingGeneral(true); let itemsWithImages = [];
@@ -187,33 +187,50 @@ export default function Home() {
              } catch (error) { console.error('Home(Client): Error fetching general recommendations:', error.message); setGeneralRecs([]); } finally { setIsLoadingGeneral(false); }
          };
          fetchGeneralRecommendations();
-     }, []); // Run once on mount
+     }, []);
 
 
     // Effect (4): Handle Order Status Subscription
     const handleDismissStatus = useCallback(() => { setOrderData(null); router.push('/', undefined, { shallow: true }); }, [router]);
     useEffect(() => {
-        const orderIdFromUrl = searchParams.get('orderId'); let channel = null;
+        const orderIdFromUrl = searchParams.get('orderId'); // 👈 Reads the param here
+        let channel = null;
         const setupSubscription = async () => {
             if (orderIdFromUrl && supabase) {
                 setIsLoadingStatus(true); setOrderData(null);
                 try {
                     const { data: initialData, error: initialError } = await supabase.from('order').select('orderId, orderStatus').eq('orderId', orderIdFromUrl).maybeSingle();
-                    if (initialError) throw initialError; if (initialData) setOrderData({ id: initialData.orderId, orderStatus: initialData.orderStatus }); else handleDismissStatus(); setIsLoadingStatus(false);
-                    channel = supabase.channel(`order_status_${orderIdFromUrl}`).on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'order', filter: `orderId=eq.${orderIdFromUrl}` }, (payload) => { if (payload.new?.orderStatus) { setOrderData({ id: payload.new.orderId, orderStatus: payload.new.orderStatus }); if (payload.new.orderStatus === 'จัดส่งแล้ว') setTimeout(handleDismissStatus, 10000); } }).subscribe((status, err) => { if (err) console.error(err); });
+                    if (initialError) throw initialError;
+                    if (initialData) setOrderData({ id: initialData.orderId, orderStatus: initialData.orderStatus });
+                    else handleDismissStatus();
+                    setIsLoadingStatus(false);
+
+                    channel = supabase.channel(`order_status_${orderIdFromUrl}`)
+                        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'order', filter: `orderId=eq.${orderIdFromUrl}` }, (payload) => {
+                            if (payload.new?.orderStatus) {
+                                setOrderData({ id: payload.new.orderId, orderStatus: payload.new.orderStatus });
+                                if (payload.new.orderStatus === 'จัดส่งแล้ว') setTimeout(handleDismissStatus, 10000);
+                            }
+                        }).subscribe((status, err) => { if (err) console.error(err); });
                 } catch (error) { setIsLoadingStatus(false); console.error(error); }
             } else { setOrderData(null); setIsLoadingStatus(false); }
         };
-        setupSubscription(); return () => { if (channel) supabase.removeChannel(channel).catch(console.error); };
-    }, [searchParams, handleDismissStatus]);
+        setupSubscription();
+        return () => { if (channel) supabase.removeChannel(channel).catch(console.error); };
+    }, [searchParams, handleDismissStatus]); // 👈 Make sure searchParams is a dependency
 
 
     // --- Render UI ---
     return (
         <main className="container mx-auto px-4 pt-4 sm:pt-6">
 
-            {isLoadingStatus ? (<div className="w-full p-4 rounded-lg shadow-md border-l-4 mb-6 bg-gray-100 border-gray-400 text-gray-600 animate-pulse">Checking order status...</div>) : (<OrderStatusBanner orderData={orderData} onDismiss={handleDismissStatus} />)}
+            {isLoadingStatus ? (
+                 <div className="w-full p-4 rounded-lg shadow-md border-l-4 mb-6 bg-gray-100 border-gray-400 text-gray-600 animate-pulse">Checking order status...</div>
+            ) : (
+                 <OrderStatusBanner orderData={orderData} onDismiss={handleDismissStatus} />
+            )}
 
+            {/* Hero Section */}
             <section className="relative flex items-center justify-center min-h-[calc(100vh-100px)] md:min-h-[calc(100vh-120px)] bg-gray-800 rounded-xl overflow-hidden mb-12">
                 <NextImage src="https://rcrntadwwvhyojmjrmzh.supabase.co/storage/v1/object/public/pic-other/picmain.jpeg" alt="Cafe ambience" fill={true} priority={true} sizes="100vw" className="absolute z-0 w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-black/60 z-10"></div>
@@ -227,21 +244,26 @@ export default function Home() {
                 </div>
             </section>
 
+             {/* General Recommendations */}
             <RecommendedSection items={generalRecs} isLoading={isLoadingGeneral} />
+
+             {/* History Recommendations */}
             <HistoryRecsSection items={historyRecs} isLoading={isLoadingHistory} />
 
+            {/* Reassurance Section */}
             <section className="bg-gray-50 py-20 md:py-24 rounded-xl mb-12">
                  <div className="px-6">
                     <div className="text-center mb-16">
-                        {/* ‼️ FIX: Don't -> Don&apos;t ‼️ */}
-                        <h2 className="text-3xl md:text-4xl font-bold text-gray-800">Don&apos;t Worry, We Can Help</h2>
+                         {/* ‼️ FIX: Don't -> Don&apos;t ‼️ */}
+                        <h2 className="text-3xl md:text-4xl font-bold text-gray-800">Don&apos;t Worry. We Can Help</h2>
                         <p className="mt-3 text-gray-600 text-lg">Whether you want to try something new or just want the right coffee</p>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
                         <div className="text-center md:text-left">
                             <NextImage src="https://rcrntadwwvhyojmjrmzh.supabase.co/storage/v1/object/public/pic-other/4.png" alt="Can't choose menu" width={600} height={400} sizes="(max-width: 768px) 100vw, 50vw" className="w-full h-auto object-cover rounded-lg shadow-md mb-6" />
-                            {/* ‼️ FIX: Can't -> Can&apos;t ‼️ */}
+                             {/* ‼️ FIX: Can't -> Can&apos;t ‼️ */}
                             <h3 className="text-2xl font-bold text-gray-800">Can&apos;t choose?</h3>
+                            {/* ‼️ FIX: don't -> don&apos;t ‼️ */}
                             <p className="mt-2 text-gray-600">Too many menus? Want to try something new but don&apos;t know where to start? This problem will be gone.</p>
                         </div>
                         <div className="text-center md:text-left">
@@ -253,7 +275,18 @@ export default function Home() {
                 </div>
             </section>
 
+            {/* How It Works */}
             <HowItWorksSection />
         </main>
     );
-} 
+}
+
+// --- Main Export ---
+export default function Home() {
+    // ‼️ Wrap the component that uses useSearchParams in Suspense ‼️
+    return (
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-xl font-semibold">Loading Page...</div>}>
+            <HomeContent />
+        </Suspense>
+    );
+}
