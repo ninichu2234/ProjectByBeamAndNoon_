@@ -88,7 +88,7 @@ export default function MenuPage() {
           {/* Sidebar (ไม่มีการเปลี่ยนแปลง) */}
           <aside className="md:w-1/4 lg:w-1/5">
             <div className="sticky top-24 bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-              <h2 className="text-xl font-bold text-gray-800 mb-4 border-b pb-2">หมวดหมู่</h2>
+              <h2 className="text-xl font-bold text-gray-800 mb-4 border-b pb-2">Category</h2>
               <nav className="flex flex-col space-y-2">
                 {categories.map(category => ( // Sidebar ยังคงแสดงทุกหมวดหมู่
                   <Link
@@ -126,19 +126,19 @@ export default function MenuPage() {
  
             {/* Promotions Section (ไม่มีการเปลี่ยนแปลง) */}
             <section className="mb-12">
-              <h2 className="text-2xl font-bold text-gray-800 mb-4">โปรโมชั่นพิเศษ</h2>
+              <h2 className="text-2xl font-bold text-gray-800 mb-4">Promotion</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="bg-amber-100 rounded-lg p-6 flex items-center shadow-sm border border-amber-200">
                     <div className="flex-1">
-                        <h3 className="font-bold text-lg text-amber-800">จับคู่สุดคุ้ม</h3>
-                        <p className="text-amber-700 text-sm">เครื่องดื่ม + เบเกอรี่ ลด 15%</p>
+                        <h3 className="font-bold text-lg text-amber-800">Best Match</h3>
+                        <p className="text-amber-700 text-sm">Beverage + Bakery got discount 15%</p>
                     </div>
                      <span className="text-3xl text-amber-500 ml-4">🎉</span>
                 </div>
                 <div className="bg-green-100 rounded-lg p-6 flex items-center shadow-sm border border-green-200">
                     <div className="flex-1">
-                        <h3 className="font-bold text-lg text-green-800">เมนูใหม่ต้องลอง!</h3>
-                        <p className="text-green-700 text-sm">Yuzu Cold Brew สดชื่นรับวันใหม่</p>
+                        <h3 className="font-bold text-lg text-green-800">New!</h3>
+                        <p className="text-green-700 text-sm">Yuzu Cold Brew</p>
                     </div>
                      <span className="text-3xl text-green-500 ml-4">✨</span>
                 </div>
@@ -151,8 +151,8 @@ export default function MenuPage() {
               {/* ‼️ 5. เพิ่มข้อความ "ไม่พบผลลัพธ์" ‼️ */}
               {filteredMenuItems.length === 0 && searchQuery.length > 0 && (
                 <div className="text-center text-gray-500 py-12">
-                  <h3 className="text-xl font-semibold">ไม่พบเมนูที่คุณค้นหา</h3>
-                  <p>ลองค้นหาด้วยคำอื่น หรือล้างข้อความเพื่อดูเมนูทั้งหมด</p>
+                  <h3 className="text-xl font-semibold">Could not find</h3>
+                  <p>Please try again</p>
                 </div>
               )}
 
@@ -200,7 +200,9 @@ export default function MenuPage() {
                       ))}
                   </div>
                 </section>
+              
               ))}
+              
             </div>
           </main>
         </div>
