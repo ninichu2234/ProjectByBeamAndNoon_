@@ -93,20 +93,20 @@ export default function BasketPage() {
     return (
         <div className="bg-gray-50 min-h-screen py-12">
             <div className="container mx-auto px-4 max-w-5xl">
-                <h1 className="text-3xl font-bold text-gray-800 mb-8">ตะกร้าสินค้าของคุณ</h1>
+                <h1 className="text-3xl font-bold text-gray-800 mb-8">Your cart</h1>
 
                 <div className="flex flex-col lg:flex-row gap-8">
                     
                     {/* --- 5.1 ฝั่งซ้าย: รายการสินค้า --- */}
                     <main className="lg:flex-1 bg-white p-6 rounded-lg shadow-sm border border-gray-200">
                         <div className="flex justify-between items-center mb-4 pb-4 border-b">
-                            <h2 className="text-xl font-semibold text-gray-700">รายการเมนู ({cart.length})</h2>
+                            <h2 className="text-xl font-semibold text-gray-700">List menu ({cart.length})</h2>
                             <button
                                 onClick={handleClearCart}
                                 className="text-sm text-red-500 hover:text-red-700 disabled:text-gray-400"
                                 disabled={cart.length === 0}
                             >
-                                ล้างตะกร้า
+                                Clear
                             </button>
                         </div>
 
@@ -114,7 +114,7 @@ export default function BasketPage() {
                         {/* ‼️ เปลี่ยนจาก space-y-6 เป็น divide-y (เส้นคั่น) ‼️ */}
                         <div className="divide-y divide-gray-200">
                             {cart.length === 0 ? (
-                                <p className="text-gray-500 text-center py-8">ตะกร้าของคุณว่างเปล่า</p>
+                                <p className="text-gray-500 text-center py-8">Your cart is empty</p>
                             ) : (
                                 cart.map(item => (
                                     // ‼️‼️ นี่คือ Layout ใหม่สำหรับ Mobile-First ‼️‼️
@@ -196,19 +196,19 @@ export default function BasketPage() {
                     {/* --- 5.2 ฝั่งขวา: สรุปรายการ (เหมือนเดิม) --- */}
                     <aside className="lg:w-1/3">
                         <div className="sticky top-24 bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                            <h2 className="text-xl font-semibold text-gray-700 mb-4 pb-4 border-b">สรุปรายการ</h2>
+                            <h2 className="text-xl font-semibold text-gray-700 mb-4 pb-4 border-b">Summary</h2>
                             
                             <div className="space-y-3 mb-6">
                                 <div className="flex justify-between text-gray-600">
-                                    <span>ราคารวม (Subtotal)</span>
+                                    <span>Subtotal</span>
                                     <span>฿{summary.subtotal.toFixed(2)}</span>
                                 </div>
                                 <div className="flex justify-between text-gray-600">
-                                    <span>ภาษี (7%)</span>
+                                    <span>vat 7%</span>
                                     <span>฿{summary.tax.toFixed(2)}</span>
                                 </div>
                                 <div className="flex justify-between text-gray-900 font-bold text-lg">
-                                    <span>ยอดรวมสุทธิ (Total)</span>
+                                    <span>Total</span>
                                     <span>฿{summary.total.toFixed(2)}</span>
                                 </div>
                             </div>

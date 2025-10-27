@@ -166,27 +166,27 @@ export default function ChatPage() {
             <div className="container mx-auto p-4 sm:p-8 max-w-5xl">
                  {/* Header */}
                  <div className="text-center mb-8">
-                     <h1 className="text-[#4A3728] font-bold text-3xl tracking-tight">Barista AI</h1>
-                     <p className="text-[#4A3728] font-bold">พร้อมแนะนำเมนูโปรดให้คุณ</p>
+                     <h1 className="text-[#4A3728] font-bold text-3xl tracking-tight">Barista</h1>
+                     <p className="text-[#4A3728] font-bold">Ready to recommend for you</p>
                  </div>
                  {/* Today's Special */}
                  <div className="bg-[#4A3728] p-6 rounded-xl mb-8 border-l-4 border-green-700"> {/* Changed border color */}
                      <h2 className="text-2xl font-bold text-white mb-2">Today&apos;s Special</h2>
                      <p className="text-white mb-4">&quot;Iced Oat Milk Hazelnut Latte&quot; ความหอมหวานลงตัว</p>
-                     <button onClick={() => setQuestion("ขอลอง Iced Oat Milk Hazelnut Latte")} className="bg-[#2c8160] hover:bg-green-900 text-white font-bold py-2 px-5 rounded-full text-sm">ถามเกี่ยวกับเมนูนี้</button>
+                     <button onClick={() => setQuestion("ขอลอง Iced Oat Milk Hazelnut Latte")} className="bg-[#2c8160] hover:bg-green-900 text-white font-bold py-2 px-5 rounded-full text-sm">Ask about this menu</button>
                  </div>
 
                  {/* Input Section */}
                  <div className="bg-[#4A3728] p-6 rounded-xl shadow-lg mb-8"> 
-                     <label htmlFor="question" className="block text-white font-bold mb-6">อยากดื่มอะไรดีคะ?</label>
+                     <label htmlFor="question" className="block text-white font-bold mb-6">What can I get for you?</label>
                      <textarea id="question" value={question} onChange={(e) => setQuestion(e.target.value)} className="w-full px-4 py-3 bg-white/10 text-white border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition placeholder-gray-400" rows="3" placeholder="เช่น กาแฟไม่เปรี้ยว, ชาผลไม้..." disabled={isLoading || isListening} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey && !isLoading && !isListening) { e.preventDefault(); handleSubmit(); } }} />
                      <div className="mt-3 flex flex-wrap gap-2"> {/* Quick Buttons */} 
-                         <button onClick={() => setQuestion("มีเมนูอะไรใหม่บ้าง?")} className="text-xs bg-white/20 hover:bg-white/30 text-white py-1 px-3 rounded-full transition">เมนูใหม่?</button>
-                         <button onClick={() => setQuestion("แนะนำกาแฟไม่เปรี้ยวหน่อย")} className="text-xs bg-white/20 hover:bg-white/30 text-white py-1 px-3 rounded-full transition">กาแฟไม่เปรี้ยว</button>
-                         <button onClick={() => setQuestion("เครื่องดื่มที่ไม่ใช่กาแฟ")} className="text-xs bg-white/20 hover:bg-white/30 text-white py-1 px-3 rounded-full transition">ไม่ใช่กาแฟ</button>
+                         <button onClick={() => setQuestion("New Menu?")} className="text-xs bg-white/20 hover:bg-white/30 text-white py-1 px-3 rounded-full transition">New Menu?</button>
+                         <button onClick={() => setQuestion("หาแฟนให้หน่อย")} className="text-xs bg-white/20 hover:bg-white/30 text-white py-1 px-3 rounded-full transition">หาแฟนให้หน่อย</button>
+                         <button onClick={() => setQuestion("Something sweet")} className="text-xs bg-white/20 hover:bg-white/30 text-white py-1 px-3 rounded-full transition">Something sweet</button>
                      </div>
                      <div className="mt-4 flex items-center gap-3"> {/* Submit & Listen Buttons */}
-                         <button onClick={() => handleSubmit()} disabled={isLoading || !question.trim() || isListening || question === "กำลังฟัง..."} className="w-full bg-[#2c8160] hover:bg-green-900 text-white font-bold py-3 px-8 rounded-full transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"> {isLoading ? 'กำลังคิด...' : '✨ ถาม Barista'} </button>
+                         <button onClick={() => handleSubmit()} disabled={isLoading || !question.trim() || isListening || question === "Listening..."} className="w-full bg-[#2c8160] hover:bg-green-900 text-white font-bold py-3 px-8 rounded-full transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"> {isLoading ? 'Thinking...' : ' Ask Barista'} </button>
                          <button onClick={handleListen} disabled={isLoading || isListening} className={`p-3 rounded-full transition-colors ${isListening ? 'bg-red-600 animate-pulse' : 'bg-white/20 hover:bg-white/30'} disabled:bg-gray-400 disabled:cursor-not-allowed`} title="สั่งด้วยเสียง"> <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 11-14 0m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg> </button>
                      </div>
                  </div>
@@ -196,13 +196,13 @@ export default function ChatPage() {
                     {/* AI Answer */}
                      <div className="flex items-start space-x-4"> 
                          <div className="bg-[#2c8160] rounded-full p-2 flex-shrink-0"> <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a2 2 0 01-2-2V7a2 2 0 012-2h2.5a1 1 0 01.7.3l2.4 2.4a1 1 0 01.3.7V8z" /></svg> </div>
-                         <div className="w-full"> <h2 className="text-xl font-bold text-white mb-2">คำแนะนำ:</h2> <div className="text-white whitespace-pre-wrap prose prose-invert max-w-none">{answer}</div> </div>
+                         <div className="w-full"> <h2 className="text-xl font-bold text-white mb-2">Suggestion:</h2> <div className="text-white whitespace-pre-wrap prose prose-invert max-w-none">{answer}</div> </div>
                      </div>
                     
                     {/* Recommended Menu Cards */}
                     {Array.isArray(recommendedMenus) && recommendedMenus.length > 0 && (
                         <div className="mt-6 border-t border-white/20 pt-6">
-                            <h3 className="text-lg font-semibold text-white mb-4">เมนูแนะนำสำหรับคุณ:</h3>
+                            <h3 className="text-lg font-semibold text-white mb-4">Recommend for you:</h3>
                             <div className="space-y-4"> {/* Increased spacing */}
                                 {recommendedMenus.map((menu) => (
                                     <RecommendedMenuCard 
@@ -238,7 +238,7 @@ export default function ChatPage() {
                                              {/* *** แสดง Special Instructions *** */}
                                              {item.specialInstructions && (
                                                  <p className="text-xs text-blue-600 ml-2 mt-1"> 
-                                                     Notes: <span className="italic">{item.specialInstructions}</span>
+                                                     Note: <span className="italic">{item.specialInstructions}</span>
                                                  </p>
                                              )}
                                         </div>
@@ -247,7 +247,7 @@ export default function ChatPage() {
                                 );
                             })
                         ) : (
-                            <p className="text-gray-500 text-center">ตะกร้าของคุณว่างเปล่า</p>
+                            <p className="text-gray-500 text-center">Your cart is empty</p>
                         )}
                     </div>
                     {/* Total and Checkout */}
@@ -257,7 +257,7 @@ export default function ChatPage() {
                     </div>
                     <Link href="/basket">
                         <button disabled={!cartItems || cartItems.length === 0} className="mt-5 w-full bg-[#2c8160] hover:bg-opacity-90 text-white font-bold py-3 px-8 rounded-full transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed">
-                            ดำเนินการต่อ
+                            Continue
                         </button>
                     </Link>
                 </div>
