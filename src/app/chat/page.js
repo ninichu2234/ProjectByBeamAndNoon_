@@ -154,28 +154,20 @@ export default function ChatPage() {
 
     // Handler for Speech-to-Text
     const handleListen = () => { 
-        if (typeof window === 'undefined') return; 
-        
-        // ‼️ นี่คือส่วนที่ทำให้เกิด Error "Browser not supported" ‼️
-        const SR = window.SpeechRecognition || window.webkitSpeechRecognition; 
-        if (!SR) {
-            alert("ขออภัยครับ เบราว์เซอร์ของคุณไม่รองรับการสั่งด้วยเสียง (โปรดลองใช้ Google Chrome)");
-            return;
-        }
-        // ‼️ สิ้นสุดส่วน Error ‼️
-        
+        if (typeof window === 'undefined') return; const SR = window.SpeechRecognition || window.webkitSpeechRecognition; if (!SR) return alert("Browser not supported");
         const rec = new SR(); rec.lang = 'th-TH'; rec.interimResults = false; rec.maxAlternatives = 1;
         rec.onstart = () => { setIsListening(true); setQuestion("กำลังฟัง..."); };
         rec.onresult = (e) => { 
             const text = e.results[0][0].transcript; 
             setQuestion(text); 
-            handleSubmit(text); // ‼️ ส่งข้อความเสียงไปให้ handleSubmit
+            handleSubmit(text); 
         };
         rec.onerror = (e) => { console.error("Speech error", e.error); setQuestion(''); alert(`Error: ${e.error}`); };
         rec.onend = () => { setIsListening(false); if (question === "กำลังฟัง...") setQuestion(''); }; rec.start();
     };
 
     // Handler to add item from RecommendedMenuCard to cart
+    // This function receives the *fully customized* item from the Card
     const _updateCart = (itemToAddFromCard) => {
         setCartItems(prevItems => {
             const currentCart = Array.isArray(prevItems) ? prevItems : [];
@@ -183,10 +175,13 @@ export default function ChatPage() {
                 console.error("ChatPage: Invalid item data received from card:", itemToAddFromCard); 
                 return currentCart; 
             }
+            
+            // The item from the card should already have a unique cartItemId
             const newItem = { 
                 ...itemToAddFromCard, 
-                cartItemId: itemToAddFromCard.cartItemId || uuidv4(), 
+                cartItemId: itemToAddFromCard.cartItemId || uuidv4(), // Fallback just in case
             };
+            
             const updatedItems = [...currentCart, newItem];
             console.log(`ChatPage: Added item cartItemId: ${newItem.cartItemId}`, newItem);
             return updatedItems; 
@@ -194,7 +189,7 @@ export default function ChatPage() {
     };
     
     // Handler to submit question to AI
-    const handleSubmit = async (textFromSpeech = null) => { // ‼️ textFromSpeech จะมีค่าถ้ามาจากไมค์
+    const handleSubmit = async (textFromSpeech = null) => { 
         const currentQuestion = textFromSpeech || question; 
         if (!currentQuestion.trim() || currentQuestion === "กำลังฟัง...") return;
 
@@ -242,17 +237,23 @@ export default function ChatPage() {
                     
                     let recs = []; 
                     if (Array.isArray(aiRes.recommendations)) { 
+                        
+                        // Handle richer recommendation data
                         recs = aiRes.recommendations.map(m => { 
                             const id = m?.menuId ?? m?.item_id; 
                             if (id == null) return null; 
+                            
                             const fullMenuItem = allMenuItems.find(i => String(i.menuId) === String(id)); 
-                            if (!fullMenuItem) return null; 
+                            if (!fullMenuItem) return null; // Skip if item not found
+
                             const suggestedOptions = m.suggestedOptions || []; 
+
                             return {
-                                ...fullMenuItem, 
-                                suggestedOptions: suggestedOptions 
+                                ...fullMenuItem, // Base menu details (name, price, image...)
+                                suggestedOptions: suggestedOptions // AI's pre-selections
                             };
-                        }).filter(Boolean); 
+
+                        }).filter(Boolean); // Filter out any nulls
                     } 
                     setRecommendedMenus(recs); 
                     console.log("ChatPage: Recommendations set:", recs);
@@ -275,13 +276,10 @@ export default function ChatPage() {
             setRecommendedMenus([]);
         } finally { 
             setIsLoading(false); 
-            
-            // ‼️ ‼️ ‼️ นี่คือ Logic ที่คุณต้องการ ‼️ ‼️ ‼️
-            if (textFromSpeech) { // ถ้า textFromSpeech มีค่า (มาจากไมค์)
-                setQuestion(''); // ล้างช่อง input
-                speak(finalAnswerText); // สั่งให้ AI พูดกลับ
+            if (textFromSpeech) { // Only speak if input was from speech
+                setQuestion(''); 
+                speak(finalAnswerText); 
             } 
-            // ‼️ ถ้า textFromSpeech เป็น null (มาจากปุ่ม Ask Barista) มันจะไม่ทำใน if นี้
         }
     };
 
@@ -311,10 +309,8 @@ export default function ChatPage() {
                          <button onClick={() => setQuestion("Something sweet")} className="text-xs bg-white/20 hover:bg-white/30 text-white py-1 px-3 rounded-full transition">Something sweet</button>
                      </div>
                      <div className="mt-4 flex items-center gap-3">
-                         {/* ‼️ ปุ่มนี้จะเรียก handleSubmit(null) */}
                          <button onClick={() => handleSubmit()} disabled={isLoading || !question.trim() || isListening || question === "Listening..."} className="w-full bg-[#2c8160] hover:bg-green-900 text-white font-bold py-3 px-8 rounded-full transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"> {isLoading ? 'Thinking...' : ' Ask Barista'} </button>
-                         {/* ‼️ ปุ่มนี้จะเรียก handleListen() */}
-                         <button onClick={handleListen} disabled={isLoading || isListening} className={`p-3 rounded-full transition-colors ${isListening ? 'bg-red-600 animate-pulse' : 'bg-white/20 hover:bg-white/30'} disabled:bg-gray-400 disabled:cursor-not-allowed`} title="สั่งด้วยเสียง"> <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 11-14 0m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg> </button>
+                         <button onClick={handleListen} disabled={isLoading || isListening} className={`p-3 rounded-full transition-colors ${isListening ? 'bg-red-600 animate-pulse' : 'bg-white/20 hover:bg-white/30'} disabled:bg-gray-400 disabled:cursor-not-allowed`} title="สั่งด้วยเสียง"> <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 11-14 0m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg> </button>
                      </div>
                  </div>
 
@@ -333,6 +329,7 @@ export default function ChatPage() {
                                     <RecommendedMenuCard 
                                         key={menu.menuId}
                                         menu={menu}
+                                        // ส่งค่าที่ AI แนะนำไปให้ Component Card
                                         initialOptions={menu.suggestedOptions || []} 
                                         onAddToCart={_updateCart} 
                                     />
@@ -376,7 +373,7 @@ export default function ChatPage() {
                     {/* Total and Checkout */}
                     <div className="border-t-2 border-[#4A3728] pt-4 flex justify-between items-center">
                         <span className="text-xl font-bold text-[#4A3728]">Total:</span>
-                        <span className="text-2xl font-extrabold text-[#4A3T28]">{totalPrice.toFixed(2)} ฿</span> 
+                        <span className="text-2xl font-extrabold text-[#4A3728]">{totalPrice.toFixed(2)} ฿</span> 
                     </div>
                     <Link href="/basket">
                         <button disabled={!cartItems || cartItems.length === 0} className="mt-5 w-full bg-[#2c8160] hover:bg-opacity-90 text-white font-bold py-3 px-8 rounded-full transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed">
