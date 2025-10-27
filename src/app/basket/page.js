@@ -218,21 +218,21 @@ export default function BasketPage() {
                                 disabled={cart.length === 0}
                                 className="w-full bg-[#2c8160] hover:bg-green-800 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed"
                             >
-                                ดำเนินการชำระเงิน
+                                Proceed with payment
                             </button>
 
                             <div className="flex flex-col sm:flex-row gap-3 mt-3">
                                 <Link
-                                    href="/menu-page"
-                                    className="flex-1 text-center bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-3 px-4 rounded-lg transition-colors duration-200 text-sm"
-                                >
-                                    เลือกเมนูเพิ่ม
-                                </Link>
-                                <Link
                                     href="/chat"
                                     className="flex-1 text-center bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-3 px-4 rounded-lg transition-colors duration-200 text-sm"
                                 >
-                                    สั่งด้วย AI
+                                    Order with AI
+                                </Link>
+                                <Link
+                                    href="/menu-page"
+                                    className="flex-1 text-center bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-3 px-4 rounded-lg transition-colors duration-200 text-sm"
+                                >
+                                    Menu
                                 </Link>
                             </div>
 

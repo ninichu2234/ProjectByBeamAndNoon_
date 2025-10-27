@@ -270,11 +270,11 @@ export default function CheckoutPage() {
             <div className="bg-white min-h-screen">
                 <div className="container mx-auto px-4 py-12 max-w-2xl text-center">
                     <CheckCircleIcon />
-                    <h1 className="text-3xl font-bold text-green-600 mt-4">สั่งซื้อสำเร็จ!</h1>
-                    <p className="text-gray-600 mt-2">ขอบคุณที่ใช้บริการ AI Barista ครับ</p>
-                    <p className="text-gray-600">คำสั่งซื้อของคุณ ({createdOrderId}) กำลังถูกจัดเตรียม</p>
+                    <h1 className="text-3xl font-bold text-green-600 mt-4">Success!</h1>
+                    <p className="text-gray-600 mt-2">Thankyou for your order</p>
+                    <p className="text-gray-600">Your order ({createdOrderId}) is being prepared</p>
                     <Link href={`/?orderId=${createdOrderId}`} className="mt-8 inline-block bg-[#4A3728] text-white px-8 py-3 rounded-lg font-bold hover:bg-green-800 transition-colors shadow">
-                        กลับสู่หน้าหลัก
+                        Back to home
                     </Link>
                 </div>
             </div>
@@ -301,7 +301,7 @@ export default function CheckoutPage() {
     if (isInitialMount.current || userLoading || profileLoading) { 
         return (
             <div className="bg-white min-h-screen flex items-center justify-center">
-                <p className="text-gray-500">กำลังโหลดข้อมูล...</p>
+                <p className="text-gray-500">Loading...</p>
             </div>
         );
     }
@@ -310,15 +310,15 @@ export default function CheckoutPage() {
     return (
         <div className="bg-gray-50 min-h-screen">
             <div className="container mx-auto px-4 py-8 md:py-12">
-                <h1 className="text-3xl md:text-4xl font-bold text-[#4A3728] text-center mb-8">ข้อมูลการชำระเงิน</h1>
+                <h1 className="text-3xl md:text-4xl font-bold text-[#4A3728] text-center mb-8">Payment Information</h1>
                 
                 {/* ‼️ --- [แก้ไข] จุดที่ 1: การแสดงผลแต้ม --- ‼️ */}
                 {userId && profile && (
                     <div className="max-w-6xl mx-auto p-4 mb-8 bg-amber-100 border border-amber-300 rounded-xl text-amber-900 shadow-sm">
                         {/* ‼️ แก้ไข: profile.username เป็น profile.fullName (ตามฐานข้อมูล) ‼️ */}
-                        <h3 className="font-semibold text-lg">สวัสดีครับ, {profile.fullName || profile.email || 'สมาชิก'}</h3>
+                        <h3 className="font-semibold text-lg">Hello, {profile.fullName || profile.email || 'member'}</h3>
                         {/* ‼️ แก้ไข: profile.points เป็น profile.loyaltyPoints (ตามฐานข้อมูล) ‼️ */}
-                        <p className="text-sm">คุณมีแต้มสะสม: <span className="font-bold text-amber-700">{profile.loyaltyPoints || 0} Points</span></p>
+                        <p className="text-sm">Your points: <span className="font-bold text-amber-700">{profile.loyaltyPoints || 0} Points</span></p>
                     </div>
                 )}
                 
@@ -328,7 +328,7 @@ export default function CheckoutPage() {
                     <div className="lg:col-span-2 bg-white rounded-xl shadow-md p-6 border">
                          {/* Input สำหรับ Table Number */}
                          <div className="mb-8">
-                             <label htmlFor="tableNumber" className="block text-xl font-semibold text-gray-700 mb-2">หมายเลขโต๊ะของคุณ</label>
+                             <label htmlFor="tableNumber" className="block text-xl font-semibold text-gray-700 mb-2">Your table number</label>
                              <input
                                  type="number"
                                  name="tableNumber"
@@ -336,23 +336,23 @@ export default function CheckoutPage() {
                                  value={formData.tableNumber}
                                  onChange={handleInputChange}
                                  className="mt-1 block w-full max-w-xs rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 text-lg p-2"
-                                 placeholder="ใส่หมายเลขโต๊ะ..."
+                                 placeholder="Enter your table number"
                                />
-                             <p className="text-xs text-gray-500 mt-1">กรุณากรอกหมายเลขโต๊ะเพื่อรับออเดอร์</p>
+                             <p className="text-xs text-gray-500 mt-1">Please enter your table number for menu serving </p>
                          </div>
 
-                        <h2 className="text-xl font-semibold text-gray-700 border-b pb-4 mb-6">เลือกช่องทางการชำระเงิน</h2>
+                        <h2 className="text-xl font-semibold text-gray-700 border-b pb-4 mb-6">Select payment method</h2>
                         <div className="space-y-4">
                             {/* --- ตัวเลือกที่ 1: จ่ายที่เคาน์เตอร์ --- */}
                             <label className={`flex items-center p-4 border rounded-lg cursor-pointer transition-all duration-200 ${formData.paymentMethod === 'counter' ? 'bg-green-50 border-green-600 ring-2 ring-green-500' : 'border-gray-300 hover:border-gray-400'}`}>
                                 <input type="radio" name="paymentMethod" value="counter" checked={formData.paymentMethod === 'counter'} onChange={handleInputChange} className="sr-only" />
                                 <CounterIcon />
-                                <span className="ml-3 font-medium text-gray-700">ชำระเงินที่เคาน์เตอร์</span>
+                                <span className="ml-3 font-medium text-gray-700">Counter</span>
                             </label>
                             {/* --- ตัวเลือกที่ 2: จ่ายผ่านมือถือ --- */}
                             <div onClick={handleMobilePaymentLabelClick} className={`flex items-center p-4 border rounded-lg cursor-pointer transition-all duration-200 ${formData.paymentMethod === 'qr' || formData.paymentMethod === 'card' ? 'bg-green-50 border-green-600 ring-2 ring-green-500' : 'border-gray-300 hover:border-gray-400'}`}>
                                 <MobilePaymentIcon />
-                                <span className="ml-3 font-medium text-gray-700">ชำระผ่านมือถือ</span>
+                                <span className="ml-3 font-medium text-gray-700">Mobile banking</span>
                             </div>
                             {/* --- ตัวเลือกย่อย --- */}
                             {(formData.paymentMethod === 'qr' || formData.paymentMethod === 'card') && (
@@ -365,7 +365,7 @@ export default function CheckoutPage() {
                                     <label className={`flex items-center p-3 rounded-lg cursor-pointer transition-all duration-200 ${formData.paymentMethod === 'card' ? 'bg-blue-50 border-blue-500' : 'hover:bg-gray-50'}`}>
                                         <input type="radio" name="paymentMethod" value="card" checked={formData.paymentMethod === 'card'} onChange={handleInputChange} className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 mr-3" />
                                         <CreditCardIcon />
-                                        <span className="font-medium text-gray-700">บัตรเครดิต / เดบิต</span>
+                                        <span className="font-medium text-gray-700">Credit card / Debit card</span>
                                     </label>
                                 </div>
                             )}
@@ -375,7 +375,7 @@ export default function CheckoutPage() {
                     {/* คอลัมน์ขวา: สรุปรายการ */}
                     <div className="lg:col-span-1">
                         <div className="bg-white rounded-xl shadow-md p-6 sticky top-24 border">
-                            <h2 className="text-xl font-semibold text-gray-700 border-b pb-4 mb-6">สรุปคำสั่งซื้อ</h2>
+                            <h2 className="text-xl font-semibold text-gray-700 border-b pb-4 mb-6">Order Summary</h2>
                             <div className="space-y-3 max-h-60 overflow-y-auto mb-4 border-b pb-4">
                                 {Array.isArray(cartItems) && cartItems.map(item => (
                                     <div key={item.menuId} className="flex justify-between items-center text-sm">
@@ -388,10 +388,10 @@ export default function CheckoutPage() {
                                 ))}
                             </div>
                             <div className="space-y-4">
-                                <div className="flex justify-between text-gray-600"><span>ราคารวม</span><span>฿{summary.subtotal.toFixed(2)}</span></div>
-                                <div className="flex justify-between text-sm text-gray-500"><span>ภาษี (7%)</span><span>฿{summary.vat.toFixed(2)}</span></div>
+                                <div className="flex justify-between text-gray-600"><span>Total</span><span>฿{summary.subtotal.toFixed(2)}</span></div>
+                                <div className="flex justify-between text-sm text-gray-500"><span>vat 7%</span><span>฿{summary.vat.toFixed(2)}</span></div>
                                 <div className="border-t pt-4 mt-4">
-                                    <div className="flex justify-between font-bold text-lg text-[#4A3728]"><span>ยอดรวมสุทธิ</span><span>฿{summary.total.toFixed(2)}</span></div>
+                                    <div className="flex justify-between font-bold text-lg text-[#4A3728]"><span>Subtotal</span><span>฿{summary.total.toFixed(2)}</span></div>
                                 </div>
                             </div>
                             <div className="mt-8 space-y-3">
@@ -400,10 +400,10 @@ export default function CheckoutPage() {
                                     disabled={isProcessing || !Array.isArray(cartItems) || cartItems.length === 0 || isInitialMount.current || userLoading || profileLoading} 
                                     className="w-full text-center py-3 rounded-lg font-bold text-lg text-white bg-[#2c8160] hover:bg-green-900 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
                                 >
-                                    {isProcessing ? 'กำลังดำเนินการ...' : `ยืนยันคำสั่งซื้อ (฿${summary.total.toFixed(2)})`}
+                                    {isProcessing ? 'In progress...' : `Submit (฿${summary.total.toFixed(2)})`}
                                 </button>
                                 <Link href="/basket" className="block w-full text-center py-3 rounded-lg font-bold text-lg text-[#4A3728] bg-gray-100 hover:bg-gray-200 transition-colors">
-                                    กลับไปแก้ไขตะกร้า
+                                    Back to cart
                                 </Link>
                             </div>
                         </div>
