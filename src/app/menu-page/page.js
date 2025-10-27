@@ -124,27 +124,7 @@ export default function MenuPage() {
                 </div>
             </section>
  
-            {/* Promotions Section (ไม่มีการเปลี่ยนแปลง) */}
-            <section className="mb-12">
-              <h2 className="text-2xl font-bold text-gray-800 mb-4">Promotion</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-amber-100 rounded-lg p-6 flex items-center shadow-sm border border-amber-200">
-                    <div className="flex-1">
-                        <h3 className="font-bold text-lg text-amber-800">Best Match</h3>
-                        <p className="text-amber-700 text-sm">Beverage + Bakery got discount 15%</p>
-                    </div>
-                     <span className="text-3xl text-amber-500 ml-4">🎉</span>
-                </div>
-                <div className="bg-green-100 rounded-lg p-6 flex items-center shadow-sm border border-green-200">
-                    <div className="flex-1">
-                        <h3 className="font-bold text-lg text-green-800">New!</h3>
-                        <p className="text-green-700 text-sm">Yuzu Cold Brew</p>
-                    </div>
-                     <span className="text-3xl text-green-500 ml-4">✨</span>
-                </div>
-              </div>
-            </section>
- 
+
             {/* Menu Sections */}
             <div className="space-y-12">
               
