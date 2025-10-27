@@ -5,23 +5,28 @@ import React, { useState, useEffect, useCallback } from 'react';
 // [FIX PATH] แก้ไข Path ไปยัง supabaseClient ให้ถูกต้อง
 import { supabase } from '../app/lib/supabaseClient'; 
 import Image from 'next/image';
+import { v4 as uuidv4 } from 'uuid'; // ‼️ แนะนำให้ import uuid ที่นี่เพื่อสร้าง cartItemId
 
-export default function RecommendedMenuCard({ menu, onAddToCart }) {
+// ‼️ 1. แก้ไข props ให้รับ initialOptions
+export default function RecommendedMenuCard({ menu, initialOptions = [], onAddToCart }) {
     const [optionGroups, setOptionGroups] = useState([]);
     const [selections, setSelections] = useState({}); 
     const [isLoading, setIsLoading] = useState(true);
     const [currentPrice, setCurrentPrice] = useState(menu.menuPrice || 0);
     const [specialInstructions, setSpecialInstructions] = useState('');
 
-    const addLog = (message) => console.log(`[${menu.menuName}] ${message}`);
+    // ‼️ 2. หุ้ม addLog ด้วย useCallback เพื่อให้ฟังก์ชันเสถียร
+    const addLog = useCallback((message, data = '') => {
+        console.log(`[${menu.menuName}] ${message}`, data);
+    }, [menu.menuName]);
 
-    // --- (fetchOptions, useEffect โหลดข้อมูล, useEffect คำนวณราคา - เหมือนเดิม) ---
+    // --- (fetchOptions, useEffect โหลดข้อมูล, useEffect คำนวณราคา) ---
     const fetchOptions = useCallback(async (menuId) => {
         setIsLoading(true);
         setOptionGroups([]);
         setSelections({});
         setCurrentPrice(menu.menuPrice || 0); 
-        setSpecialInstructions(''); 
+        // ‼️ ไม่รีเซ็ต specialInstructions ที่นี่ เผื่อ AI ส่งมา
         addLog(`(1) Fetching options...`);
         try {
             const { data, error } = await supabase.from('menuItemOptionGroups').select(`groupId, optionGroups (groupId, nameGroup, selectionType, option ( optionId, optionName, priceAdjustment ))`).eq('menuId', menuId);
@@ -29,27 +34,70 @@ export default function RecommendedMenuCard({ menu, onAddToCart }) {
             const groups = data.map(item => item.optionGroups).filter(Boolean); 
             setOptionGroups(groups);
             addLog(`(2) Fetched ${groups.length} groups.`);
-            const defaultSelections = {};
+
+            // ‼️ 3. [LOGIC ใหม่] สร้าง Selections โดยอิงจาก AI (initialOptions) ก่อน
+            const newSelections = {};
+            addLog(`(3) Applying initial selections from AI:`, initialOptions);
+            
             groups.forEach(group => {
-                if (group.selectionType === 'single_required') { 
-                    const defaultOption = group.option.find(opt => opt.optionName?.includes('100%')) || group.option.find(opt => opt.optionName?.includes('50%')) || group.option[0];
-                    if (defaultOption) { defaultSelections[group.groupId] = String(defaultOption.optionId); }
-                } else if (group.selectionType === 'single_optional') { 
-                     defaultSelections[group.groupId] = ''; 
-                } else if (group.selectionType === 'multiple_optional') {
-                     defaultSelections[group.groupId] = []; 
+                const groupName = group.nameGroup;
+                const groupId = group.groupId;
+
+                // 3.1 ค้นหาว่า AI แนะนำตัวเลือกสำหรับกลุ่มนี้หรือไม่
+                const aiSuggestion = initialOptions.find(opt => opt.groupName === groupName);
+                let appliedAiSuggestion = false;
+
+                if (aiSuggestion && aiSuggestion.optionName) {
+                    // 3.2 ถ้า AI แนะนำ ให้หา optionId ที่ตรงกัน
+                    const matchingOption = group.option.find(opt => opt.optionName === aiSuggestion.optionName);
+                    if (matchingOption) {
+                        newSelections[groupId] = String(matchingOption.optionId);
+                        addLog(` -> Applied AI suggestion for '${groupName}': ${matchingOption.optionName}`);
+                        appliedAiSuggestion = true;
+                    } else {
+                        addLog(` -> WARNING: AI suggested '${aiSuggestion.optionName}' for '${groupName}', but no matching optionId was found.`);
+                    }
+                }
+
+                // 3.3 ถ้า AI ไม่ได้แนะนำ ให้ใช้ Logic เดิม
+                if (!appliedAiSuggestion) {
+                    if (group.selectionType === 'single_required') { 
+                        const defaultOption = group.option.find(opt => opt.optionName?.includes('100%')) || group.option.find(opt => opt.optionName?.includes('50%')) || group.option[0];
+                        if (defaultOption) { newSelections[groupId] = String(defaultOption.optionId); }
+                    } else if (group.selectionType === 'single_optional') { 
+                         newSelections[groupId] = ''; // 'None'
+                    } else if (group.selectionType === 'multiple_optional') {
+                         newSelections[groupId] = []; 
+                    }
                 }
             });
-            setSelections(defaultSelections);
+
+            // 3.4 ตรวจสอบ Notes/Special Instructions จาก AI
+            const aiNotes = initialOptions.find(opt => opt.groupName === 'Notes');
+            if (aiNotes && aiNotes.optionName) {
+                setSpecialInstructions(aiNotes.optionName);
+                addLog(` -> Applied AI suggestion for Notes: ${aiNotes.optionName}`);
+            } else {
+                setSpecialInstructions(''); // ถ้า AI ไม่ได้ส่งมา ก็ให้เป็นค่าว่าง
+            }
+
+            setSelections(newSelections); // ตั้งค่า state ทีเดียว
+
         } catch (err) { addLog(`(!) ERROR fetching options: ${err.message}`);
         } finally { setIsLoading(false); addLog(`(4) Finished fetching.`); }
-    }, [menu.menuId, menu.menuName, menu.menuPrice]); // ‼️ หมายเหตุ: ถ้า addLog ถูกสร้างนอก useCallback คุณอาจต้องเพิ่ม 'addLog' ในนี้ตามที่ Vercel เตือน
+    // ‼️ 4. เพิ่ม initialOptions และ addLog ใน dependencies
+    }, [menu.menuId, menu.menuPrice, initialOptions, addLog]); 
 
     useEffect(() => {
-        if (menu.menuId) { fetchOptions(menu.menuId); }
+        if (menu.menuId) { 
+            fetchOptions(menu.menuId); 
+        }
+        // รีเซ็ตราคาพื้นฐานเสมอเมื่อ menu prop เปลี่ยน
         setCurrentPrice(menu.menuPrice || 0); 
-    }, [menu.menuId, menu.menuPrice, fetchOptions]);
+    // ‼️ fetchOptions จะเปลี่ยนเมื่อ initialOptions เปลี่ยน ซึ่งจะ trigger effect นี้
+    }, [menu.menuId, menu.menuPrice, fetchOptions]); 
 
+    // (useEffect คำนวณราคา - เหมือนเดิม)
     useEffect(() => {
         if (!isLoading && optionGroups && optionGroups.length >= 0) { 
             let priceAdjustmentTotal = 0;
@@ -70,7 +118,7 @@ export default function RecommendedMenuCard({ menu, onAddToCart }) {
         } 
     }, [selections, optionGroups, menu.menuPrice, isLoading, currentPrice]); 
 
-    // --- (Handlers - handleSelectionChange, handleAddClick - เหมือนเดิม) ---
+    // --- (Handlers - handleSelectionChange, handleAddClick) ---
     const handleSelectionChange = (groupId, optionId) => {
         addLog(`(!) Selection changed: Group ${groupId} -> Option ${optionId}`);
         setSelections(prev => ({ ...prev, [groupId]: optionId }));
@@ -80,6 +128,7 @@ export default function RecommendedMenuCard({ menu, onAddToCart }) {
         addLog(`(+) Add clicked. Final Price: ${currentPrice}. Instructions: "${specialInstructions}"`);
         const allSelectedOptions = [];
         let priceAdjustmentTotal = 0; 
+
         Object.entries(selections).forEach(([groupId, selectedOptionId]) => {
             if (selectedOptionId && selectedOptionId !== '') { 
                 const group = optionGroups.find(g => String(g.groupId) === String(groupId));
@@ -99,20 +148,25 @@ export default function RecommendedMenuCard({ menu, onAddToCart }) {
         
         const itemToCart = { 
             ...menu, 
+            cartItemId: uuidv4(), // ‼️ สร้าง ID ที่ไม่ซ้ำกันสำหรับตะกร้า
             quantity: 1, 
             finalPrice: currentPrice, 
             customizations: customizations,
-            specialInstructions: specialInstructions.trim() || null 
+            specialInstructions: specialInstructions.trim() || null,
+            // ‼️ ลบ initialOptions ออกจาก object ที่ส่งไปตะกร้า
+            initialOptions: undefined 
         };
+        // ‼️ ลบ key ที่ไม่จำเป็นก่อนส่ง
+        delete itemToCart.suggestedOptions; 
         
         onAddToCart(itemToCart); 
     };
 
-    // --- ‼️‼️ UI ที่แก้ไข (ส่วน Dropdowns) ‼️‼️ ---
+    // --- (UI - เหมือนเดิม) ---
     return (
         <div className="bg-white/10 p-4 rounded-lg border border-white/20 flex flex-col transition hover:shadow-md hover:border-green-500">
             
-            {/* (แถวบน: ข้อมูลเมนู - เหมือนเดิม) */}
+            {/* (แถวบน: ข้อมูลเมนู) */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between w-full mb-4">
                  <div className="flex items-center mb-3 sm:mb-0">
                     <div className="w-20 h-20 rounded-lg overflow-hidden mr-4 flex-shrink-0 bg-gray-700">
@@ -125,13 +179,11 @@ export default function RecommendedMenuCard({ menu, onAddToCart }) {
                 </div>
             </div>
 
-            {/* ‼️ 1. เปลี่ยนจาก flex-wrap เป็น grid ‼️ */}
+            {/* (ส่วน Dropdowns) */}
             {!isLoading && optionGroups.length > 0 && (
                 <div className="mb-4">
-                    {/* ใช้ grid-cols-1 (มือถือ) และ md:grid-cols-2 (เดสก์ท็อป) */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
                         {optionGroups.map(group => (
-                            // ‼️ 2. เปลี่ยนเป็น flex-col เพื่อให้ Label อยู่บน Select ‼️
                             <div key={group.groupId} className="flex flex-col space-y-1">
                                 <label 
                                     htmlFor={`select-${menu.menuId}-${group.groupId}`} 
@@ -141,9 +193,9 @@ export default function RecommendedMenuCard({ menu, onAddToCart }) {
                                 </label>
                                 <select
                                     id={`select-${menu.menuId}-${group.groupId}`}
+                                    // ‼️ value จะถูก set จาก state (selections)
                                     value={selections[group.groupId] || ''} 
                                     onChange={(e) => handleSelectionChange(group.groupId, e.target.value)}
-                                    // ‼️ 3. เพิ่ม w-full ให้ dropdown กว้างเต็มคอลัมน์ ‼️
                                     className="bg-white/20 text-white text-xs rounded p-2 border border-white/30 focus:outline-none focus:ring-1 focus:ring-green-500 w-full"
                                 >
                                     {group.selectionType === 'single_optional' && (<option value="" className="text-black">None</option>)}
@@ -154,15 +206,15 @@ export default function RecommendedMenuCard({ menu, onAddToCart }) {
                     </div>
                 </div>
             )}
-            {/* ‼️ จบส่วนที่แก้ไข ‼️ */}
 
             {isLoading && (<div className="mb-4"><p className="text-xs text-gray-400">Loading options...</p></div>)}
 
-            {/* (Textarea - เหมือนเดิม) */}
+            {/* (Textarea - Notes) */}
             <div className="mb-4">
                 <label htmlFor={`instructions-${menu.menuId}`} className="block text-xs text-gray-300 mb-1">Notes:</label>
                 <textarea
                     id={`instructions-${menu.menuId}`}
+                    // ‼️ value จะถูก set จาก state (specialInstructions)
                     value={specialInstructions}
                     onChange={(e) => setSpecialInstructions(e.target.value)}
                     rows="2"
@@ -171,7 +223,7 @@ export default function RecommendedMenuCard({ menu, onAddToCart }) {
                 />
             </div>
 
-            {/* (แถวล่าง: ราคา & ปุ่ม Add - เหมือนเดิม) */}
+            {/* (แถวล่าง: ราคา & ปุ่ม Add) */}
             <div className="border-t border-white/10 mt-auto pt-3 flex flex-col sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-lg font-bold text-white text-left sm:text-left mb-2 sm:mb-0">
                     Total: {currentPrice.toFixed(2)} บาท

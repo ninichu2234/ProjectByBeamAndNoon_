@@ -1,11 +1,14 @@
+// src/app/api/chat/route.js
+
 import { NextResponse } from 'next/server';
 
-// [EDIT] เราจะใช้ Gemini Flash รุ่นใหม่ล่าสุด
-const MODEL_NAME = 'gemini-2.5-pro';
+// [EDIT] แก้ไขเป็น 'gemini-1.5-flash'
+const MODEL_NAME = 'gemini-2.5-pro'; 
 
 export async function POST(request) {
   try {
-    const { question, menuContext } = await request.json();
+    // ‼️‼️ [FIX] แก้ไขบรรทัดนี้ ‼️‼️
+    const { question, menuContext, optionsContext } = await request.json();
     const API_KEY = process.env.GEMINI_API_KEY;
 
     if (!API_KEY) {
@@ -16,25 +19,59 @@ export async function POST(request) {
     
     const myOwnContent = "Our cafe opens between 8am - 6pm on weekdays, and 10am - 9pm on weekends.";
 
-    // [EDIT] นี่คือส่วนที่แก้ไข "Prompt" ให้เข้มงวด
+    // [EDIT] อัปเดต Prompt ให้รองรับ suggestedOptions
     const promptText = `
-        You are a helpful cafe assistant. Your task is to answer the user's question based on the provided information.
-        You MUST respond with **only** a single, valid JSON object. Do not include any text or markdown formatting.
-        The JSON object must contain "text" (your answer in Thai) and "recommendations" (an array).
+        You are a helpful and friendly cafe barista.
+        Your task is to answer the user's question in Thai based on the provided information.
+        You MUST respond with **only** a single, valid JSON object. Do not include any other text or markdown formatting (like \`\`\`json).
 
-        **CRITICAL RULE:** If you recommend menu items, you **MUST** use the exact \`menuId\`, \`menuName\`, and \`menuPrice\` from the 'Menu Context' provided below. 
-        Do NOT invent your own IDs (like 'C01') or prices. Use the numeric IDs.
+        **JSON Format Required:**
+        {
+          "text": "Your conversational answer in Thai. You MUST also ask a follow-up question.",
+          "recommendations": [
+            { 
+              "menuId": "123", 
+              "menuName": "Item Name",
+              "suggestedOptions": [
+                { "groupName": "Name of the group", "optionName": "Name of the option" }
+              ] 
+            }
+          ]
+        }
 
-        Here is the information to use:
-        - General Info: ${myOwnContent}
-        - Menu Context: ${menuContext}
+        **--- CRITICAL RULES ---**
+        1.  **Answer in Thai**: Your "text" response must be in Thai.
+        2.  **Follow-up Question**: Your "text" response MUST end with a relevant follow-up question (e.g., "สนใจรับอะไรเพิ่มไหมคะ?").
+        3.  **Exact Matching (Menu)**: If you recommend items, you **MUST** use the exact \`menuId\` and \`menuName\` from the 'Menu Context'. Do NOT invent items.
+        4.  **Customization (suggestedOptions)**: 
+            * If the user requests a specific customization (e.g., "ไม่หวาน", "เพิ่มช็อต", "ขอนมโอ๊ต"), you MUST find the matching "groupName" and "optionName" from the 'Options Context' and put it in the 'suggestedOptions' array.
+            * The "groupName" and "optionName" MUST MATCH the context *EXACTLY*.
+            * If the user's request is a note (e.g., "ขอน้ำแข็งน้อยๆ", "แยกไซรัป"), use the groupName "Notes" and put the request in "optionName". (e.g., \`{ "groupName": "Notes", "optionName": "น้ำแข็งน้อย" }\`)
+            * If the user does not specify any customizations for an item, return an EMPTY array: \`"suggestedOptions": []\`
+        5.  **JSON Only**: Your entire output must be *only* the JSON object, starting with { and ending with }.
 
-        User's question: "${question}"
+        **--- Provided Information ---**
+        
+        **General Info:** ${myOwnContent}
 
-        Generate only the JSON object now.
+        **Menu Context:** ${menuContext || 'No menu context provided.'}
+
+        **Options Context:** ${optionsContext || 'No customization options available.'} 
+
+        **User's question:** "${question}"
+
+        Generate only the single, valid JSON object now.
     `;
+    
+    // ตั้งค่า Generation Config เพื่อบังคับให้ AI ตอบเป็น JSON
+    const generationConfig = {
+      "response_mime_type": "application/json",
+    };
 
-    const requestBody = { contents: [{ parts: [{ text: promptText }] }] };
+    const requestBody = { 
+      contents: [{ parts: [{ text: promptText }] }],
+      generationConfig 
+    };
 
     const response = await fetch(API_URL, {
       method: 'POST',
@@ -53,25 +90,12 @@ export async function POST(request) {
       throw new Error("Invalid response structure from Gemini API");
     }
     
-    // ดึงข้อความดิบที่ AI สร้างขึ้น
     const rawResponseText = data.candidates[0].content.parts[0].text;
     
-    // "ทำความสะอาด" คำตอบจาก AI ให้เหลือแต่ JSON จริงๆ
-    const jsonMatch = rawResponseText.match(/\{[\s\S]*\}/);
-
-    if (!jsonMatch) {
-      console.error("AI did not return valid JSON:", rawResponseText);
-      throw new Error("AI response was not in the expected JSON format.");
-    }
-
-    const cleanJsonString = jsonMatch[0];
-    
-    // ส่ง { responseText: "..." } กลับไปให้หน้าแชท
-    return NextResponse.json({ responseText: cleanJsonString });
+    return NextResponse.json({ responseText: rawResponseText }); 
 
   } catch (error) {
     console.error("Error in /api/chat:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
-
