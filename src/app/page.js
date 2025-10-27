@@ -410,7 +410,7 @@ export default function Home() {
             <section className="bg-gray-50 py-20 md:py-24 rounded-xl mb-12">
                  <div className="px-6">
                     <div className="text-center mb-16">
-                        <h2 className="text-3xl md:text-4xl font-bold text-gray-800">Don't Worry, We Can Help</h2>
+                        <h2 className="text-3xl md:text-4xl font-bold text-gray-800">Don't Worry. We Can Help</h2>
                         <p className="mt-3 text-gray-600 text-lg">Whether you want to try something new or just want the right coffee</p>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
