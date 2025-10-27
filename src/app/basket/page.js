@@ -100,7 +100,7 @@ export default function BasketPage() {
                     {/* --- 5.1 ฝั่งซ้าย: รายการสินค้า --- */}
                     <main className="lg:flex-1 bg-white p-6 rounded-lg shadow-sm border border-gray-200">
                         <div className="flex justify-between items-center mb-4 pb-4 border-b">
-                            <h2 className="text-xl font-semibold text-gray-700">List menu ({cart.length})</h2>
+                            <h2 className="text-xl font-semibold text-gray-700">List menu </h2>
                             <button
                                 onClick={handleClearCart}
                                 className="text-sm text-red-500 hover:text-red-700 disabled:text-gray-400"
