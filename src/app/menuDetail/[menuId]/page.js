@@ -243,7 +243,7 @@ export default function MenuDetailPage() {
                     </Link>
                 </div>
 
-                <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
+                <div className="bg-[#F0EBE3] rounded-xl shadow-lg overflow-hidden border border-gray-200">
                     {/* Image */}
                     <div className="w-full h-64 sm:h-80 bg-gray-100 relative">
                         <Image
@@ -257,15 +257,15 @@ export default function MenuDetailPage() {
 
                     {/* Details */}
                     <div className="p-6 sm:p-8">
-                        <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">{menuItem.menuName}</h1>
-                        <p className="text-gray-700 mb-5 leading-relaxed">{menuItem.menuDescription || "ไม่มีคำอธิบาย"}</p>
+                        <h1 className="text-3xl sm:text-4xl font-bold text-[#4A3728] mb-3">{menuItem.menuName}</h1>
+                        <p className="text-[#4A3728] mb-5 leading-relaxed">{menuItem.menuDescription || "ไม่มีคำอธิบาย"}</p>
                         
                         {/* --- ส่วนของ Customizations ที่เพิ่มเข้ามา --- */}
                         <div className="mb-6 space-y-4 border-t pt-6">
-                            <h2 className="text-xl font-semibold text-gray-800 mb-4">ตัวเลือกเพิ่มเติม</h2>
+                            <h2 className="text-xl font-semibold text-[#4A3728] mb-4">Additional options</h2>
                             
                             {isOptionsLoading && (
-                                <p className="text-gray-500 text-sm">กำลังโหลดตัวเลือก...</p>
+                                <p className="text-gray-500 text-sm">Loading...</p>
                             )}
                             
                             {!isOptionsLoading && optionGroups.length > 0 && (
