@@ -13,14 +13,14 @@ const XMarkIcon = () => (
         <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
     </svg>
 );
-const WaterGlassIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M15.2 3.2a.5.5 0 0 0-.6.4L13 10h6l-1.6-6.4a.5.5 0 0 0-.6-.4Z" />
-        <path d="m6 10 1.5-6.4a.5.5 0 0 1 .6-.4h8.8a.5.5 0 0 1 .6.4L18 10" />
-        <path d="M6 10h12" />
-        <path d="M6 10v10c0 .6.4 1 1 1h10c.6 0 1-.4 1-1V10" />
-    </svg>
+
+const IconBuskt = () => (
+    <span className="inline-flex items-center justify-center p-1 bg-white/20 rounded-full">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" 
+                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-cup-soda-icon lucide-cup-soda"><path d="m6 8 1.75 12.28a2 2 0 0 0 2 1.72h4.54a2 2 0 0 0 2-1.72L18 8"/><path d="M5 8h14"/><path d="M7 15a6.47 6.47 0 0 1 5 0 6.47 6.47 0 0 0 5 0"/><path d="m12 8 1-6h2"/></svg>
+                        </span>
 );
+
 // --- (จบส่วนไอคอน) ---
 
 export default function Header() {
@@ -48,21 +48,17 @@ export default function Header() {
     }, []); 
 
     return (
-        // ลบ logic การเปลี่ยนสีออก ใส่สีน้ำตาล 'bg-[#4A3728]' ไปตรงๆ เลย
         <header className="bg-[#4A3728] shadow-sm sticky top-0 z-50">
             <div className="container mx-auto px-6">
                 <div className="flex items-center justify-between h-16 relative">
-                    {/* ส่วนที่ 1: โลโก้ (ซ้าย) */}
                     <div className="flex items-center">
                         <Link href="/" onClick={() => setMobileMenuOpen(false)} className="text-2xl font-bold">
-                            {/* [!! แก้ไข !!] เปลี่ยนเป็น 'text-white' ถาวร */}
                             <span className="text-xl font-bold text-white">MyCafe</span>
                         </Link>
                     </div>
 
                     {/* ส่วนที่ 2: เมนูและปุ่ม (ขวา) - สำหรับ Desktop */}
                     <nav className="hidden md:flex items-center space-x-8">
-                        {/* [!! แก้ไข !!] เปลี่ยนเป็น 'text-white' ถาวร */}
                         <Link href="/menu-page" className="text-white hover:text-green-700 transition-colors duration-300">
                             Menu
                         </Link>
@@ -71,7 +67,9 @@ export default function Header() {
                         </Link>
                         
                         <Link href="/basket" className="relative text-white hover:text-green-700 transition-colors duration-300">
-                            <WaterGlassIcon />
+                            {/*Icon busket*/}
+                            <IconBuskt/>
+
                             {cartCount > 0 && (
                                 <span className="absolute -top-2 -right-3 flex items-center justify-center w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full">
                                     {cartCount}
@@ -87,16 +85,10 @@ export default function Header() {
                     </nav>
                     
                     <div className="md:hidden flex items-center space-x-4">
-                        {/* [!! แก้ไข !!] เปลี่ยนเป็น 'text-white' ถาวร */}
                         <Link href="/basket" className="relative text-white">
-                            <WaterGlassIcon />
-                             {cartCount > 0 && (
-                                <span className="absolute -top-2 -right-2 flex items-center justify-center w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full">
-                                    {cartCount}
-                                </span>
-                            )}
+                        {/*Icon busket */}
+                             <IconBuskt/>
                         </Link>
-                        {/* [!! แก้ไข !!] เปลี่ยนเป็น 'text-white' ถาวร */}
                         <button onClick={() => setMobileMenuOpen(!isMobileMenuOpen)} className="text-white">
                             {isMobileMenuOpen ? <XMarkIcon /> : <Bars3Icon />}
                         </button>
