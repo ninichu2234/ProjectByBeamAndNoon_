@@ -100,7 +100,7 @@ const HistoryRecsSection = ({ items, isLoading }) => {
     );
 };
 
-// Component "How It Works" (UI + Logic)
+// ‼️ [EDIT] นำ Component "How It Works" กลับมา ‼️
 const HowItWorksSection = () => {
     const [activeStep, setActiveStep] = useState(1);
     const timerRef = useRef(null);
@@ -132,7 +132,7 @@ function HomeContent() {
     // States for Order Status
     const [orderData, setOrderData] = useState(null);
     const [isLoadingStatus, setIsLoadingStatus] = useState(false);
-    const searchParams = useSearchParams(); // 👈 Use the hook here
+    const searchParams = useSearchParams();
     const router = useRouter();
 
     // States for History Recommendations
@@ -193,7 +193,7 @@ function HomeContent() {
     // Effect (4): Handle Order Status Subscription
     const handleDismissStatus = useCallback(() => { setOrderData(null); router.push('/', undefined, { shallow: true }); }, [router]);
     useEffect(() => {
-        const orderIdFromUrl = searchParams.get('orderId'); // 👈 Reads the param here
+        const orderIdFromUrl = searchParams.get('orderId');
         let channel = null;
         const setupSubscription = async () => {
             if (orderIdFromUrl && supabase) {
@@ -217,7 +217,7 @@ function HomeContent() {
         };
         setupSubscription();
         return () => { if (channel) supabase.removeChannel(channel).catch(console.error); };
-    }, [searchParams, handleDismissStatus]); // 👈 Make sure searchParams is a dependency
+    }, [searchParams, handleDismissStatus]);
 
 
     // --- Render UI ---
@@ -254,16 +254,16 @@ function HomeContent() {
             <section className="bg-gray-50 py-20 md:py-24 rounded-xl mb-12">
                  <div className="px-6">
                     <div className="text-center mb-16">
-                         {/* ‼️ FIX: Don't -> Don&apos;t ‼️ */}
+                         {/* FIX: Don't -> Don&apos;t */}
                         <h2 className="text-3xl md:text-4xl font-bold text-gray-800">Don&apos;t Worry. We Can Help</h2>
                         <p className="mt-3 text-gray-600 text-lg">Whether you want to try something new or just want the right coffee</p>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
                         <div className="text-center md:text-left">
                             <NextImage src="https://rcrntadwwvhyojmjrmzh.supabase.co/storage/v1/object/public/pic-other/4.png" alt="Can't choose menu" width={600} height={400} sizes="(max-width: 768px) 100vw, 50vw" className="w-full h-auto object-cover rounded-lg shadow-md mb-6" />
-                             {/* ‼️ FIX: Can't -> Can&apos;t ‼️ */}
+                             {/* FIX: Can't -> Can&apos;t */}
                             <h3 className="text-2xl font-bold text-gray-800">Can&apos;t choose?</h3>
-                            {/* ‼️ FIX: don't -> don&apos;t ‼️ */}
+                            {/* FIX: don't -> don&apos;t */}
                             <p className="mt-2 text-gray-600">Too many menus? Want to try something new but don&apos;t know where to start? This problem will be gone.</p>
                         </div>
                         <div className="text-center md:text-left">
@@ -275,8 +275,9 @@ function HomeContent() {
                 </div>
             </section>
 
-            {/* How It Works */}
+            {/* ‼️ [EDIT] นำ HowItWorksSection กลับมาใส่ ‼️ */}
             <HowItWorksSection />
+
         </main>
     );
 }
