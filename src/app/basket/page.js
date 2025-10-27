@@ -193,7 +193,6 @@ export default function BasketPage() {
                         </div>
                     </main>
 
-                    {/* --- 5.2 ฝั่งขวา: สรุปรายการ (เหมือนเดิม) --- */}
                     <aside className="lg:w-1/3">
                         <div className="sticky top-24 bg-white p-6 rounded-lg shadow-sm border border-gray-200">
                             <h2 className="text-xl font-semibold text-gray-700 mb-4 pb-4 border-b">Summary</h2>
