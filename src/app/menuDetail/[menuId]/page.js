@@ -227,9 +227,9 @@ export default function MenuDetailPage() {
     };
 
     // --- 7. Render Logic ---
-    if (isLoading) return <div className="text-center py-20">กำลังโหลดข้อมูลเมนู...</div>;
+    if (isLoading) return <div className="text-center py-20">Loading...</div>;
     if (error) return <div className="text-center py-20 text-red-600">{error}</div>;
-    if (!menuItem) return <div className="text-center py-20 text-gray-500">ไม่พบเมนู</div>;
+    if (!menuItem) return <div className="text-center py-20 text-gray-500">Menu not found</div>;
 
     // --- 8. UI ที่อัปเดตแล้ว ---
     return (
