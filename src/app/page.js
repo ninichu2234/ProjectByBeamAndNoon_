@@ -3,7 +3,7 @@ import Link from 'next/link';
 // ‼️ ใช้ NextImage ‼️
 import NextImage from 'next/image';
 // ‼️ Import Hooks เพิ่มเติม ‼️
-import React, { Suspense, useState, useEffect, useRef, useCallback } from 'react';
+import React, { Suspense, useState, useEffect, useRef, useCallback } from 'react';+
 import { useSearchParams, useRouter } from 'next/navigation'; // ‼️ Import useRouter ‼️
 // ‼️ Import supabase client - แก้ไข Path ‼️
 import { supabase } from '../app/lib/supabaseClient'; // <-- แก้ไข Path ตรงนี้
