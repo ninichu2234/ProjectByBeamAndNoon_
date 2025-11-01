@@ -22,8 +22,6 @@ const getFolderName = (category) => {
     }
 };
 
-// --- UI Components ---
-
 // Component "เมนูแนะนำทั่วไป" (UI)
 const RecommendedSection = ({ items, isLoading }) => {
     const SkeletonCardGrid = () => (
@@ -101,7 +99,9 @@ const HistoryRecsSection = ({ items, isLoading }) => {
 const HowItWorksSection = () => {
     const [activeStep, setActiveStep] = useState(1);
     const timerRef = useRef(null);
-    const steps = [ { id: 1, title: '1. คุยกับ AI หรือเลือกเมนู', description: 'บอก AI ว่าคุณอยากดื่มอะไร...', imageUrl: 'https://rcrntadwwvhyojmjrmzh.supabase.co/storage/v1/object/public/pic-other/step-1.png' }, { id: 2, title: '2. ตรวจสอบและปรับแต่ง', description: 'AI จะเสนอเมนูที่ใช่ให้คุณ...', imageUrl: 'https://rcrntadwwvhyojmjrmzh.supabase.co/storage/v1/object/public/pic-other/step-2.png' }, { id: 3, title: '3. ชำระเงิน & รอรับที่โต๊ะ', description: 'ชำระเงินออนไลน์ง่ายๆ...', imageUrl: 'https://rcrntadwwvhyojmjrmzh.supabase.co/storage/v1/object/public/pic-other/step-3.png' } ];
+    const steps = [ { id: 1, title: '1. Chat with AI or Browse Menu', description: "Tell our AI what you're craving.", imageUrl: 'https://rcrntadwwvhyojmjrmzh.supabase.co/storage/v1/object/public/pic-other/step-1.png' }, 
+                    { id: 2, title: '2. Review and Customize', description: 'The AI will suggest the perfect items for you.', imageUrl: 'https://rcrntadwwvhyojmjrmzh.supabase.co/storage/v1/object/public/pic-other/step-2.png' }, 
+                    { id: 3, title: '3. Pay & Wait at Your Table', description: 'Pay online or in-person at the counter.', imageUrl: 'https://rcrntadwwvhyojmjrmzh.supabase.co/storage/v1/object/public/pic-other/step-3.png' } ];
     const startTimer = () => { if (timerRef.current) clearInterval(timerRef.current); timerRef.current = setInterval(() => { setActiveStep((prevStep) => (prevStep % 3) + 1); }, 4000); };
     const handleStepClick = (stepId) => { setActiveStep(stepId); startTimer(); };
     useEffect(() => { startTimer(); return () => { if (timerRef.current) clearInterval(timerRef.current); }; }, []);
@@ -113,10 +113,10 @@ const OrderStatusBanner = ({ orderData, onDismiss }) => {
     const displayId = String(orderData.id).substring(0, 8);
     const getStatusInfo = (status) => {
          switch (status) {
-            case 'กำลังเตรียม': return { text: `ออเดอร์ (${displayId}) กำลังเตรียม`, icon: <ClockIcon />, bgColor: 'bg-yellow-100', textColor: 'text-yellow-800', borderColor: 'border-yellow-400' };
-            case 'กำลังจัดส่ง': return { text: `ออเดอร์ (${displayId}) กำลังนำไปเสิร์ฟ`, icon: <TruckIcon />, bgColor: 'bg-blue-100', textColor: 'text-blue-800', borderColor: 'border-blue-400' };
-            case 'จัดส่งแล้ว': return { text: `ออเดอร์ (${displayId}) จัดส่งเรียบร้อย`, icon: <CheckBadgeIcon />, bgColor: 'bg-green-100', textColor: 'text-green-800', borderColor: 'border-green-400' };
-            default: return { text: `ออเดอร์ (${displayId}) สถานะ: ${status}`, icon: null, bgColor: 'bg-gray-100', textColor: 'text-gray-800', borderColor: 'border-gray-400' };
+            case 'Preparing': return { text: `order (${displayId}) Preparing`, icon: <ClockIcon />, bgColor: 'bg-yellow-100', textColor: 'text-yellow-800', borderColor: 'border-yellow-400' };
+            case 'Serving': return { text: `order (${displayId}) Serving`, icon: <TruckIcon />, bgColor: 'bg-blue-100', textColor: 'text-blue-800', borderColor: 'border-blue-400' };
+            case 'Served': return { text: `order (${displayId}) Served`, icon: <CheckBadgeIcon />, bgColor: 'bg-green-100', textColor: 'text-green-800', borderColor: 'border-green-400' };
+            default: return { text: `oder (${displayId}) status: ${status}`, icon: null, bgColor: 'bg-gray-100', textColor: 'text-gray-800', borderColor: 'border-gray-400' };
         }
     };
     const { text, icon, bgColor, textColor, borderColor } = getStatusInfo(orderData.orderStatus);
@@ -225,9 +225,8 @@ function HomeContent() {
                  <OrderStatusBanner orderData={orderData} onDismiss={handleDismissStatus} />
             )}
 
-            {/* Hero Section */}
             <section className="relative flex items-center justify-center min-h-[calc(100vh-100px)] md:min-h-[calc(100vh-120px)] bg-gray-800 rounded-xl overflow-hidden mb-12">
-                <NextImage src="https://rcrntadwwvhyojmjrmzh.supabase.co/storage/v1/object/public/pic-other/picmain.jpeg" alt="Cafe ambience" fill={true} priority={true} sizes="100vw" className="absolute z-0 w-full h-full object-cover" />
+                <NextImage src="https://rcrntadwwvhyojmjrmzh.supabase.co/storage/v1/object/public/pic-other/picmainpage.png" alt="Cafe ambience" fill={true} priority={true} sizes="100vw" className="absolute z-0 w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-black/60 z-10"></div>
                 <div className="relative z-20 text-center text-white p-4">
                     <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight">My<span className="text-amber-400">Cafe</span></h1>
@@ -269,10 +268,7 @@ function HomeContent() {
                     </div>
                 </div>
             </section>
-
-        
             <HowItWorksSection />
-
         </main>
     );
 }
