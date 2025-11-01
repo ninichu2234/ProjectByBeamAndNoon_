@@ -263,7 +263,7 @@ function HomeContent() {
                         </div>
                         <div className="text-center md:text-left">
                             <NextImage src="https://rcrntadwwvhyojmjrmzh.supabase.co/storage/v1/object/public/pic-other/5.png" alt="Example chat with AI" width={600} height={400} sizes="(max-width: 768px) 100vw, 50vw" className="w-full h-auto object-cover rounded-lg shadow-md mb-6" />
-                            <h3 className="text-2xl font-bold text-amber-600">Let us recommend!</h3>
+                            <h3 className="text-2xl font-bold text-amber-600">Let's us recommend!</h3>
                             <p className="mt-2 text-gray-600">Just tell us how you feel. Our AI is ready to help choose the best drink for you.</p>
                         </div>
                     </div>
@@ -279,7 +279,7 @@ function HomeContent() {
 
 // --- Main Export ---
 export default function Home() {
-    // ‼️ Wrap the component that uses useSearchParams in Suspense ‼️
+   
     return (
         <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-xl font-semibold">Loading Page...</div>}>
             <HomeContent />
