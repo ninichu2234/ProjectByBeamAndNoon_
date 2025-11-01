@@ -1,6 +1,5 @@
 import React from 'react';
 
-// --- (Optional) Icons for decoration ---
 const LightbulbIcon = () => (
     <svg 
         xmlns="http://www.w3.org/2000/svg" 
@@ -79,10 +78,8 @@ export default function AboutUsPage() {
                         </div>
                     </section>
 
-                    {/* --- Divider --- */}
                     <hr className="my-12 border-gray-200" />
 
-                    {/* --- Section 2: Image Attribution --- */}
                     <section>
                         <div className="flex items-start">
                             <PicIcon />
