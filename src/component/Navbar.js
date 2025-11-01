@@ -130,6 +130,10 @@ export default function Header() {
                                 </span>
                             )}
                         </Link>
+                        
+                        <Link href="/about-us" className="text-white hover:text-green-700 transition-colors duration-300">
+                            About us
+                        </Link>
 
                         <Link href="/chat">
                             <button className="bg-green-800 text-white px-6 py-2 rounded-full font-bold hover:bg-green-700 transition-colors shadow">
@@ -165,6 +169,9 @@ export default function Header() {
                             </Link>
                             <Link href="/member" onClick={() => setMobileMenuOpen(false)} className="text-gray-700 hover:text-green-700 font-medium text-lg text-center py-2">
                                 Member
+                            </Link>
+                            <Link href="/about-us" onClick={() => setMobileMenuOpen(false)} className="text-gray-700 hover:text-green-700 font-medium text-lg text-center py-2">
+                                About us
                             </Link>
                         </div>
                     </div>
