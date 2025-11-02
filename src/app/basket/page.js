@@ -1,5 +1,3 @@
-// src/app/basket/page.js
-
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -11,6 +9,15 @@ export default function BasketPage() {
     const [cart, setCart] = useState([]);
     const [summary, setSummary] = useState({ subtotal: 0, tax: 0, total: 0 });
     const router = useRouter();
+
+    // ‼️ (บีม) State สำหรับ Pop-up "ดูดี" (นำกลับมา)
+    const [modal, setModal] = useState({
+        isOpen: false,
+        title: '',
+        message: '',
+        actionType: null, // 'remove' หรือ 'clear'
+        targetId: null    // cartItemId ที่จะลบ
+    });
 
     // --- (ส่วน Logic: useEffect, updateLocalStorage, Handlers - เหมือนเดิม) ---
 
@@ -61,6 +68,7 @@ export default function BasketPage() {
     // 4. Handlers
     const handleUpdateQuantity = (cartItemId, newQuantity) => {
         if (newQuantity < 1) {
+            // [FIX 5] (บีม) ถ้าจำนวน < 1, ให้เรียก `handleRemoveItem` (ซึ่งจะเปิด Modal)
             handleRemoveItem(cartItemId);
             return;
         }
@@ -71,29 +79,85 @@ export default function BasketPage() {
         updateLocalStorage(newCart);
     };
 
+    // ‼️ [FIX 5] (บีม) แก้ไข handleRemoveItem ให้ "เปิด Modal"
     const handleRemoveItem = (cartItemId) => {
-        const newCart = cart.filter(item => item.cartItemId !== cartItemId);
-        setCart(newCart);
-        updateLocalStorage(newCart);
+        setModal({
+            isOpen: true,
+            title: 'Delete Item',
+            message: 'Are you sure you want to remove this item?',
+            actionType: 'remove',
+            targetId: cartItemId
+        });
     };
 
+    // ‼️ [FIX 8] (บีม) แก้ไข handleClearCart ให้ "เปิด Modal"
     const handleClearCart = () => {
         if (cart.length === 0) return;
-        if (confirm("คุณต้องการล้างตะกร้าสินค้าทั้งหมดใช่หรือไม่?")) {
-            setCart([]);
-            updateLocalStorage([]);
-        }
+        setModal({
+            isOpen: true,
+            title: 'Clear Cart',
+            message: 'Are you sure you want to clear all items from your cart?',
+            actionType: 'clear',
+            targetId: null
+        });
     };
     
     const handleCheckout = () => {
+        console.log("Proceeding to checkout");
         router.push('/checkout');
     };
+
+    // ‼️ (บีม) ฟังก์ชันสำหรับ Modal "ดูดี"
+    const handleModalCancel = () => {
+        setModal({ isOpen: false, title: '', message: '', actionType: null, targetId: null });
+    };
+
+    const handleModalConfirm = () => {
+        if (modal.actionType === 'remove' && modal.targetId) {
+            // Logic ลบรายชิ้น
+            const newCart = cart.filter(item => item.cartItemId !== modal.targetId);
+            setCart(newCart);
+            updateLocalStorage(newCart);
+        } else if (modal.actionType === 'clear') {
+            // Logic ล้างตะกร้า
+            setCart([]);
+            updateLocalStorage([]);
+        }
+        handleModalCancel(); // ปิด Modal หลังทำงาน
+    };
+
 
     // --- 5. Render UI (มีการแก้ไข) ---
     return (
         <div className="bg-gray-50 min-h-screen py-12">
-            <div className="container mx-auto px-4 max-w-5xl">
-                <h1 className="text-3xl font-bold text-gray-800 mb-8">Your cart</h1>
+            
+            <div className="container mx-auto px-4 max-w-5xl relative"> {/* ‼️ เพิ่ม relative ‼️ */}
+                <h1 className="text-3xl font-bold text-gray-800 mb-8">Your Cart</h1>
+
+                {/* ‼️ (บีม) นี่คือ Pop-up "ดูดี" ที่อยู่บนหน้าเดิม (ไม่บังจอ) ‼️ */}
+                {modal.isOpen && (
+                    <div className="absolute inset-0 flex items-center justify-center z-50 p-4"> {/* ‼️ เปลี่ยนเป็น absolute, ไม่มี bg-black ‼️ */}
+                        <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm transform scale-100 opacity-100 border border-gray-200">
+                            <h3 className="text-xl font-bold text-gray-900">{modal.title}</h3>
+                            <p className="mt-2 text-gray-600">{modal.message}</p>
+                            <div className="mt-6 flex justify-end gap-3">
+                                <button 
+                                    onClick={handleModalCancel} 
+                                    className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+                                >
+                                    Cancel
+                                </button>
+                                <button 
+                                    onClick={handleModalConfirm} 
+                                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-bold"
+                                >
+                                    {modal.actionType === 'clear' ? 'Clear' : 'Delete'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+                {/* ‼️ จบส่วน Pop-up ‼️ */}
 
                 <div className="flex flex-col lg:flex-row gap-8">
                     
@@ -106,18 +170,16 @@ export default function BasketPage() {
                                 className="text-sm text-red-500 hover:text-red-700 disabled:text-gray-400"
                                 disabled={cart.length === 0}
                             >
-                                Clear
+                                Clear Cart
                             </button>
                         </div>
 
                         {/* --- รายการสินค้าในตะกร้า --- */}
-                        {/* ‼️ เปลี่ยนจาก space-y-6 เป็น divide-y (เส้นคั่น) ‼️ */}
                         <div className="divide-y divide-gray-200">
                             {cart.length === 0 ? (
                                 <p className="text-gray-500 text-center py-8">Your cart is empty</p>
                             ) : (
                                 cart.map(item => (
-                                    // ‼️‼️ นี่คือ Layout ใหม่สำหรับ Mobile-First ‼️‼️
                                     <div key={item.cartItemId} className="flex gap-4 py-6">
                                         
                                         {/* 1. Image */}
@@ -187,14 +249,15 @@ export default function BasketPage() {
                                             </div>
                                         </div>
                                     </div>
-                                    // ‼️‼️ จบ Layout ใหม่ ‼️‼️
                                 ))
                             )}
                         </div>
                     </main>
 
+                    {/* --- 5.2 ฝั่งขวา: สรุป --- */}
                     <aside className="lg:w-1/3">
                         <div className="sticky top-24 bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                            
                             <h2 className="text-xl font-semibold text-gray-700 mb-4 pb-4 border-b">Summary</h2>
                             
                             <div className="space-y-3 mb-6">
@@ -217,19 +280,19 @@ export default function BasketPage() {
                                 disabled={cart.length === 0}
                                 className="w-full bg-[#2c8160] hover:bg-green-800 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed"
                             >
-                                Proceed with payment
+                                Continue to Checkout
                             </button>
 
                             <div className="flex flex-col sm:flex-row gap-3 mt-3">
                                 <Link
                                     href="/chat"
-                                    className="flex-1 text-center bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-3 px-4 rounded-lg transition-colors duration-200 text-sm"
+                                    className="flex-1 text-center bg-white border border-[#2c8160] text-[#2c8160] hover:bg-green-50 font-medium py-3 px-4 rounded-lg transition-colors duration-200 text-sm"
                                 >
                                     Order with AI
                                 </Link>
                                 <Link
                                     href="/menu-page"
-                                    className="flex-1 text-center bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-3 px-4 rounded-lg transition-colors duration-200 text-sm"
+                                    className="flex-1 text-center bg-white border border-[#2c8160] text-[#2c8160] hover:bg-green-50 font-medium py-3 px-4 rounded-lg transition-colors duration-200 text-sm"
                                 >
                                     Menu
                                 </Link>
@@ -242,3 +305,4 @@ export default function BasketPage() {
         </div>
     );
 }
+

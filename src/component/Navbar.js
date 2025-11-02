@@ -2,9 +2,11 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useUser } from '@/app/context/UserContext';
+// ‼️ (บีม) Import 2 ตัวนี้จากโค้ดใหม่ของคุณ
+import { useUser } from '@/app/context/UserContext'; 
 import { supabase } from '@/app/lib/supabaseClient';
-// Icon
+
+// --- (บีม) ไอคอนจากโค้ดใหม่ของคุณ ---
 const Bars3Icon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-7 h-7">
         <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
@@ -23,6 +25,7 @@ const SmallXIcon = () => (
     </svg>
 );
 
+// (บีม) ไอคอนตะกร้าแบบใหม่ (จากโค้ดของคุณ)
 const IconBuskt = () => (
      <span className="inline-flex items-center justify-center p-1 bg-white/20 rounded-full">
              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
@@ -34,22 +37,26 @@ const IconBuskt = () => (
      </span>
 );
 
-export default function Header() {
+// (บีม) ใช้ชื่อ Component ว่า Header หรือ Navbar ก็ได้ครับ (ตามโค้ดใหม่ของคุณคือ Header)
+export default function Header() { 
     const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [cartCount, setCartCount] = useState(0);
     const [showHint, setShowHint] = useState(true);
     const pathname = usePathname();
     const isHomePage = pathname === '/';
 
+    // (บีม) ดึง user/profile จากโค้ดใหม่ของคุณ
     const { session, profile, loading } = useUser();
 
+    // (บีม) ฟังก์ชัน updateCartCount จากโค้ดใหม่ของคุณ
     const updateCartCount = () => {
         if (typeof window !== 'undefined') {
             try {
                 const savedCartJSON = localStorage.getItem('myCafeCart');
                 const cartItems = savedCartJSON ? JSON.parse(savedCartJSON) : [];
+                // (บีม) แก้ไข Logic การนับจำนวนเล็กน้อย (จากโค้ดเก่า) ให้ชัวร์
                 const totalItems = Array.isArray(cartItems)
-                    ? cartItems.reduce((sum, item) => sum + (item.quantity || 0), 0)
+                    ? cartItems.reduce((sum, item) => sum + (item.quantity || 1), 0) // ใช้ 1 ถ้า quantity ไม่มี
                     : 0;
                 setCartCount(totalItems);
             } catch (error) {
@@ -59,11 +66,12 @@ export default function Header() {
         }
     };
 
+    // (บีม) useEffect จากโค้ดใหม่ของคุณ
     useEffect(() => {
         if (typeof window !== 'undefined') {
             // --- 1. Update cart count on initial load and storage change ---
             updateCartCount(); 
-            window.addEventListener('local-storage', updateCartCount); // Listen for changes from other tabs/pages
+            window.addEventListener('local-storage', updateCartCount); // Listen for changes
 
             // --- 2. Cleanup function: remove listener when component unmounts 
             return () => {
@@ -71,6 +79,7 @@ export default function Header() {
             };
         }
     }, []); 
+
     return (
         <header className="bg-[#4A3728] shadow-sm sticky top-0 z-50">
             <div className="container mx-auto px-6">
@@ -80,6 +89,7 @@ export default function Header() {
                             <span className="text-xl font-bold text-white">MyCafe</span>
                         </Link>
                     </div>
+                    {/* (บีม) NAV (Desktop) จากโค้ดใหม่ของคุณ */}
                     <nav className="hidden md:flex items-center space-x-8">
                         <Link href="/menu-page" 
                         className={`text-white hover:text-green-700 transition-colors duration-300 px-3 py-1 rounded-md ${pathname === '/menu-page' ? 'bg-white/10' : ''}`}
@@ -151,7 +161,8 @@ export default function Header() {
                             className={`relative text-white hover:text-green-700 transition-colors duration-300 px-3 py-1 rounded-md ${pathname === '/basket' ? 'bg-white/10' : ''}`}>
                             <IconBuskt />
                             {cartCount > 0 && (
-                                <span className="absolute -top-2 -right-3 ...">
+                                // ‼️ (บีม) แก้ไขสไตล์ไอคอนตะกร้า (Desktop) ให้เป็นวงกลมสีแดง ‼️
+                                <span className="absolute -top-2 -right-3 flex items-center justify-center w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full">
                                     {cartCount}
                                 </span>
                              )}
@@ -165,11 +176,12 @@ export default function Header() {
                         </Link>
                     </nav>
 
-{/* ... (โค้ด Mobile Menu Toggle) ... */}
+                    {/* (บีม) NAV (Mobile) จากโค้ดใหม่ของคุณ */}
                     <div className="md:hidden flex items-center space-x-4">
                         <Link href="/basket" className="relative text-white">
                             <IconBuskt /> 
                              {cartCount > 0 && (
+                                // ‼️ (บีม) ไอคอนตะกร้า (Mobile) (อันนี้ดีอยู่แล้ว) ‼️
                                 <span className="absolute -top-2 -right-2 flex items-center justify-center w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full">
                                     {cartCount}
                                 </span>

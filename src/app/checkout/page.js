@@ -29,6 +29,9 @@ export default function CheckoutPage() {
     const [profile, setProfile] = useState(null);
     const [profileLoading, setProfileLoading] = useState(true); 
 
+    // ‼️ (บีม) State ใหม่สำหรับ validation (ข้อ 3)
+    const [tableNumberError, setTableNumberError] = useState(false);
+
     // [1] Effect "โหลด" และ "สร้าง Listener" (เหมือนเดิม)
     useEffect(() => {
         const loadInitialCart = () => {
@@ -118,13 +121,24 @@ export default function CheckoutPage() {
         return { subtotal, vat, total };
     }, [cartItems]);
 
+    // ‼️ (บีม) Memo ใหม่สำหรับเช็กว่าปุ่มควรกดได้ยัง (ข้อ 3)
+    const isFormValid = useMemo(() => {
+        return formData.tableNumber.trim().length > 0;
+    }, [formData.tableNumber]);
+
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
+        
+        // ‼️ (บีม) ถ้าเริ่มพิมพ์เลขโต๊ะ ให้ซ่อน Error (ข้อ 3)
+        if (name === 'tableNumber' && value.trim().length > 0) {
+            setTableNumberError(false);
+        }
+        
         console.log("CheckoutPage: formData updated:", { ...formData, [name]: value });
     };
 
-    const handleMobilePaymentLabelClick = () => {
+    const handleMobilePaymentLabelClick = (e) => {
         if (formData.paymentMethod !== 'qr' && formData.paymentMethod !== 'card') {
             setFormData(prev => ({ ...prev, paymentMethod: 'qr' }));
             console.log("CheckoutPage: Defaulted mobile payment to QR");
@@ -134,6 +148,15 @@ export default function CheckoutPage() {
     // ‼️ 5. อัปเดต handleSubmitOrder ให้บันทึกลง Supabase ‼️
     const handleSubmitOrder = async (e) => { 
         e.preventDefault();
+
+        // ‼️ (บีม) เพิ่ม Validation Check (ข้อ 3) ‼️
+        if (!isFormValid) {
+            setTableNumberError(true);
+            alert("กรุณากรอกหมายเลขโต๊ะของคุณ");
+            return; // หยุดการทำงาน
+        }
+        setTableNumberError(false); // ถ้าผ่าน ก็เคลียร์ Error
+
         const currentCart = Array.isArray(cartItems) ? cartItems : [];
         if (currentCart.length === 0) {
             alert("ตะกร้าของคุณว่างเปล่า ไม่สามารถดำเนินการต่อได้");
@@ -266,7 +289,7 @@ export default function CheckoutPage() {
 
     // --- ส่วนแสดงผลตอนสั่งซื้อสำเร็จ ---
     if (isSuccess) {
-        return ( /* ... โค้ดหน้า Success ... */
+        return (
             <div className="bg-white min-h-screen">
                 <div className="container mx-auto px-4 py-12 max-w-2xl text-center">
                     <CheckCircleIcon />
@@ -283,7 +306,7 @@ export default function CheckoutPage() {
 
     // --- ส่วนแสดงผลตอนตะกร้าว่าง ---
     if (!isInitialMount.current && (!Array.isArray(cartItems) || cartItems.length === 0) && !isProcessing) {
-         return ( /* ... โค้ดหน้า Empty Cart ... */
+         return (
              <div className="bg-white min-h-screen">
                  <div className="container mx-auto px-4 py-12 max-w-2xl text-center">
                      <EmptyCartIcon />
@@ -298,8 +321,10 @@ export default function CheckoutPage() {
     }
 
     // --- ส่วนแสดงผล Loading (เหมือนเดิม) ---
+    // ‼️ (บีม) แก้ไขจุดที่พัง (ข้อ 90) ‼️
     if (isInitialMount.current || userLoading || profileLoading) { 
         return (
+            // (บีม) นำโค้ดหน้า Loading... กลับมาใส่
             <div className="bg-white min-h-screen flex items-center justify-center">
                 <p className="text-gray-500">Loading...</p>
             </div>
@@ -328,16 +353,28 @@ export default function CheckoutPage() {
                     <div className="lg:col-span-2 bg-white rounded-xl shadow-md p-6 border">
                          {/* Input สำหรับ Table Number */}
                          <div className="mb-8">
-                             <label htmlFor="tableNumber" className="block text-xl font-semibold text-gray-700 mb-2">Your table number</label>
+                             {/* ‼️ (บีม) เพิ่มดอกจันสีแดง (ข้อ 3) ‼️ */}
+                             <label htmlFor="tableNumber" className="block text-xl font-semibold text-gray-700 mb-2">
+                                 Your table number <span className="text-red-500">*</span>
+                             </label>
                              <input
                                  type="number"
                                  name="tableNumber"
                                  id="tableNumber"
                                  value={formData.tableNumber}
                                  onChange={handleInputChange}
-                                 className="mt-1 block w-full max-w-xs rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 text-lg p-2"
+                                 // ‼️ (บีม) เพิ่ม CSS สำหรับกรอบสีแดง (ข้อ 3) ‼️
+                                 className={`mt-1 block w-full max-w-xs rounded-md shadow-sm text-lg p-2 ${
+                                     tableNumberError 
+                                     ? 'border-red-500 ring-1 ring-red-500' // ถ้า Error
+                                     : 'border-gray-300 focus:border-green-500 focus:ring-green-500' // ปกติ
+                                 }`}
                                  placeholder="Enter your table number"
                                />
+                             {/* ‼️ (บีม) เพิ่มข้อความ Error (ข้อ 3) ‼️ */}
+                             {tableNumberError && (
+                                 <p className="text-sm text-red-600 mt-1">Please enter a table number.</p>
+                             )}
                              <p className="text-xs text-gray-500 mt-1">Please enter your table number for menu serving </p>
                          </div>
 
@@ -397,7 +434,16 @@ export default function CheckoutPage() {
                             <div className="mt-8 space-y-3">
                                 <button
                                     type="submit"
-                                    disabled={isProcessing || !Array.isArray(cartItems) || cartItems.length === 0 || isInitialMount.current || userLoading || profileLoading} 
+                                    // ‼️ (บีม) เพิ่ม !isFormValid ใน disabled (ข้อ 3) ‼️
+                                    disabled={
+                                        !isFormValid || // <-- เพิ่มตัวนี้
+                                        isProcessing || 
+                                        !Array.isArray(cartItems) || 
+                                        cartItems.length === 0 || 
+                                        isInitialMount.current || 
+                                        userLoading || 
+                                        profileLoading
+                                    } 
                                     className="w-full text-center py-3 rounded-lg font-bold text-lg text-white bg-[#2c8160] hover:bg-green-900 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
                                 >
                                     {isProcessing ? 'In progress...' : `Submit (฿${summary.total.toFixed(2)})`}
@@ -413,3 +459,4 @@ export default function CheckoutPage() {
         </div>
     );
 }
+

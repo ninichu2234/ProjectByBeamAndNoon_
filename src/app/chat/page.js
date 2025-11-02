@@ -1,5 +1,3 @@
-// src/app/chat/page.js
-
 "use client";
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
@@ -20,8 +18,14 @@ export default function ChatPage() {
     const [allOptions, setAllOptions] = useState({});
     const [cartItems, setCartItems] = useState([]);
     const [totalPrice, setTotalPrice] = useState(0);
-    const [isListening, setIsListening] = useState(false);
+    const [isListening, setIsListening] = useState(false); // ‼️ (บีม) เอากลับมา
     const isInitialMount = useRef(true);
+
+    // ‼️ (บีม) ลบ State และ Ref ของข้อ 13
+    // const [isContinuousListening, setIsContinuousListening] = useState(false);
+    // const recognitionRef = useRef(null);
+    
+    // (ข้อ 14 ถูกข้ามไปตามคำขอ)
 
     // Effect โหลด cart, menu items, และ options ตอนเริ่ม
     useEffect(() => {
@@ -118,7 +122,7 @@ export default function ChatPage() {
         }
     }, [cartItems]); 
 
-    // Helper function for Text-to-Speech
+    // ‼️ (บีม) นำ `speak` แบบดั้งเดิม (ไม่มี onEndCallback) กลับมา
     const speak = (text) => {
         if (typeof window === 'undefined' || !window.speechSynthesis || !text) return;
         window.speechSynthesis.cancel(); 
@@ -141,7 +145,7 @@ export default function ChatPage() {
         }
     };
 
-    // Added cleanup effect for speech synthesis on unmount
+    // ‼️ (บีม) นำ useEffect (cleanup) แบบดั้งเดิมกลับมา
     useEffect(() => {
         return () => {
             if (typeof window !== 'undefined' && window.speechSynthesis) {
@@ -152,7 +156,7 @@ export default function ChatPage() {
     }, []); 
 
 
-    // Handler for Speech-to-Text
+    // ‼️ (บีม) นำ `handleListen` แบบดั้งเดิม (ฟังครั้งเดียว) กลับมา
     const handleListen = () => { 
         if (typeof window === 'undefined') return; const SR = window.SpeechRecognition || window.webkitSpeechRecognition; if (!SR) return alert("Browser not supported");
         const rec = new SR(); rec.lang = 'th-TH'; rec.interimResults = false; rec.maxAlternatives = 1;
@@ -160,14 +164,15 @@ export default function ChatPage() {
         rec.onresult = (e) => { 
             const text = e.results[0][0].transcript; 
             setQuestion(text); 
-            handleSubmit(text); 
+            handleSubmit(text); // ‼️ เรียก handleSubmit แบบดั้งเดิม
         };
         rec.onerror = (e) => { console.error("Speech error", e.error); setQuestion(''); alert(`Error: ${e.error}`); };
         rec.onend = () => { setIsListening(false); if (question === "กำลังฟัง...") setQuestion(''); }; rec.start();
     };
 
-    // Handler to add item from RecommendedMenuCard to cart
-    // This function receives the *fully customized* item from the Card
+    // ‼️ (บีม) ลบฟังก์ชันของข้อ 13 (startListening, stopContinuousListening, toggleContinuousListen)
+
+    // [FIX 7] แก้ไขฟังก์ชัน _updateCart ให้รวมออเดอร์ที่เหมือนกัน
     const _updateCart = (itemToAddFromCard) => {
         setCartItems(prevItems => {
             const currentCart = Array.isArray(prevItems) ? prevItems : [];
@@ -175,24 +180,58 @@ export default function ChatPage() {
                 console.error("ChatPage: Invalid item data received from card:", itemToAddFromCard); 
                 return currentCart; 
             }
-            
-            // The item from the card should already have a unique cartItemId
-            const newItem = { 
-                ...itemToAddFromCard, 
-                cartItemId: itemToAddFromCard.cartItemId || uuidv4(), // Fallback just in case
-            };
-            
-            const updatedItems = [...currentCart, newItem];
-            console.log(`ChatPage: Added item cartItemId: ${newItem.cartItemId}`, newItem);
-            return updatedItems; 
+
+            // สร้าง "ลายนิ้วมือ" (fingerprint)
+            const newItemOptions = itemToAddFromCard.customizations?.selectedOptions || [];
+            const newItemFingerprint = JSON.stringify(newItemOptions.map(opt => ({
+                groupName: opt.groupName,
+                optionName: opt.optionName
+            })).sort((a, b) => a.groupName.localeCompare(b.groupName))); 
+            const newItemSpecialInstructions = itemToAddFromCard.specialInstructions || "";
+
+            // ค้นหา item ที่เหมือนกัน
+            const existingItemIndex = currentCart.findIndex(item => {
+                const existingItemOptions = item.customizations?.selectedOptions || [];
+                const existingItemFingerprint = JSON.stringify(existingItemOptions.map(opt => ({
+                    groupName: opt.groupName,
+                    optionName: opt.optionName
+                })).sort((a, b) => a.groupName.localeCompare(b.groupName)));
+                const existingItemSpecialInstructions = item.specialInstructions || "";
+
+                return item.menuId === itemToAddFromCard.menuId && 
+                       existingItemFingerprint === newItemFingerprint &&
+                       existingItemSpecialInstructions === newItemSpecialInstructions;
+            });
+
+            if (existingItemIndex > -1) {
+                // ถ้าเจอ -> รวมยอด
+                const updatedItems = [...currentCart];
+                const existingItem = updatedItems[existingItemIndex];
+                updatedItems[existingItemIndex] = {
+                    ...existingItem,
+                    quantity: (existingItem.quantity || 1) + (itemToAddFromCard.quantity || 1),
+                };
+                console.log(`ChatPage: Merged item quantity for cartItemId: ${existingItem.cartItemId}`);
+                return updatedItems;
+            } else {
+                // ถ้าไม่เจอ -> เพิ่มใหม่
+                const newItem = { 
+                    ...itemToAddFromCard, 
+                    cartItemId: itemToAddFromCard.cartItemId || uuidv4(),
+                };
+                const updatedItems = [...currentCart, newItem];
+                console.log(`ChatPage: Added new item cartItemId: ${newItem.cartItemId}`, newItem);
+                return updatedItems; 
+            }
         });
     };
     
-    // Handler to submit question to AI
+    // ‼️ (บีม) นำ handleSubmit แบบดั้งเดิมกลับมา (ลบ onSpeakEndCallback)
     const handleSubmit = async (textFromSpeech = null) => { 
         const currentQuestion = textFromSpeech || question; 
         if (!currentQuestion.trim() || currentQuestion === "กำลังฟัง...") return;
 
+        // (ข้อ 14 ไม่ได้เพิ่ม chatHistory, เราจึงยังใช้ promptToAI แบบเดิม)
         const promptToAI = `${currentQuestion}\n\n(AI, please also ask a relevant follow-up question to keep the conversation going.)`;
 
         setIsLoading(true); setAnswer("กำลังคิด..."); setRecommendedMenus([]);
@@ -218,50 +257,49 @@ export default function ChatPage() {
                 method: 'POST', 
                 headers: { 'Content-Type': 'application/json' }, 
                 body: JSON.stringify({ 
-                    question: promptToAI, 
+                    question: promptToAI, // ‼️ (บีม) ยังใช้ promptToAI แบบเดิม
                     menuContext, 
                     optionsContext 
+                    // (ข้อ 14 ไม่ได้เพิ่ม chatHistory)
                 }) 
             });
 
             const body = await res.text(); if (!res.ok) throw new Error(`API Error (${res.status}): ${body}`); 
             let data; try { data = JSON.parse(body); } catch (e) { throw new Error("Invalid JSON response from API"); }
-            const { responseText } = data; if (!responseText) throw new Error("API returned no responseText");
-            const jsonMatch = responseText.trim().match(/^\{[\s\S]*\}$/); 
             
-            if (jsonMatch) { 
+            const { responseText } = data; if (!responseText) throw new Error("API returned no responseText");
+
+            // (บีม) เพิ่มโค้ด "แกะ" JSON (จากครั้งก่อน)
+            let jsonString = responseText;
+            const jsonMatch = responseText.match(/```json([\s\S]*?)```/);
+            if (jsonMatch && jsonMatch[1]) {
+                jsonString = jsonMatch[1].trim();
+            }
+            
+            if (jsonString.startsWith('{') && jsonString.endsWith('}')) { 
                 try { 
-                    const aiRes = JSON.parse(jsonMatch[0]); 
+                    const aiRes = JSON.parse(jsonString); 
                     finalAnswerText = aiRes.text || "แนะนำ:"; 
                     setAnswer(finalAnswerText); 
                     
                     let recs = []; 
                     if (Array.isArray(aiRes.recommendations)) { 
-                        
-                        // Handle richer recommendation data
                         recs = aiRes.recommendations.map(m => { 
                             const id = m?.menuId ?? m?.item_id; 
                             if (id == null) return null; 
-                            
                             const fullMenuItem = allMenuItems.find(i => String(i.menuId) === String(id)); 
-                            if (!fullMenuItem) return null; // Skip if item not found
-
+                            if (!fullMenuItem) return null; 
                             const suggestedOptions = m.suggestedOptions || []; 
-
-                            return {
-                                ...fullMenuItem, // Base menu details (name, price, image...)
-                                suggestedOptions: suggestedOptions // AI's pre-selections
-                            };
-
-                        }).filter(Boolean); // Filter out any nulls
+                            return { ...fullMenuItem, suggestedOptions: suggestedOptions };
+                        }).filter(Boolean); 
                     } 
                     setRecommendedMenus(recs); 
                     console.log("ChatPage: Recommendations set:", recs);
                 } catch (e) { 
-                    finalAnswerText = "AI Error: Invalid JSON structure in response."; 
+                    finalAnswerText = jsonString; 
                     setAnswer(finalAnswerText); 
                     setRecommendedMenus([]); 
-                    console.error("AI JSON Parse Error:", e); 
+                    console.error("AI JSON Parse Error (after regex):", e); 
                 } 
             } else { 
                 finalAnswerText = responseText; 
@@ -276,10 +314,14 @@ export default function ChatPage() {
             setRecommendedMenus([]);
         } finally { 
             setIsLoading(false); 
-            if (textFromSpeech) { // Only speak if input was from speech
+            
+            // ‼️ (บีม) นำ Logic การพูดตอบแบบดั้งเดิมกลับมา
+            if (textFromSpeech) {
+                // ถ้ามาจาก handleListen (ตัวเก่า)
                 setQuestion(''); 
                 speak(finalAnswerText); 
-            } 
+            }
+            // (ถ้ามาจากปุ่ม "Ask Barista" ก็ไม่ต้องพูด)
         }
     };
 
@@ -302,25 +344,64 @@ export default function ChatPage() {
                  {/* Input Section */}
                  <div className="bg-[#4A3728] p-6 rounded-xl shadow-lg mb-8"> 
                      <label htmlFor="question" className="block text-white font-bold mb-6">What can I get for you?</label>
-                     <textarea id="question" value={question} onChange={(e) => setQuestion(e.target.value)} className="w-full px-4 py-3 bg-white/10 text-white border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition placeholder-gray-400" rows="3" placeholder="เช่น กาแฟไม่เปรี้ยว, ชาผลไม้..." disabled={isLoading || isListening} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey && !isLoading && !isListening) { e.preventDefault(); handleSubmit(); } }} />
+                     <textarea 
+                        id="question" 
+                        value={question} 
+                        onChange={(e) => setQuestion(e.target.value)} 
+                        className="w-full px-4 py-3 bg-white/10 text-white border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition placeholder-gray-400" 
+                        rows="3" 
+                        placeholder="เช่น กาแฟไม่เปรี้ยว, ชาผลไม้..." 
+                        // ‼️ (บีม) แก้ไข disabled กลับไปเป็นแบบดั้งเดิม
+                        disabled={isLoading || isListening} 
+                        onKeyDown={(e) => { 
+                            // ‼️ (บีม) แก้ไข onKeyDown กลับไปเป็นแบบดั้งเดิม
+                            if (e.key === 'Enter' && !e.shiftKey && !isLoading && !isListening) { 
+                                e.preventDefault(); 
+                                handleSubmit(); 
+                            } 
+                        }} 
+                    />
                      <div className="mt-3 flex flex-wrap gap-2"> 
                          <button onClick={() => setQuestion("New Menu?")} className="text-xs bg-white/20 hover:bg-white/30 text-white py-1 px-3 rounded-full transition">New Menu?</button>
-                         <button onClick={() => setQuestion("หาแฟนให้หน่อย")} className="text-xs bg-white/20 hover:bg-white/30 text-white py-1 px-3 rounded-full transition">หาแฟนให้หน่อย</button>
+                         {/* [FIX 4] ลบปุ่ม "หาแฟนให้หน่อย" */}
+                         {/* <button onClick={() => setQuestion("หาแฟนให้หน่อย")} className="text-xs bg-white/20 hover:bg-white/30 text-white py-1 px-3 rounded-full transition">หาแฟนให้หน่อย</button> */}
                          <button onClick={() => setQuestion("Something sweet")} className="text-xs bg-white/20 hover:bg-white/30 text-white py-1 px-3 rounded-full transition">Something sweet</button>
                      </div>
                      <div className="mt-4 flex items-center gap-3">
-                         <button onClick={() => handleSubmit()} disabled={isLoading || !question.trim() || isListening || question === "Listening..."} className="w-full bg-[#2c8160] hover:bg-green-900 text-white font-bold py-3 px-8 rounded-full transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"> {isLoading ? 'Thinking...' : ' Ask Barista'} </button>
-                         <button onClick={handleListen} disabled={isLoading || isListening} className={`p-3 rounded-full transition-colors ${isListening ? 'bg-red-600 animate-pulse' : 'bg-white/20 hover:bg-white/30'} disabled:bg-gray-400 disabled:cursor-not-allowed`} title="สั่งด้วยเสียง"> <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 11-14 0m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg> </button>
+                         <button 
+                            onClick={() => handleSubmit()} 
+                            // ‼️ (บีม) แก้ไข disabled กลับไปเป็นแบบดั้งเดิม
+                            disabled={isLoading || !question.trim() || isListening || question === "กำลังฟัง..."} 
+                            className="w-full bg-[#2c8160] hover:bg-green-900 text-white font-bold py-3 px-8 rounded-full transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                        > 
+                            {isLoading ? 'Thinking...' : ' Ask Barista'} 
+                        </button>
+                         <button 
+                            // ‼️ (บีม) แก้ไขปุ่มไมค์กลับไปเป็นแบบดั้งเดิม
+                            onClick={handleListen} 
+                            disabled={isLoading || isListening} 
+                            className={`p-3 rounded-full transition-colors ${
+                                isListening ? 'bg-red-600 animate-pulse' // ถ้ากำลังฟัง (ดั้งเดิม) = สีแดง
+                                : 'bg-white/20 hover:bg-white/30' // โหมดปกติ
+                            } disabled:bg-gray-400 disabled:cursor-not-allowed`} 
+                            title="สั่งด้วยเสียง"
+                        > 
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 11-14 0m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg> 
+                        </button>
                      </div>
                  </div>
 
-                {/* Recommendation Section */}
+                {/* Recommendation Section (ย้าย Card เข้ามา) */}
                 <div className="bg-[#4A3728] p-6 rounded-xl shadow-lg min-h-[100px] mb-8">
                      <div className="flex items-start space-x-4"> 
                          <div className="bg-[#2c8160] rounded-full p-2 flex-shrink-0"> <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a2 2 0 01-2-2V7a2 2 0 012-2h2.5a1 1 0 01.7.3l2.4 2.4a1 1 0 01.3.7V8z" /></svg> </div>
-                         <div className="w-full"> <h2 className="text-xl font-bold text-white mb-2">Suggestion:</h2> <div className="text-white whitespace-pre-wrap prose prose-invert max-w-none">{answer}</div> </div>
+                         <div className="w-full"> 
+                            <h2 className="text-xl font-bold text-white mb-2">Suggestion:</h2> 
+                            <div className="text-white whitespace-pre-wrap prose prose-invert max-w-none">{answer}</div> 
+                        </div>
                      </div>
                     
+                    {/* (บีม) ย้าย Card เข้ามาไว้ข้างใน (จากครั้งก่อน) */}
                     {Array.isArray(recommendedMenus) && recommendedMenus.length > 0 && (
                         <div className="mt-6 border-t border-white/20 pt-6">
                             <h3 className="text-lg font-semibold text-white mb-4">Recommend for you:</h3>
@@ -329,7 +410,6 @@ export default function ChatPage() {
                                     <RecommendedMenuCard 
                                         key={menu.menuId}
                                         menu={menu}
-                                        // ส่งค่าที่ AI แนะนำไปให้ Component Card
                                         initialOptions={menu.suggestedOptions || []} 
                                         onAddToCart={_updateCart} 
                                     />
@@ -376,8 +456,9 @@ export default function ChatPage() {
                         <span className="text-2xl font-extrabold text-[#4A3728]">{totalPrice.toFixed(2)} ฿</span> 
                     </div>
                     <Link href="/basket">
+                        {/* [FIX 6] (บีม) ใช้คำให้เหมือนกัน */}
                         <button disabled={!cartItems || cartItems.length === 0} className="mt-5 w-full bg-[#2c8160] hover:bg-opacity-90 text-white font-bold py-3 px-8 rounded-full transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed">
-                            Continue
+                            View Cart ({cartItems.length})
                         </button>
                     </Link>
                 </div>
@@ -385,3 +466,4 @@ export default function ChatPage() {
         </div>
     );
 }
+
