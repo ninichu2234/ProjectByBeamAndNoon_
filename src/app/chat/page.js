@@ -18,16 +18,16 @@ export default function ChatPage() {
     const [allOptions, setAllOptions] = useState({});
     const [cartItems, setCartItems] = useState([]);
     const [totalPrice, setTotalPrice] = useState(0);
-    const [isListening, setIsListening] = useState(false); // ‼️ (บีม) เอากลับมา
+    const [isListening, setIsListening] = useState(false); // (บีม) State นี้จะถูกคุมโดย (ข้อ 13)
     const isInitialMount = useRef(true);
 
-    // ‼️ (บีม) ลบ State และ Ref ของข้อ 13
-    // const [isContinuousListening, setIsContinuousListening] = useState(false);
-    // const recognitionRef = useRef(null);
+    // [FIX 13] State และ Ref สำหรับการสนทนาต่อเนื่อง
+    const [isContinuousListening, setIsContinuousListening] = useState(false);
+    const recognitionRef = useRef(null);
     
     // (ข้อ 14 ถูกข้ามไปตามคำขอ)
 
-    // Effect โหลด cart, menu items, และ options ตอนเริ่ม
+    // ... (useEffect โหลด cart, menu, options ไม่เปลี่ยนแปลง) ...
     useEffect(() => {
         // Load cart
         try {
@@ -100,7 +100,7 @@ export default function ChatPage() {
         isInitialMount.current = false;
     }, []); 
 
-    // Effect คำนวณราคารวม และ บันทึก cart
+    // ... (useEffect คำนวณราคา ไม่เปลี่ยนแปลง) ...
     useEffect(() => {
         const currentCart = Array.isArray(cartItems) ? cartItems : [];
         const newTotal = currentCart.reduce((sum, item) => {
@@ -122,13 +122,32 @@ export default function ChatPage() {
         }
     }, [cartItems]); 
 
-    // ‼️ (บีม) นำ `speak` แบบดั้งเดิม (ไม่มี onEndCallback) กลับมา
-    const speak = (text) => {
-        if (typeof window === 'undefined' || !window.speechSynthesis || !text) return;
+    // [FIX 13] Helper function for Text-to-Speech (เพิ่ม onEndCallback)
+    const speak = (text, onEndCallback = null) => {
+        if (typeof window === 'undefined' || !window.speechSynthesis || !text) {
+            if (onEndCallback) onEndCallback(); // เรียก callback ทันทีถ้าพูดไม่ได้
+            return;
+        }
         window.speechSynthesis.cancel(); 
         const utt = new SpeechSynthesisUtterance(text);
         utt.lang = 'th-TH';
         utt.rate = 1.0;
+
+        // [FIX 13] เมื่อพูดจบ ให้เรียก callback
+        utt.onend = () => {
+            if (onEndCallback) {
+                onEndCallback();
+            }
+        };
+        
+        // [FIX 13] จัดการกรณี error
+        utt.onerror = (e) => {
+            console.error("Speech synthesis error:", e);
+            if (onEndCallback) {
+                onEndCallback(); // ยังคงเรียก callback เพื่อให้ loop ไม่พัง
+            }
+        };
+
         let voices = window.speechSynthesis.getVoices();
         const setVoice = () => {
             voices = window.speechSynthesis.getVoices();
@@ -136,6 +155,8 @@ export default function ChatPage() {
             if (voice) utt.voice = voice;
             if (typeof window !== 'undefined' && window.speechSynthesis) {
                 window.speechSynthesis.speak(utt);
+            } else if (onEndCallback) {
+                onEndCallback(); // Failsafe
             }
         };
         if (voices.length === 0) {
@@ -145,32 +166,139 @@ export default function ChatPage() {
         }
     };
 
-    // ‼️ (บีม) นำ useEffect (cleanup) แบบดั้งเดิมกลับมา
+    // [FIX 13] Added cleanup effect for speech synthesis on unmount
     useEffect(() => {
         return () => {
             if (typeof window !== 'undefined' && window.speechSynthesis) {
                 window.speechSynthesis.cancel();
                 window.speechSynthesis.onvoiceschanged = null;
             }
+            // [FIX 13] cleanup STT ด้วย
+            if (recognitionRef.current) {
+                recognitionRef.current.stop();
+                recognitionRef.current = null;
+            }
         };
     }, []); 
 
 
-    // ‼️ (บีม) นำ `handleListen` แบบดั้งเดิม (ฟังครั้งเดียว) กลับมา
+    // [FIX 13] ลบ `handleListen` (แบบเก่า) ทิ้ง
+    /*
     const handleListen = () => { 
-        if (typeof window === 'undefined') return; const SR = window.SpeechRecognition || window.webkitSpeechRecognition; if (!SR) return alert("Browser not supported");
-        const rec = new SR(); rec.lang = 'th-TH'; rec.interimResults = false; rec.maxAlternatives = 1;
-        rec.onstart = () => { setIsListening(true); setQuestion("กำลังฟัง..."); };
-        rec.onresult = (e) => { 
-            const text = e.results[0][0].transcript; 
-            setQuestion(text); 
-            handleSubmit(text); // ‼️ เรียก handleSubmit แบบดั้งเดิม
+       // ... โค้ดเก่าถูกลบ ...
+    };
+    */
+
+    // [FIX 13] ฟังก์ชันสำหรับเริ่มฟัง (STT) - นี่คือส่วนหนึ่งของ Loop
+    const startListening = () => {
+        if (!isContinuousListening) return; 
+
+        console.log("STT: Starting listener...");
+        if (typeof window === 'undefined') {
+            stopContinuousListening(); return;
+        }
+        const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SR) {
+            alert("Browser not supported");
+            stopContinuousListening(); return;
+        }
+        
+        if (recognitionRef.current) {
+            recognitionRef.current.stop();
+        }
+
+        const rec = new SR();
+        recognitionRef.current = rec;
+        rec.lang = 'th-TH';
+        rec.interimResults = false;
+        rec.maxAlternatives = 1;
+        rec.continuous = false; 
+
+        rec.onstart = () => {
+            setIsListening(true); // (บีม) ใช้ State "isListening" เดิม
+            setQuestion("กำลังฟัง...");
         };
-        rec.onerror = (e) => { console.error("Speech error", e.error); setQuestion(''); alert(`Error: ${e.error}`); };
-        rec.onend = () => { setIsListening(false); if (question === "กำลังฟัง...") setQuestion(''); }; rec.start();
+        
+        rec.onresult = (e) => {
+            const text = e.results[0][0].transcript;
+            console.log("STT: Heard:", text);
+            setQuestion(text);
+            setIsListening(false);
+            if (recognitionRef.current) {
+                recognitionRef.current.stop(); 
+                recognitionRef.current = null;
+            }
+            
+            // [FIX 13] เรียก handleSubmit พร้อม callback (startListening)
+            handleSubmit(text, startListening);
+        };
+        
+        rec.onend = () => {
+            console.log("STT: Listener ended.");
+            setIsListening(false);
+            recognitionRef.current = null;
+            
+            if (isContinuousListening && !isLoading) { 
+                 console.log("STT: Timeout or no speech, listening again.");
+                 startListening();
+            }
+        };
+        
+        rec.onerror = (e) => {
+            console.error("Speech error", e.error);
+            setIsListening(false);
+            if (recognitionRef.current) {
+                recognitionRef.current.stop();
+                recognitionRef.current = null;
+            }
+            if (e.error !== 'aborted' && isContinuousListening) {
+                console.log("STT: Error, listening again.");
+                startListening();
+            }
+        };
+
+        rec.start();
     };
 
-    // ‼️ (บีม) ลบฟังก์ชันของข้อ 13 (startListening, stopContinuousListening, toggleContinuousListen)
+    // [FIX 13] ฟังก์ชันสำหรับหยุดโหมดสนทนาต่อเนื่อง
+    const stopContinuousListening = () => {
+        console.log("Stopping continuous conversation.");
+        setIsContinuousListening(false);
+        setIsListening(false);
+        setIsLoading(false); 
+        
+        if (recognitionRef.current) {
+            recognitionRef.current.stop();
+            recognitionRef.current = null;
+        }
+        
+        if (typeof window !== 'undefined' && window.speechSynthesis) {
+            window.speechSynthesis.cancel(); 
+        }
+        setQuestion('');
+        setAnswer('สวัสดีค่ะ ให้ AI Barista แนะนำเมนูอะไรดีคะ?'); 
+        
+        // (ข้อ 14 ไม่ได้เพิ่มการล้าง chatHistory)
+    };
+
+    // [FIX 13] ฟังก์ชันสำหรับปุ่มไมโครโฟน (Toggle)
+    const toggleContinuousListen = () => {
+        if (isContinuousListening) {
+            // ถ้ากำลังคุยอยู่ กดอีกครั้งเพื่อ >> หยุด
+            stopContinuousListening();
+        } else {
+            // ถ้ายังไม่ได้คุย กดเพื่อ >> เริ่ม
+            if (isLoading) return; 
+            
+            setIsContinuousListening(true);
+            setAnswer("สวัสดีค่ะ พูดคุยได้เลย...");
+            
+            speak("สวัสดีค่ะ พูดคุยได้เลยค่ะ", () => {
+                startListening();
+            });
+        }
+    };
+
 
     // [FIX 7] แก้ไขฟังก์ชัน _updateCart ให้รวมออเดอร์ที่เหมือนกัน
     const _updateCart = (itemToAddFromCard) => {
@@ -181,7 +309,7 @@ export default function ChatPage() {
                 return currentCart; 
             }
 
-            // สร้าง "ลายนิ้วมือ" (fingerprint)
+            // (บีม) สร้าง "ลายนิ้วมือ" (fingerprint)
             const newItemOptions = itemToAddFromCard.customizations?.selectedOptions || [];
             const newItemFingerprint = JSON.stringify(newItemOptions.map(opt => ({
                 groupName: opt.groupName,
@@ -189,7 +317,7 @@ export default function ChatPage() {
             })).sort((a, b) => a.groupName.localeCompare(b.groupName))); 
             const newItemSpecialInstructions = itemToAddFromCard.specialInstructions || "";
 
-            // ค้นหา item ที่เหมือนกัน
+            // (บีม) ค้นหา item ที่เหมือนกัน
             const existingItemIndex = currentCart.findIndex(item => {
                 const existingItemOptions = item.customizations?.selectedOptions || [];
                 const existingItemFingerprint = JSON.stringify(existingItemOptions.map(opt => ({
@@ -226,9 +354,16 @@ export default function ChatPage() {
         });
     };
     
-    // ‼️ (บีม) นำ handleSubmit แบบดั้งเดิมกลับมา (ลบ onSpeakEndCallback)
-    const handleSubmit = async (textFromSpeech = null) => { 
+    // [FIX 13] Handler to submit question to AI (เพิ่ม onSpeakEndCallback)
+    // (ข้อ 14 ไม่ได้เพิ่ม chatHistory)
+    const handleSubmit = async (textFromSpeech = null, onSpeakEndCallback = null) => { 
         const currentQuestion = textFromSpeech || question; 
+        
+        if ((!currentQuestion.trim() || currentQuestion === "กำลังฟัง...") && onSpeakEndCallback) {
+            onSpeakEndCallback();
+            return;
+        }
+        
         if (!currentQuestion.trim() || currentQuestion === "กำลังฟัง...") return;
 
         // (ข้อ 14 ไม่ได้เพิ่ม chatHistory, เราจึงยังใช้ promptToAI แบบเดิม)
@@ -257,7 +392,7 @@ export default function ChatPage() {
                 method: 'POST', 
                 headers: { 'Content-Type': 'application/json' }, 
                 body: JSON.stringify({ 
-                    question: promptToAI, // ‼️ (บีม) ยังใช้ promptToAI แบบเดิม
+                    question: promptToAI, // (บีม) ยังใช้ promptToAI แบบเดิม
                     menuContext, 
                     optionsContext 
                     // (ข้อ 14 ไม่ได้เพิ่ม chatHistory)
@@ -315,13 +450,23 @@ export default function ChatPage() {
         } finally { 
             setIsLoading(false); 
             
-            // ‼️ (บีม) นำ Logic การพูดตอบแบบดั้งเดิมกลับมา
-            if (textFromSpeech) {
-                // ถ้ามาจาก handleListen (ตัวเก่า)
+            // [FIX 13] ตรวจสอบว่ามี callback (onSpeakEndCallback) หรือไม่
+            if (onSpeakEndCallback) { 
+                // ถ้ามี = มาจากโหมดเสียงต่อเนื่อง
+                speak(finalAnswerText, onSpeakEndCallback); 
+            } else if (textFromSpeech) {
+                // (บีม) กรณีที่เรียกจาก handleListen (เวอร์ชันเก่า)
                 setQuestion(''); 
                 speak(finalAnswerText); 
             }
             // (ถ้ามาจากปุ่ม "Ask Barista" ก็ไม่ต้องพูด)
+            
+            // (ข้อ 14 ไม่ได้เพิ่มการบันทึก chatHistory)
+            
+            // (บีม) ล้างช่องพิมพ์ ถ้าเป็นการส่งแบบ "พิมพ์"
+            if (!textFromSpeech && !onSpeakEndCallback) {
+                setQuestion('');
+            }
         }
     };
 
@@ -351,13 +496,13 @@ export default function ChatPage() {
                         className="w-full px-4 py-3 bg-white/10 text-white border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition placeholder-gray-400" 
                         rows="3" 
                         placeholder="เช่น กาแฟไม่เปรี้ยว, ชาผลไม้..." 
-                        // ‼️ (บีม) แก้ไข disabled กลับไปเป็นแบบดั้งเดิม
-                        disabled={isLoading || isListening} 
+                        // [FIX 13] ปิดใช้งาน textarea ถ้ากำลังฟัง หรือ อยู่ในโหมดคุยต่อเนื่อง
+                        disabled={isLoading || isListening || isContinuousListening} 
                         onKeyDown={(e) => { 
-                            // ‼️ (บีม) แก้ไข onKeyDown กลับไปเป็นแบบดั้งเดิม
-                            if (e.key === 'Enter' && !e.shiftKey && !isLoading && !isListening) { 
+                            // [FIX 13] อัปเดต onKeyDown
+                            if (e.key === 'Enter' && !e.shiftKey && !isLoading && !isListening && !isContinuousListening) { 
                                 e.preventDefault(); 
-                                handleSubmit(); 
+                                handleSubmit(null, null); // (บีม) เรียก handleSubmit แบบพิมพ์
                             } 
                         }} 
                     />
@@ -369,22 +514,24 @@ export default function ChatPage() {
                      </div>
                      <div className="mt-4 flex items-center gap-3">
                          <button 
-                            onClick={() => handleSubmit()} 
-                            // ‼️ (บีม) แก้ไข disabled กลับไปเป็นแบบดั้งเดิม
-                            disabled={isLoading || !question.trim() || isListening || question === "กำลังฟัง..."} 
+                            onClick={() => handleSubmit(null, null)} // (บีม) เรียก handleSubmit แบบพิมพ์
+                            // [FIX 13] ปิดใช้งานปุ่ม Ask ถ้ากำลังฟัง หรือ อยู่ในโหมดคุยต่อเนื่อง
+                            disabled={isLoading || !question.trim() || isListening || isContinuousListening || question === "กำลังฟัง..."} 
                             className="w-full bg-[#2c8160] hover:bg-green-900 text-white font-bold py-3 px-8 rounded-full transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
                         > 
                             {isLoading ? 'Thinking...' : ' Ask Barista'} 
                         </button>
                          <button 
-                            // ‼️ (บีม) แก้ไขปุ่มไมค์กลับไปเป็นแบบดั้งเดิม
-                            onClick={handleListen} 
-                            disabled={isLoading || isListening} 
+                            // [FIX 13] เปลี่ยน onClick เป็น toggleContinuousListen
+                            onClick={toggleContinuousListen} 
+                            // (บีม) ปิดใช้งานปุ่มไมค์ ถ้ากำลังโหลดคำตอบ (จากการพิมพ์)
+                            disabled={isLoading && !isContinuousListening} 
                             className={`p-3 rounded-full transition-colors ${
-                                isListening ? 'bg-red-600 animate-pulse' // ถ้ากำลังฟัง (ดั้งเดิม) = สีแดง
+                                // (บีม) ใช้ "isContinuousListening" (ข้อ 13) เป็นตัวหลักในการโชว์สีแดง
+                                isContinuousListening ? 'bg-red-600 animate-pulse' 
                                 : 'bg-white/20 hover:bg-white/30' // โหมดปกติ
                             } disabled:bg-gray-400 disabled:cursor-not-allowed`} 
-                            title="สั่งด้วยเสียง"
+                            title={isContinuousListening ? "หยุดคุย" : "เริ่มคุยด้วยเสียง"}
                         > 
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 11-14 0m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg> 
                         </button>
@@ -397,14 +544,16 @@ export default function ChatPage() {
                          <div className="bg-[#2c8160] rounded-full p-2 flex-shrink-0"> <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a2 2 0 01-2-2V7a2 2 0 012-2h2.5a1 1 0 01.7.3l2.4 2.4a1 1 0 01.3.7V8z" /></svg> </div>
                          <div className="w-full"> 
                             <h2 className="text-xl font-bold text-white mb-2">Suggestion:</h2> 
-                            <div className="text-white whitespace-pre-wrap prose prose-invert max-w-none">{answer}</div> 
+                            {/* (บีม) แก้ไข: แสดง answer (ข้อความ) เฉพาะเมื่อมี */}
+                            {answer && <div className="text-white whitespace-pre-wrap prose prose-invert max-w-none">{answer}</div>}
                         </div>
                      </div>
                     
                     {/* (บีม) ย้าย Card เข้ามาไว้ข้างใน (จากครั้งก่อน) */}
                     {Array.isArray(recommendedMenus) && recommendedMenus.length > 0 && (
                         <div className="mt-6 border-t border-white/20 pt-6">
-                            <h3 className="text-lg font-semibold text-white mb-4">Recommend for you:</h3>
+                            {/* (บีม) ซ่อน "Recommend for you:" ถ้ามีแต่รูป */}
+                            {/* <h3 className="text-lg font-semibold text-white mb-4">Recommend for you:</h3> */}
                             <div className="space-y-4">
                                 {recommendedMenus.map((menu) => (
                                     <RecommendedMenuCard 

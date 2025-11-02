@@ -8,9 +8,9 @@ const LightbulbIcon = () => (
         viewBox="0 0 24 24" 
         fill="none"
         stroke="currentColor" 
-        stroke-width="2" 
-        stroke-linecap="round" 
-        stroke-linejoin="round" 
+        strokeWidth="2" // (บีม) แก้ไข stroke-width
+        strokeLinecap="round" // (บีม) แก้ไข stroke-linecap
+        strokeLinejoin="round" // (บีม) แก้ไข stroke-linejoin
         className="w-8 h-8 text-[#4A3728] float-left mr-4">
         <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/>
         <path d="M9 18h6"/>
@@ -61,7 +61,8 @@ export default function AboutUsPage() {
                                 Have you ever stared at a long menu, unsure of what to order? Or wished for a coffee that perfectly matched your mood?
                             </p>
                             <p>
-                                This project, <strong>MyCafe</strong>, was born from that very challenge. The goal isn't just to build another ordering website, but to create a 
+                                {/* ‼️ (บีม) นี่คือจุดที่แก้ไข Vercel Error ‼️ */}
+                                This project, <strong>MyCafe</strong>, was born from that very challenge. The goal isn&apos;t just to build another ordering website, but to create a 
                                 <span className="font-semibold text-gray-900"> smarter, more personal cafe experience.</span>
                             </p>
                             <p>
