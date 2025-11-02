@@ -247,20 +247,21 @@ function HomeContent() {
             <section className="bg-gray-50 py-20 md:py-24 rounded-xl mb-12">
                  <div className="px-6">
                     <div className="text-center mb-16">
-                         {/* FIX: Don't -> Don&apos;t */}
+                         {/* ‼️ (บีม) นี่คือบรรทัด 251 ‼️ */}
                         <h2 className="text-3xl md:text-4xl font-bold text-gray-800">Don't Worry. We Can Help</h2>
                         <p className="mt-3 text-gray-600 text-lg">Whether you want to try something new or just want the right coffee</p>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
                         <div className="text-center md:text-left">
                             <NextImage src="https://rcrntadwwvhyojmjrmzh.supabase.co/storage/v1/object/public/pic-other/4.png" alt="Can't choose menu" width={600} height={400} sizes="(max-width: 768px) 100vw, 50vw" className="w-full h-auto object-cover rounded-lg shadow-md mb-6" />
-                             {/* FIX: Can't -> Can&apos;t */}
+                             {/* ‼️ (บีม) นี่คือบรรทัด 258 ‼️ */}
                             <h3 className="text-2xl font-bold text-gray-800">Can't choose?</h3>
-                            {/* FIX: don't -> don&apos;t */}
+                            {/* ‼️ (บีม) นี่คือบรรทัด 260 ‼️ */}
                             <p className="mt-2 text-gray-600">Too many menus? Want to try something new but don't know where to start? This problem will be gone.</p>
                         </div>
                         <div className="text-center md:text-left">
                             <NextImage src="https://rcrntadwwvhyojmjrmzh.supabase.co/storage/v1/object/public/pic-other/5.png" alt="Example chat with AI" width={600} height={400} sizes="(max-width: 768px) 100vw, 50vw" className="w-full h-auto object-cover rounded-lg shadow-md mb-6" />
+                             {/* ‼️ (บีม) นี่คือบรรทัด 264 ‼️ */}
                             <h3 className="text-2xl font-bold text-amber-600">Let's us recommend!</h3>
                             <p className="mt-2 text-gray-600">Just tell us how you feel. Our AI is ready to help choose the best drink for you.</p>
                         </div>
@@ -281,3 +282,4 @@ export default function Home() {
         </Suspense>
     );
 }
+
