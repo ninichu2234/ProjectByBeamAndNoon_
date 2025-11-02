@@ -23,17 +23,7 @@ const getFolderName = (category) => {
 
 // Component "เมนูแนะนำทั่วไป" (UI)
 const RecommendedSection = ({ items, isLoading }) => {
-    const SkeletonCardGrid = () => (
-         <div className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden animate-pulse">
-            <div className="w-full h-48 bg-gray-300"></div>
-            <div className="p-4">
-                <div className="h-4 bg-gray-300 rounded w-3/4 mb-2"></div>
-                <div className="h-3 bg-gray-300 rounded w-full mb-1"></div>
-                <div className="h-3 bg-gray-300 rounded w-1/2"></div>
-                <div className="h-4 bg-gray-300 rounded w-1/4 mt-2"></div>
-            </div>
-        </div>
-    );
+    // ... (existing code) ...
     if (!isLoading && (!items || items.length === 0)) return null;
     return (
         <section className="py-20 md:py-24 mb-12">
@@ -45,7 +35,39 @@ const RecommendedSection = ({ items, isLoading }) => {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
                     {isLoading ? (
-                        <> <SkeletonCardGrid /> <SkeletonCardGrid /> <SkeletonCardGrid /> <SkeletonCardGrid /> </>
+                        <> <div className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden animate-pulse">
+            <div className="w-full h-48 bg-gray-300"></div>
+            <div className="p-4">
+                <div className="h-4 bg-gray-300 rounded w-3/4 mb-2"></div>
+                <div className="h-3 bg-gray-300 rounded w-full mb-1"></div>
+                <div className="h-3 bg-gray-300 rounded w-1/2"></div>
+                <div className="h-4 bg-gray-300 rounded w-1/4 mt-2"></div>
+            </div>
+        </div> <div className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden animate-pulse">
+            <div className="w-full h-48 bg-gray-300"></div>
+            <div className="p-4">
+                <div className="h-4 bg-gray-300 rounded w-3/4 mb-2"></div>
+                <div className="h-3 bg-gray-300 rounded w-full mb-1"></div>
+                <div className="h-3 bg-gray-300 rounded w-1/2"></div>
+                <div className="h-4 bg-gray-300 rounded w-1/4 mt-2"></div>
+            </div>
+        </div> <div className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden animate-pulse">
+            <div className="w-full h-48 bg-gray-300"></div>
+            <div className="p-4">
+                <div className="h-4 bg-gray-300 rounded w-3/4 mb-2"></div>
+                <div className="h-3 bg-gray-300 rounded w-full mb-1"></div>
+                <div className="h-3 bg-gray-300 rounded w-1/2"></div>
+                <div className="h-4 bg-gray-300 rounded w-1/4 mt-2"></div>
+            </div>
+        </div> <div className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden animate-pulse">
+            <div className="w-full h-48 bg-gray-300"></div>
+            <div className="p-4">
+                <div className="h-4 bg-gray-300 rounded w-3/4 mb-2"></div>
+                <div className="h-3 bg-gray-300 rounded w-full mb-1"></div>
+                <div className="h-3 bg-gray-300 rounded w-1/2"></div>
+                <div className="h-4 bg-gray-300 rounded w-1/4 mt-2"></div>
+            </div>
+        </div> </>
                     ) : (
                         items.map(item => (
                             <Link key={item.menuId} href={`/menuDetail/${item.menuId}`} passHref>
@@ -76,6 +98,7 @@ const RecommendedSection = ({ items, isLoading }) => {
 
 // Component "เมนูจากประวัติ" (UI + Logic + Auto Scroll)
 const HistoryRecsSection = ({ items, isLoading }) => {
+    // ... (existing code) ...
     const scrollContainerRef = useRef(null);
     const intervalRef = useRef(null);
     const stopScrolling = useCallback(() => { if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; } }, []);
@@ -96,18 +119,20 @@ const HistoryRecsSection = ({ items, isLoading }) => {
 };
 
 const HowItWorksSection = () => {
+    // ... (existing code) ...
     const [activeStep, setActiveStep] = useState(1);
     const timerRef = useRef(null);
     const steps = [ { id: 1, title: '1. Chat with AI or Browse Menu', description: "Tell our AI what you're craving.", imageUrl: 'https://rcrntadwwvhyojmjrmzh.supabase.co/storage/v1/object/public/pic-other/step-1.png' }, 
                     { id: 2, title: '2. Review and Customize', description: 'The AI will suggest the perfect items for you.', imageUrl: 'https://rcrntadwwvhyojmjrmzh.supabase.co/storage/v1/object/public/pic-other/step-2.png' }, 
                     { id: 3, title: '3. Pay & Wait at Your Table', description: 'Pay online or in-person at the counter.', imageUrl: 'https://rcrntadwwvhyojmjrmzh.supabase.co/storage/v1/object/public/pic-other/step-3.png' } ];
-    const startTimer = () => { if (timerRef.current) clearInterval(timerRef.current); timerRef.current = setInterval(() => { setActiveStep((prevStep) => (prevStep % 3) + 1); }, 4000); };
+    const startTimer = () => { if (timerRef.current) { clearInterval(timerRef.current); } timerRef.current = setInterval(() => { setActiveStep((prevStep) => (prevStep % 3) + 1); }, 4000); };
     const handleStepClick = (stepId) => { setActiveStep(stepId); startTimer(); };
-    useEffect(() => { startTimer(); return () => { if (timerRef.current) clearInterval(timerRef.current); }; }, []);
+    useEffect(() => { startTimer(); return () => { if (timerRef.current) { clearInterval(timerRef.current); } }; }, []);
     return ( <section className="bg-white py-20 md:py-24 rounded-xl"> <div className="container mx-auto px-6"> <div className="text-center mb-16"> <h2 className="text-3xl md:text-4xl font-bold text-gray-800">ใช้งานง่ายๆ ใน 3 ขั้นตอน</h2> <p className="mt-3 text-gray-600 text-lg"> สั่งเครื่องดื่มแก้วโปรดของคุณได้ง่ายกว่าที่เคย </p> </div> <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center"> <div className="space-y-6"> {steps.map((step) => ( <div key={step.id} onClick={() => handleStepClick(step.id)} className={`p-6 rounded-lg border-2 transition-all duration-300 cursor-pointer ${activeStep === step.id ? 'bg-amber-50 border-amber-500 shadow-lg' : 'bg-gray-50 border-gray-200 hover:bg-gray-100'}`} > <h3 className="text-2xl font-bold text-gray-800">{step.title}</h3> <p className="mt-2 text-gray-600">{step.description}</p> </div> ))} </div> <div className="relative w-full h-80 md:h-96"> {steps.map((step) => ( <NextImage key={step.id} src={step.imageUrl} alt={step.title} fill={true} sizes="(max-width: 768px) 100vw, 50vw" className={`absolute inset-0 w-full h-full object-cover rounded-lg shadow-md transition-all duration-500 ease-in-out ${activeStep === step.id ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`} /> ))} </div> </div> </div> </section> );
 };
 
 const OrderStatusBanner = ({ orderData, onDismiss }) => {
+    // ... (existing code) ...
     if (!orderData || orderData.id == null || !orderData.orderStatus) return null;
     const displayId = String(orderData.id).substring(0, 8);
     const getStatusInfo = (status) => {
@@ -123,30 +148,20 @@ const OrderStatusBanner = ({ orderData, onDismiss }) => {
 };
 
 function HomeContent() {
-    // States for Order Status
+    // ... (existing code) ...
     const [orderData, setOrderData] = useState(null);
     const [isLoadingStatus, setIsLoadingStatus] = useState(false);
     const searchParams = useSearchParams();
     const router = useRouter();
-
-    // States for History Recommendations
     const [currentUser, setCurrentUser] = useState(null);
     const [historyRecs, setHistoryRecs] = useState([]);
     const [isLoadingHistory, setIsLoadingHistory] = useState(true);
-
-    // States for General Recommendations
     const [generalRecs, setGeneralRecs] = useState([]);
     const [isLoadingGeneral, setIsLoadingGeneral] = useState(true);
-
-    // --- Effects ---
-
-    // Effect (1): Fetch User
     useEffect(() => {
         const fetchUser = async () => { if (supabase) { const { data: { user } } = await supabase.auth.getUser(); setCurrentUser(user); if (!user) setIsLoadingHistory(false); } };
         fetchUser();
     }, []);
-
-    // Effect (2): Fetch History Recommendations
     useEffect(() => {
         const fetchHistoryRecommendations = async (userId) => {
             setIsLoadingHistory(true); setHistoryRecs([]);
@@ -168,8 +183,6 @@ function HomeContent() {
         };
         if (currentUser && currentUser.id) fetchHistoryRecommendations(currentUser.id);
     }, [currentUser]);
-
-    // Effect (3): Fetch General Recommendations
      useEffect(() => {
         const fetchGeneralRecommendations = async () => {
             setIsLoadingGeneral(true); let itemsWithImages = [];
@@ -182,9 +195,6 @@ function HomeContent() {
          };
          fetchGeneralRecommendations();
      }, []);
-
-
-    // Effect (4): Handle Order Status Subscription
     const handleDismissStatus = useCallback(() => { setOrderData(null); router.push('/', undefined, { shallow: true }); }, [router]);
     useEffect(() => {
         const orderIdFromUrl = searchParams.get('orderId');
@@ -205,12 +215,12 @@ function HomeContent() {
                                 setOrderData({ id: payload.new.orderId, orderStatus: payload.new.orderStatus });
                                 if (payload.new.orderStatus === 'จัดส่งแล้ว') setTimeout(handleDismissStatus, 10000);
                             }
-                        }).subscribe((status, err) => { if (err) console.error(err); });
+                        }).subscribe((status, err) => { if (err) { console.error(err); } });
                 } catch (error) { setIsLoadingStatus(false); console.error(error); }
             } else { setOrderData(null); setIsLoadingStatus(false); }
         };
         setupSubscription();
-        return () => { if (channel) supabase.removeChannel(channel).catch(console.error); };
+        return () => { if (channel) { supabase.removeChannel(channel).catch(console.error); } };
     }, [searchParams, handleDismissStatus]);
 
 
@@ -248,21 +258,21 @@ function HomeContent() {
                  <div className="px-6">
                     <div className="text-center mb-16">
                          {/* ‼️ (บีม) นี่คือบรรทัด 251 ‼️ */}
-                        <h2 className="text-3xl md:text-4xl font-bold text-gray-800">Don't Worry. We Can Help</h2>
+                        <h2 className="text-3xl md:text-4xl font-bold text-gray-800">Don&apos;t Worry. We Can Help</h2>
                         <p className="mt-3 text-gray-600 text-lg">Whether you want to try something new or just want the right coffee</p>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
                         <div className="text-center md:text-left">
                             <NextImage src="https://rcrntadwwvhyojmjrmzh.supabase.co/storage/v1/object/public/pic-other/4.png" alt="Can't choose menu" width={600} height={400} sizes="(max-width: 768px) 100vw, 50vw" className="w-full h-auto object-cover rounded-lg shadow-md mb-6" />
                              {/* ‼️ (บีม) นี่คือบรรทัด 258 ‼️ */}
-                            <h3 className="text-2xl font-bold text-gray-800">Can't choose?</h3>
+                            <h3 className="text-2xl font-bold text-gray-800">Can&apos;t choose?</h3>
                             {/* ‼️ (บีม) นี่คือบรรทัด 260 ‼️ */}
-                            <p className="mt-2 text-gray-600">Too many menus? Want to try something new but don't know where to start? This problem will be gone.</p>
+                            <p className="mt-2 text-gray-600">Too many menus? Want to try something new but don&apos;t know where to start? This problem will be gone.</p>
                         </div>
                         <div className="text-center md:text-left">
                             <NextImage src="https://rcrntadwwvhyojmjrmzh.supabase.co/storage/v1/object/public/pic-other/5.png" alt="Example chat with AI" width={600} height={400} sizes="(max-width: 768px) 100vw, 50vw" className="w-full h-auto object-cover rounded-lg shadow-md mb-6" />
                              {/* ‼️ (บีม) นี่คือบรรทัด 264 ‼️ */}
-                            <h3 className="text-2xl font-bold text-amber-600">Let's us recommend!</h3>
+                            <h3 className="text-2xl font-bold text-amber-600">Let&apos;s us recommend!</h3>
                             <p className="mt-2 text-gray-600">Just tell us how you feel. Our AI is ready to help choose the best drink for you.</p>
                         </div>
                     </div>
