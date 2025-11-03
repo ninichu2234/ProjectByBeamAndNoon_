@@ -221,7 +221,10 @@ export default function ChatPage() {
         
         rec.onresult = (e) => {
             const text = e.results[0][0].transcript;
+            
+            // นี่คือจุดที่คุณถามหาครับ
             console.log("STT: Heard:", text);
+            
             setQuestion(text);
             setIsListening(false);
             if (recognitionRef.current) {
@@ -244,7 +247,6 @@ export default function ChatPage() {
             }
         };
         
-        // [START] โค้ดที่แก้ไขจากคำถามล่าสุด
         rec.onerror = (e) => {
             console.error("Speech error", e.error);
             setIsListening(false);
@@ -266,7 +268,6 @@ export default function ChatPage() {
                 startListening();
             }
         };
-        // [END] โค้ดที่แก้ไขจากคำถามล่าสุด
 
         rec.start();
     };
@@ -292,6 +293,7 @@ export default function ChatPage() {
         // (ข้อ 14 ไม่ได้เพิ่มการล้าง chatHistory)
     };
 
+    // [START] โค้ดที่แก้ไขจากคำถามล่าสุด
     // [FIX 13] ฟังก์ชันสำหรับปุ่มไมโครโฟน (Toggle)
     const toggleContinuousListen = () => {
         if (isContinuousListening) {
@@ -302,13 +304,20 @@ export default function ChatPage() {
             if (isLoading) return; 
             
             setIsContinuousListening(true);
-            setAnswer("สวัสดีค่ะ พูดคุยได้เลย...");
+            setAnswer("สวัสดีค่ะ พูดคุยได้เลย..."); // (บีม) ยังโชว์ข้อความทักทาย
             
+            // [SIMPLIFIED] เรียก startListening() โดยตรง
+            // เราจะไม่รอให้ AI "พูด" เสร็จก่อน
+            // เพราะถ้าการ "พูด" (TTS) ล้มเหลว การ "ฟัง" (STT) จะไม่เริ่มเลย
+            /*
             speak("สวัสดีค่ะ พูดคุยได้เลยค่ะ", () => {
                 startListening();
             });
+            */
+            startListening(); // <--- เรียกฟังทันที
         }
     };
+    // [END] โค้ดที่แก้ไขจากคำถามล่าสุด
 
 
     // [FIX 7] แก้ไขฟังก์ชัน _updateCart ให้รวมออเดอร์ที่เหมือนกัน
