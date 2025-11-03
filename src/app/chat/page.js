@@ -21,10 +21,13 @@ export default function ChatPage() {
     const [isListening, setIsListening] = useState(false); 
     const isInitialMount = useRef(true);
 
-    // [FIX 13] State และ Ref สำหรับการสนทนาต่อเนื่อง
     const [isContinuousListening, setIsContinuousListening] = useState(false);
     const recognitionRef = useRef(null);
     
+    // [START] (ข้อ 14) เพิ่ม State สำหรับเก็บประวัติการแชท
+    const [chatHistory, setChatHistory] = useState([]);
+    // [END] (ข้อ 14)
+
     // ... (useEffect โหลด cart, menu, options ไม่เปลี่ยนแปลง) ...
     useEffect(() => {
         // Load cart
@@ -54,7 +57,7 @@ export default function ChatPage() {
             } catch (error) { console.error("ChatPage: Error fetching menus:", error.message); setAllMenuItems([]); }
         };
 
-        // Fetch all customization options (Using correct schema: 'option' and 'optionGroups')
+        // Fetch all customization options
         const fetchAllOptions = async () => {
             console.log("ChatPage: Fetching all options...");
             try {
@@ -123,7 +126,7 @@ export default function ChatPage() {
     // ... (speak function ไม่เปลี่ยนแปลง) ...
     const speak = (text, onEndCallback = null) => {
         if (typeof window === 'undefined' || !window.speechSynthesis || !text) {
-            if (onEndCallback) onEndCallback(); 
+            if (onEndCallback) onEndCallback();
             return;
         }
         window.speechSynthesis.cancel(); 
@@ -135,7 +138,7 @@ export default function ChatPage() {
         };
         utt.onerror = (e) => {
             console.error("Speech synthesis error:", e);
-            if (onEndCallback) onEndCallback(); 
+            if (onEndCallback) onEndCallback();
         };
         let voices = window.speechSynthesis.getVoices();
         const setVoice = () => {
@@ -169,21 +172,10 @@ export default function ChatPage() {
         };
     }, []); 
 
-    // [START] โค้ดที่แก้ไขจากคำถามล่าสุด
-    // [FIX 13] ฟังก์ชันสำหรับเริ่มฟัง (STT) - นี่คือส่วนหนึ่งของ Loop
+    // ... (startListening function ไม่เปลี่ยนแปลง) ...
     const startListening = () => {
-        // [DEBUG] เราจะยัง log ค่า state ตัวเก่า (stale state) เพื่อดู แต่จะไม่ใช้มันตัดสินใจ
-        console.log("STT: startListening() called. isContinuousListening (may be stale):", isContinuousListening);
+        console.log("STT: startListening() called...");
 
-        // [REMOVED] ลบ if check ที่ทำให้เกิดปัญหา Stale State ทิ้ง
-        /*
-        if (!isContinuousListening) {
-            console.log("STT: Aborting listen because isContinuousListening is false.");
-            return; 
-        }
-        */
-
-        console.log("STT: Starting listener..."); // <--- [FIX] ทีนี้บรรทัดนี้จะทำงานทันที
         if (typeof window === 'undefined') {
             stopContinuousListening(); return;
         }
@@ -192,23 +184,19 @@ export default function ChatPage() {
             alert("Browser not supported");
             stopContinuousListening(); return;
         }
-        
         if (recognitionRef.current) {
             recognitionRef.current.stop();
         }
-
         const rec = new SR();
         recognitionRef.current = rec;
         rec.lang = 'th-TH';
         rec.interimResults = false;
         rec.maxAlternatives = 1;
         rec.continuous = false; 
-
         rec.onstart = () => {
             setIsListening(true); 
             setQuestion("กำลังฟัง...");
         };
-        
         rec.onresult = (e) => {
             const text = e.results[0][0].transcript;
             console.log("STT: Heard:", text);
@@ -220,19 +208,15 @@ export default function ChatPage() {
             }
             handleSubmit(text, startListening);
         };
-        
         rec.onend = () => {
             console.log("STT: Listener ended.");
             setIsListening(false);
             recognitionRef.current = null;
-            
-            // การตรวจสอบตรงนี้ (onend) ถูกต้องแล้ว เพราะ state อัปเดตนานแล้ว
             if (isContinuousListening && !isLoading) { 
                  console.log("STT: Timeout or no speech, listening again.");
                  startListening();
             }
         };
-        
         rec.onerror = (e) => {
             console.error("Speech error", e.error);
             setIsListening(false);
@@ -251,17 +235,16 @@ export default function ChatPage() {
                 startListening();
             }
         };
-
         rec.start();
     };
-    // [END] โค้ดที่แก้ไขจากคำถามล่าสุด
 
-    // ... (stopContinuousListening function ไม่เปลี่ยนแปลง) ...
+    // [START] (ข้อ 14) แก้ไข stopContinuousListening
     const stopContinuousListening = () => {
         console.log("Stopping continuous conversation.");
         setIsContinuousListening(false);
         setIsListening(false);
         setIsLoading(false); 
+        
         if (recognitionRef.current) {
             recognitionRef.current.stop();
             recognitionRef.current = null;
@@ -271,29 +254,25 @@ export default function ChatPage() {
         }
         setQuestion('');
         setAnswer('สวัสดีค่ะ ให้ AI Barista แนะนำเมนูอะไรดีคะ?'); 
+        
+        // (ข้อ 14) ล้างประวัติแชทเมื่อจบการสนทนา
+        setChatHistory([]);
     };
+    // [END] (ข้อ 14)
 
     // ... (toggleContinuousListen function ไม่เปลี่ยนแปลง) ...
     const toggleContinuousListen = () => {
-        console.log("STT: toggleContinuousListen() clicked. isLoading:", isLoading, "isContinuousListening:", isContinuousListening);
-
         if (isContinuousListening) {
-            // ถ้ากำลังคุยอยู่ กดอีกครั้งเพื่อ >> หยุด
-            console.log("STT: Calling stopContinuousListening()");
             stopContinuousListening();
         } else {
-            // ถ้ายังไม่ได้คุย กดเพื่อ >> เริ่ม
-            if (isLoading) {
-                console.log("STT: Aborting start because isLoading is true.");
-                return; 
-            }
-            
-            console.log("STT: Setting isContinuousListening = true");
+            if (isLoading) return; 
             setIsContinuousListening(true);
-            setAnswer("สวัสดีค่ะ พูดคุยได้เลย..."); 
+            setAnswer("สวัสดีค่ะ พูดคุยได้เลย...");
             
-            console.log("STT: Calling startListening() directly.");
-            startListening(); // <--- เรียกฟังทันที
+            // (ข้อ 14) ล้างประวัติแชทเก่าเมื่อเริ่มคุย
+            setChatHistory([]);
+            
+            startListening();
         }
     };
 
@@ -306,12 +285,19 @@ export default function ChatPage() {
                 console.error("ChatPage: Invalid item data received from card:", itemToAddFromCard); 
                 return currentCart; 
             }
-            const newItemOptions = itemToAddFromCard.customizations?.selectedOptions || [];
-            const newItemFingerprint = JSON.stringify(newItemOptions.map(opt => ({
+
+            // (บีม) สร้าง "ลายนิ้วมือ" (fingerprint)
+            // [FIX] ต้องรองรับ suggestedOptions ที่ AI ส่งมาด้วย
+            const itemOptionsList = itemToAddFromCard.customizations?.selectedOptions || itemToAddFromCard.suggestedOptions || [];
+            
+            const newItemFingerprint = JSON.stringify(itemOptionsList.map(opt => ({
                 groupName: opt.groupName,
                 optionName: opt.optionName
             })).sort((a, b) => a.groupName.localeCompare(b.groupName))); 
+            
             const newItemSpecialInstructions = itemToAddFromCard.specialInstructions || "";
+
+            // (บีม) ค้นหา item ที่เหมือนกัน
             const existingItemIndex = currentCart.findIndex(item => {
                 const existingItemOptions = item.customizations?.selectedOptions || [];
                 const existingItemFingerprint = JSON.stringify(existingItemOptions.map(opt => ({
@@ -319,11 +305,14 @@ export default function ChatPage() {
                     optionName: opt.optionName
                 })).sort((a, b) => a.groupName.localeCompare(b.groupName)));
                 const existingItemSpecialInstructions = item.specialInstructions || "";
+
                 return item.menuId === itemToAddFromCard.menuId && 
                        existingItemFingerprint === newItemFingerprint &&
                        existingItemSpecialInstructions === newItemSpecialInstructions;
             });
+
             if (existingItemIndex > -1) {
+                // ถ้าเจอ -> รวมยอด
                 const updatedItems = [...currentCart];
                 const existingItem = updatedItems[existingItemIndex];
                 updatedItems[existingItemIndex] = {
@@ -333,31 +322,72 @@ export default function ChatPage() {
                 console.log(`ChatPage: Merged item quantity for cartItemId: ${existingItem.cartItemId}`);
                 return updatedItems;
             } else {
+                // ถ้าไม่เจอ -> เพิ่มใหม่
+                
+                // [FIX] สร้าง item object ให้สมบูรณ์สำหรับตะกร้า
+                const fullMenuItem = allMenuItems.find(m => m.menuId === itemToAddFromCard.menuId);
+                const basePrice = fullMenuItem?.menuPrice || 0;
+                
+                // คำนวณราคาส่วนเพิ่มจาก options (ถ้ามี)
+                // (โค้ดส่วนนี้ควรอยู่ใน RecommendedMenuCard แต่เราต้องจำลองมันที่นี่สำหรับ auto-add)
+                const optionsPrice = itemOptionsList.reduce((sum, opt) => {
+                    // หาก allOptions มีข้อมูลราคา เราสามารถ lookup ได้
+                    // แต่เพื่อความง่าย, เราจะสมมติว่า AI ยังไม่ส่งราคา option มา
+                    return sum + (opt.priceAdjustment || 0);
+                }, 0);
+
+                const finalPrice = basePrice + optionsPrice;
+
                 const newItem = { 
-                    ...itemToAddFromCard, 
-                    cartItemId: itemToAddFromCard.cartItemId || uuidv4(),
+                    cartItemId: uuidv4(),
+                    menuId: itemToAddFromCard.menuId,
+                    menuName: itemToAddFromCard.menuName,
+                    menuPrice: basePrice, // ราคาตั้งต้น
+                    finalPrice: finalPrice, // ราคาหลังบวก/ลบ
+                    quantity: itemToAddFromCard.quantity || 1,
+                    specialInstructions: newItemSpecialInstructions,
+                    // สร้าง object ที่ตรงกับตะกร้า
+                    customizations: {
+                        selectedOptions: itemOptionsList
+                    },
+                    publicImageUrl: fullMenuItem?.publicImageUrl || null
                 };
+                
                 const updatedItems = [...currentCart, newItem];
-                console.log(`ChatPage: Added new item cartItemId: ${newItem.cartItemId}`, newItem);
+                console.log(`ChatPage: Auto-Added new item cartItemId: ${newItem.cartItemId}`, newItem);
                 return updatedItems; 
             }
         });
     };
     
-    // ... (handleSubmit function ไม่เปลี่ยนแปลง) ...
+    // [START] (ข้อ 14) อัปเดต handleSubmit ทั้งหมด
     const handleSubmit = async (textFromSpeech = null, onSpeakEndCallback = null) => { 
         const currentQuestion = textFromSpeech || question; 
+        
         if ((!currentQuestion.trim() || currentQuestion === "กำลังฟัง...") && onSpeakEndCallback) {
             onSpeakEndCallback();
             return;
         }
+        
         if (!currentQuestion.trim() || currentQuestion === "กำลังฟัง...") return;
-        const promptToAI = `${currentQuestion}\n\n(AI, please also ask a relevant follow-up question to keep the conversation going.)`;
-        setIsLoading(true); setAnswer("กำลังคิด..."); setRecommendedMenus([]);
+
+        setIsLoading(true); 
+        setAnswer("กำลังคิด..."); 
+        setRecommendedMenus([]);
+
+        // (ข้อ 14) เพิ่มคำถามใหม่ของผู้ใช้เข้าประวัติ (ก่อนส่ง)
+        const updatedHistory = [
+            ...chatHistory,
+            { role: "user", parts: [{ text: currentQuestion }] }
+        ];
+        // (บีม) เราจะยังไม่ setChatHistory(updatedHistory)
+        // เราจะรอ set ทีเดียวตอน AI ตอบกลับมา
+
         let menuContext = "Menu:\n"; 
         if (allMenuItems?.length > 0) { 
             allMenuItems.forEach(item => { menuContext += `- ID: ${item.menuId}, Name: ${item.menuName}, Price: ${item.menuPrice}\n`; }); 
         } else { menuContext += "- None loaded.\n"; }
+
         let optionsContext = "Available Customizations:\n";
         if (Object.keys(allOptions).length > 0) {
             for (const groupName in allOptions) {
@@ -366,53 +396,68 @@ export default function ChatPage() {
         } else {
             optionsContext += "- None loaded.\n";
         }
+        
         let finalAnswerText = ''; 
+        let aiResponseData = null; // (บีม) เราจะเก็บ response ทั้งก้อน
+
         try {
             const res = await fetch('/api/chat', { 
                 method: 'POST', 
                 headers: { 'Content-Type': 'application/json' }, 
                 body: JSON.stringify({ 
-                    question: promptToAI, menuContext, optionsContext 
+                    question: currentQuestion, // (บีม) ส่งแค่คำถามปัจจุบัน
+                    menuContext, 
+                    optionsContext,
+                    chatHistory: chatHistory // (ข้อ 14) ส่งประวัติแชท (ก่อนคำถามนี้)
                 }) 
             });
-            const body = await res.text(); if (!res.ok) throw new Error(`API Error (${res.status}): ${body}`); 
-            let data; try { data = JSON.parse(body); } catch (e) { throw new Error("Invalid JSON response from API"); }
-            const { responseText } = data; if (!responseText) throw new Error("API returned no responseText");
-            let jsonString = responseText;
-            const jsonMatch = responseText.match(/```json([\s\S]*?)```/);
-            if (jsonMatch && jsonMatch[1]) {
-                jsonString = jsonMatch[1].trim();
+
+            // (บีม) API route ของเราตอบกลับเป็น JSON object โดยตรงแล้ว
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || `API Error (${res.status})`); 
+            
+            aiResponseData = data; // เก็บ object ทั้งก้อน
+            
+            if (!aiResponseData.text) {
+                throw new Error("AI response missing 'text' field");
             }
-            if (jsonString.startsWith('{') && jsonString.endsWith('}')) { 
-                try { 
-                    const aiRes = JSON.parse(jsonString); 
-                    finalAnswerText = aiRes.text || "แนะนำ:"; 
-                    setAnswer(finalAnswerText); 
-                    let recs = []; 
-                    if (Array.isArray(aiRes.recommendations)) { 
-                        recs = aiRes.recommendations.map(m => { 
-                            const id = m?.menuId ?? m?.item_id; 
-                            if (id == null) return null; 
-                            const fullMenuItem = allMenuItems.find(i => String(i.menuId) === String(id)); 
-                            if (!fullMenuItem) return null; 
-                            const suggestedOptions = m.suggestedOptions || []; 
-                            return { ...fullMenuItem, suggestedOptions: suggestedOptions };
-                        }).filter(Boolean); 
-                    } 
-                    setRecommendedMenus(recs); 
-                    console.log("ChatPage: Recommendations set:", recs);
-                } catch (e) { 
-                    finalAnswerText = jsonString; 
-                    setAnswer(finalAnswerText); 
-                    setRecommendedMenus([]); 
-                    console.error("AI JSON Parse Error (after regex):", e); 
-                } 
-            } else { 
-                finalAnswerText = responseText; 
-                setAnswer(finalAnswerText); 
-                setRecommendedMenus([]); 
-                console.log("ChatPage: AI response was plain text."); 
+
+            finalAnswerText = aiResponseData.text; 
+            setAnswer(finalAnswerText); 
+            
+            // 1. แสดง Recommendations (ถ้ามี)
+            let recs = []; 
+            if (Array.isArray(aiResponseData.recommendations)) { 
+                recs = aiResponseData.recommendations.map(m => { 
+                    const id = m?.menuId ?? m?.item_id; 
+                    if (id == null) return null; 
+                    const fullMenuItem = allMenuItems.find(i => String(i.menuId) === String(id)); 
+                    if (!fullMenuItem) return null; 
+                    const suggestedOptions = m.suggestedOptions || []; 
+                    return { ...fullMenuItem, suggestedOptions: suggestedOptions };
+                }).filter(Boolean); 
+            } 
+            setRecommendedMenus(recs); 
+            console.log("ChatPage: Recommendations set:", recs);
+
+            // 2. [ACTION] เพิ่มของลงตะกร้าอัตโนมัติ (ถ้ามี)
+            if (Array.isArray(aiResponseData.itemsToAutoAdd) && aiResponseData.itemsToAutoAdd.length > 0) {
+                console.log("ChatPage: AI requested auto-add:", aiResponseData.itemsToAutoAdd);
+                aiResponseData.itemsToAutoAdd.forEach(item => {
+                    // (บีม) ค้นหาเมนูเต็มจาก allMenuItems เพื่อความสมบูรณ์
+                    const fullMenuItem = allMenuItems.find(m => String(m.menuId) === String(item.menuId));
+                    if (fullMenuItem) {
+                        const itemToAdd = {
+                            ...fullMenuItem, // เอาข้อมูลทั้งหมด (เช่น menuPrice)
+                            ...item, // ทับด้วยข้อมูลจาก AI (เช่น quantity, suggestedOptions)
+                        };
+                         _updateCart(itemToAdd);
+                    } else {
+                        console.warn("AI tried to auto-add unknown menuId:", item.menuId);
+                    }
+                });
             }
+
         } catch (error) { 
             console.error("ChatPage Submit Error:", error); 
             finalAnswerText = `เกิดข้อผิดพลาด: ${error.message}`; 
@@ -420,17 +465,27 @@ export default function ChatPage() {
             setRecommendedMenus([]);
         } finally { 
             setIsLoading(false); 
+            
+            // (ข้อ 14) บันทึกประวัติแชท (ทั้งคำถามและคำตอบ)
+            // (บีม) เราจะบันทึกเฉพาะ 'text' ที่ AI ตอบ ไม่ใช่ JSON ก้อนใหญ่
+            setChatHistory([
+                ...updatedHistory, // คำถามของผู้ใช้ (ที่สร้างไว้ก่อน fetch)
+                { role: "model", parts: [{ text: finalAnswerText }] } // คำตอบของ AI
+            ]);
+            
             if (onSpeakEndCallback) { 
                 speak(finalAnswerText, onSpeakEndCallback); 
             } else if (textFromSpeech) {
                 setQuestion(''); 
                 speak(finalAnswerText); 
             }
+            
             if (!textFromSpeech && !onSpeakEndCallback) {
                 setQuestion('');
             }
         }
     };
+    // [END] (ข้อ 14)
 
     // --- JSX (ไม่เปลี่ยนแปลง) ---
     return (
@@ -487,7 +542,7 @@ export default function ChatPage() {
                             } disabled:bg-gray-400 disabled:cursor-not-allowed`} 
                             title={isContinuousListening ? "หยุดคุย" : "เริ่มคุยด้วยเสียง"}
                         > 
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 11-14 0m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg> 
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0_0_24_24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 11-14 0m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg> 
                         </button>
                      </div>
                  </div>
@@ -495,7 +550,7 @@ export default function ChatPage() {
                 {/* Recommendation Section */}
                 <div className="bg-[#4A3728] p-6 rounded-xl shadow-lg min-h-[100px] mb-8">
                      <div className="flex items-start space-x-4"> 
-                         <div className="bg-[#2c8160] rounded-full p-2 flex-shrink-0"> <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a2 2 0 01-2-2V7a2 2 0 012-2h2.5a1 1 0 01.7.3l2.4 2.4a1 1 0 01.3.7V8z" /></svg> </div>
+                         <div className="bg-[#2c8160] rounded-full p-2 flex-shrink-0"> <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0_0_24_24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a2 2 0 01-2-2V7a2 2 0 012-2h2.5a1 1 0 01.7.3l2.4 2.4a1 1 0 01.3.7V8z" /></svg> </div>
                          <div className="w-full"> 
                             <h2 className="text-xl font-bold text-white mb-2">Suggestion:</h2> 
                             {answer && <div className="text-white whitespace-pre-wrap prose prose-invert max-w-none">{answer}</div>}
@@ -531,7 +586,7 @@ export default function ChatPage() {
                                         <div className="font-medium text-sm flex-grow mr-2"> 
                                             {item.menuName} x {item.quantity}
                                             {item.customizations?.selectedOptions?.map(opt => (
-                                                <p key={opt.optionId} className="text-xs text-gray-600 ml-2">
+                                                <p key={opt.optionId || opt.optionName} className="text-xs text-gray-600 ml-2">
                                                     - {opt.groupName}: {opt.optionName} {opt.priceAdjustment > 0 ? `(+${opt.priceAdjustment.toFixed(2)}฿)` : ''}
                                                 </p>
                                             ))}
