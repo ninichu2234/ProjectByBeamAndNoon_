@@ -280,7 +280,7 @@ export default function MenuDetailPage() {
                 {/* Back Button */}
                 <div className="mb-6">
                     {/* (บีม) แก้ Link กลับไปหน้า /menu */}
-                    <Link href="/menu" className="text-green-700 hover:text-amber-800 transition-colors inline-flex items-center group">
+                    <Link href="/menu-page" className="text-green-700 hover:text-amber-800 transition-colors inline-flex items-center group">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1 group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
                         กลับไปที่เมนู
                     </Link>

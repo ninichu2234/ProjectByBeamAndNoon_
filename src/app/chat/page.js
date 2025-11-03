@@ -244,6 +244,7 @@ export default function ChatPage() {
             }
         };
         
+        // [START] โค้ดที่แก้ไขจากคำถามล่าสุด
         rec.onerror = (e) => {
             console.error("Speech error", e.error);
             setIsListening(false);
@@ -251,11 +252,21 @@ export default function ChatPage() {
                 recognitionRef.current.stop();
                 recognitionRef.current = null;
             }
-            if (e.error !== 'aborted' && isContinuousListening) {
+
+            // [FIX] เพิ่มการจัดการ Error ที่ไม่สามารถกู้คืนได้
+            if (e.error === 'not-allowed') {
+                alert("คุณต้องอนุญาตให้ใช้ไมโครโฟนก่อนค่ะ");
+                stopContinuousListening(); // หยุด loop ไปเลย
+            } else if (e.error === 'service-not-allowed') {
+                 alert("Speech Recognition ใช้งานไม่ได้ อาจจะต้องรันบน HTTPS หรือ localhost เท่านั้นค่ะ");
+                 stopContinuousListening(); // หยุด loop
+            } else if (e.error !== 'aborted' && isContinuousListening) {
+                // สำหรับ Error อื่นๆ (เช่น network, no-speech) ให้พยายามฟังใหม่
                 console.log("STT: Error, listening again.");
                 startListening();
             }
         };
+        // [END] โค้ดที่แก้ไขจากคำถามล่าสุด
 
         rec.start();
     };
@@ -615,4 +626,3 @@ export default function ChatPage() {
         </div>
     );
 }
-
