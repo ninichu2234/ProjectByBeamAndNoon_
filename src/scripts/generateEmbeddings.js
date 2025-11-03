@@ -1,68 +1,65 @@
-// src/scripts/generateEmbeddings.js
-
-// --- 1. Import เครื่องมือ ---
-const { supabase } = require('../app/lib/supabaseClient'); // (ใช้ require เพราะนี่คือ Node.js script)
+const { createClient } = require('@supabase/supabase-js'); 
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const dotenv = require('dotenv');
 
-// --- 2. โหลด API Keys จาก .env.local ---
 dotenv.config({ path: '.env.local' });
 
-// --- 3. ตั้งค่า Clients ---
+const supabaseAdmin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_KEY,
+    { auth: { persistSession: false } } // (บอกว่าไม่ต้องจำ session)
+);
+
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
 const embeddingModel = genAI.getGenerativeModel({ model: "text-embedding-004" });
 
-// --- 4. ฟังก์ชันหลัก ---
+// --- 5. ฟังก์ชันหลัก ---
 async function generateEmbeddings() {
-    console.log("--- เริ่มกระบวนการสร้าง Embeddings ---");
-
+    console.log("--- เริ่มกระบวนการสร้าง Embeddings (ในโหมด Admin) ---");
     try {
-        // --- 5. ดึงเมนูทั้งหมดจาก Supabase ---
-        // (ต้องใช้ชื่อตารางใน "" เพราะมีตัวพิมพ์ใหญ่)
+
         console.log("กำลังดึงข้อมูลเมนูจาก Supabase...");
-        const { data: menuItems, error } = await supabase
+        const { data: menuItems, error } = await supabaseAdmin // <-- (แก้ไข!)
             .from("menuItems")
             .select("menuId, menuName, menuDescription, menuCategory, allergens")
-            //.is('embedding', null); // (ทางเลือก: ถ้าจะรันซ้ำ ให้ใส่บรรทัดนี้เพื่อทำเฉพาะอันที่ยังว่าง)
+            .is('embedding', null); // (สำคัญ: เราจะทำเฉพาะอันที่ยังเป็น NULL เท่านั้น)
 
         if (error) throw error;
+        
+        if (menuItems.length === 0) {
+            console.log("--- ไม่พบเมนูที่เป็น NULL, ข้อมูล Embedding น่าจะครบแล้ว! ---");
+            return; 
+        }
 
-        console.log(`พบเมนูที่ต้องทำ Embedding จำนวน ${menuItems.length} รายการ`);
+        console.log(`พบเมนูที่ต้องทำ Embedding (ที่เป็น NULL) จำนวน ${menuItems.length} รายการ`);
 
-        // --- 6. วน Loop ทีละเมนู ---
         for (const item of menuItems) {
-            // สร้าง "เอกสาร" (Document) ที่อธิบายเมนูนี้
             const document = `เมนู: ${item.menuName}, 
-                             ประเภท: ${item.menuCategory}, 
-                             รายละเอียด: ${item.menuDescription || 'ไม่มี'}, 
-                             สิ่งที่อาจแพ้: ${item.allergens ? item.allergens.join(', ') : 'ไม่มี'}`;
-            
-            console.log(`\nกำลังสร้าง Embedding สำหรับ: "${item.menuName}"...`);
-            
-            // --- 7. ส่งไปให้ Google สร้าง Embedding ---
-            const result = await embeddingModel.embedContent(document);
-            const embedding = result.embedding.values; // นี่คือ Vector (ตัวเลข 768 ตัว)
+                            ประเภท: ${item.menuCategory}, 
+                            รายละเอียด: ${item.menuDescription || 'ไม่มี'}, 
+                            สิ่งที่อาจแพ้: ${item.allergens ? item.allergens.join(', ') : 'ไม่มี'}`;
 
-            // --- 8. อัปเดตกลับเข้า Supabase ---
-            const { error: updateError } = await supabase
+            console.log(`\nกำลังสร้าง Embedding สำหรับ: "${item.menuName}"...`);
+
+            const result = await embeddingModel.embedContent(document);
+            const embedding = result.embedding.values;
+            const { error: updateError } = await supabaseAdmin // <-- (แก้ไข!)
                 .from("menuItems")
                 .update({ embedding: embedding })
                 .eq("menuId", item.menuId);
 
             if (updateError) {
-                console.error(`  [X] อัปเดตล้มเหลว: ${updateError.message}`);
+                console.error(`  [X] อัปเดตล้มเหลว (Admin): ${updateError.message}`);
             } else {
-                console.log(`  [✓] บันทึก Embedding สำหรับ "${item.menuName}" เรียบร้อย!`);
+                console.log(`  [✓] บันทึก Embedding (Admin) สำหรับ "${item.menuName}" เรียบร้อย!`);
             }
         }
-
         console.log("\n--- กระบวนการสร้าง Embeddings ทั้งหมดเสร็จสมบูรณ์! ---");
-
     } catch (err) {
         console.error("\n--- เกิดข้อผิดพลาดร้ายแรง ---");
         console.error(err.message);
     }
 }
 
-// --- 9. สั่งให้ฟังก์ชันหลักทำงาน ---
+
 generateEmbeddings();
