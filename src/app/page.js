@@ -238,7 +238,7 @@ function HomeContent() {
                 <NextImage src="https://rcrntadwwvhyojmjrmzh.supabase.co/storage/v1/object/public/pic-other/picmainpage.png" alt="Cafe ambience" fill={true} priority={true} sizes="100vw" className="absolute z-0 w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-black/60 z-10"></div>
                 <div className="relative z-20 text-center text-white p-4">
-                    <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight">My<span className="text-amber-400">Cafe</span></h1>
+                    <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight">My<span className="text-white">Cafe</span></h1>
                     <p className="mt-4 max-w-2xl mx-auto text-lg md:text-xl text-gray-200">Suggest menu by AI for you or select on the menu</p>
                     <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
                         <Link href="/chat"><button className="w-full sm:w-auto bg-[#2c8160] hover:bg-green-900 text-white font-bold py-3 px-8 rounded-full transition-all duration-300 shadow-lg transform hover:scale-105">Talk with AI</button></Link>
