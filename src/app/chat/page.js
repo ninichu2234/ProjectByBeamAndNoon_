@@ -44,9 +44,7 @@ export default function ChatPage() {
     const [isReady, setIsReady] = useState(false);
     const loadStatusRef = useRef({ menus: false, options: false });
 
-    // (เอา Pop-up state ออก)
-
-
+    // ... (useEffect โหลดเมนูและ options - เหมือนเดิม) ...
     useEffect(() => {
         const checkReadyState = () => {
             if (loadStatusRef.current.menus && loadStatusRef.current.options) {
@@ -100,6 +98,7 @@ export default function ChatPage() {
         isInitialMount.current = false;
     }, []); 
 
+    // ... (useEffect คำนวณตะกร้า - เหมือนเดิม) ...
     useEffect(() => {
         const currentCart = Array.isArray(cartItems) ? cartItems : [];
         const newTotal = currentCart.reduce((sum, item) => {
@@ -121,13 +120,148 @@ export default function ChatPage() {
         }
     }, [cartItems]); 
 
-    // ... (speak, useEffect cleanup, startListening, stop/toggle - เหมือนเดิม) ...
-    const speak = (text, onEndCallback = null) => { /* ... */ };
-    useEffect(() => { /* ... */ }, []); 
-    const startListening = () => { /* ... */ };
-    const stopContinuousListening = () => { /* ... */ };
-    const toggleContinuousListen = () => { /* ... */ };
-    // ... (จบส่วน STT/TTS) ...
+    // [START] เติมโค้ด STT/TTS ที่หายไป
+    const speak = (text, onEndCallback = null) => {
+        if (typeof window === 'undefined' || !window.speechSynthesis || !text) {
+            if (onEndCallback) onEndCallback();
+            return;
+        }
+        window.speechSynthesis.cancel(); 
+        const utt = new SpeechSynthesisUtterance(text);
+        utt.lang = 'th-TH';
+        utt.rate = 1.0;
+        utt.onend = () => {
+            if (onEndCallback) onEndCallback();
+        };
+        utt.onerror = (e) => {
+            console.error("Speech synthesis error:", e);
+            if (onEndCallback) onEndCallback();
+        };
+        let voices = window.speechSynthesis.getVoices();
+        const setVoice = () => {
+            voices = window.speechSynthesis.getVoices();
+            const voice = voices.find(v => v.lang === 'th-TH' && v.name.includes('Kanya'));
+            if (voice) utt.voice = voice;
+            if (typeof window !== 'undefined' && window.speechSynthesis) {
+                window.speechSynthesis.speak(utt);
+            } else if (onEndCallback) {
+                onEndCallback(); 
+            }
+        };
+        if (voices.length === 0) {
+            window.speechSynthesis.onvoiceschanged = setVoice;
+        } else {
+            setVoice(); 
+        }
+    };
+
+    useEffect(() => {
+        return () => {
+            if (typeof window !== 'undefined' && window.speechSynthesis) {
+                window.speechSynthesis.cancel();
+                window.speechSynthesis.onvoiceschanged = null;
+            }
+            if (recognitionRef.current) {
+                recognitionRef.current.stop();
+                recognitionRef.current = null;
+            }
+        };
+    }, []); 
+
+    const startListening = () => {
+        console.log("STT: startListening() called...");
+
+        if (typeof window === 'undefined') {
+            stopContinuousListening(); return;
+        }
+        const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SR) {
+            alert("Browser not supported");
+            stopContinuousListening(); return;
+        }
+        if (recognitionRef.current) {
+            recognitionRef.current.stop();
+        }
+        const rec = new SR();
+        recognitionRef.current = rec;
+        rec.lang = 'th-TH';
+        rec.interimResults = false;
+        rec.maxAlternatives = 1;
+        rec.continuous = false; 
+        rec.onstart = () => {
+            setIsListening(true); 
+            setQuestion("กำลังฟัง...");
+        };
+        rec.onresult = (e) => {
+            const text = e.results[0][0].transcript;
+            console.log("STT: Heard:", text);
+            setQuestion(text);
+            setIsListening(false);
+            if (recognitionRef.current) {
+                recognitionRef.current.stop(); 
+                recognitionRef.current = null;
+            }
+            handleSubmit(text, startListening);
+        };
+        rec.onend = () => {
+            console.log("STT: Listener ended.");
+            setIsListening(false);
+            recognitionRef.current = null;
+            if (isContinuousListening && !isLoading) { 
+                 console.log("STT: Timeout or no speech, listening again.");
+                 startListening();
+            }
+        };
+        rec.onerror = (e) => {
+            console.error("Speech error", e.error);
+            setIsListening(false);
+            if (recognitionRef.current) {
+                recognitionRef.current.stop();
+                recognitionRef.current = null;
+            }
+            if (e.error === 'not-allowed') {
+                alert("คุณต้องอนุญาตให้ใช้ไมโครโฟนก่อนค่ะ");
+                stopContinuousListening(); 
+            } else if (e.error === 'service-not-allowed') {
+                 alert("Speech Recognition ใช้งานไม่ได้ อาจจะต้องรันบน HTTPS หรือ localhost เท่านั้นค่ะ");
+                 stopContinuousListening(); 
+            } else if (e.error !== 'aborted' && isContinuousListening) {
+                console.log("STT: Error, listening again.");
+                startListening();
+            }
+        };
+        rec.start();
+    };
+
+    const stopContinuousListening = () => {
+        console.log("Stopping continuous conversation.");
+        setIsContinuousListening(false);
+        setIsListening(false);
+        setIsLoading(false); 
+        if (recognitionRef.current) {
+            recognitionRef.current.stop();
+            recognitionRef.current = null;
+        }
+        if (typeof window !== 'undefined' && window.speechSynthesis) {
+            window.speechSynthesis.cancel(); 
+        }
+        setQuestion('');
+        setAnswer('สวัสดีค่ะ ให้ AI Barista แนะนำเมนูอะไรดีคะ?'); 
+        setChatHistory([]);
+    };
+
+    const toggleContinuousListen = () => {
+        if (isContinuousListening) {
+            stopContinuousListening();
+        } else {
+            if (isLoading) return; 
+            setIsContinuousListening(true);
+            setAnswer("สวัสดีค่ะ พูดคุยได้เลย...");
+            setChatHistory([]);
+            startListening();
+        }
+    };
+    // [END] เติมโค้ด STT/TTS ที่หายไป
 
 
     // --- (ฟังก์ชันจัดการตะกร้า) ---
@@ -208,16 +342,36 @@ export default function ChatPage() {
             }
         });
     };
-    const _handleModifyItems = (itemsToModify) => { /* ... (โค้ดเหมือนเดิม) ... */ };
-    const _handleDeleteItems = (itemsToDelete) => { /* ... (โค้ดเหมือนเดิม) ... */ };
+    
+    // (บีม) เรายังไม่ได้ใช้ 2 ฟังก์ชันนี้ แต่ใส่ไว้เผื่อ AI เรียก
+    const _handleModifyItems = (itemsToModify) => { 
+        if (!itemsToModify || itemsToModify.length === 0) return;
+        console.log("AI requested to MODIFY items (not implemented):", itemsToModify);
+    };
+    const _handleDeleteItems = (itemsToDelete) => {
+        if (!itemsToDelete || itemsToDelete.length === 0) return;
+        console.log("AI requested to DELETE items:", itemsToDelete);
+        
+        setCartItems(prevItems => {
+            let items = [...prevItems];
+            itemsToDelete.forEach(itemInfo => {
+                if (itemInfo.cartItemId) {
+                    items = items.filter(i => i.cartItemId !== itemInfo.cartItemId);
+                } else if (itemInfo.menuName) {
+                    // ลบ item แรกที่เจอที่ชื่อตรงกัน (อาจจะไม่แม่นยำ)
+                    const indexToRemove = items.findIndex(i => i.menuName === itemInfo.menuName);
+                    if (indexToRemove > -1) {
+                        items.splice(indexToRemove, 1);
+                    }
+                }
+            });
+            return items;
+        });
+    };
     
     // [FIX] (เอา window.confirm ออก)
     const _handleRemoveItemFromCart = (cartItemIdToRemove, itemName, quantity) => {
         if (!cartItemIdToRemove) return;
-
-        // (ลบ window.confirm ออก)
-
-        // (ลบ if (confirmation) ออก)
         
         // ลบเลยทันที
         setCartItems(prevItems => {
@@ -252,6 +406,10 @@ export default function ChatPage() {
                 optionsContext += `  - ${opt.optionName} (${priceInfo})\n`;
             });
         }
+        
+        // (บีม) ส่งตะกร้าปัจจุบันไปด้วย
+        const cartContext = JSON.stringify(cartItems);
+
         let finalAnswerText = ''; 
         let aiResponseData = null;
         try {
@@ -263,7 +421,7 @@ export default function ChatPage() {
                     menuContext, 
                     optionsContext,
                     chatHistory: chatHistory,
-                    cartItems: cartItems
+                    cartContext: cartContext // ส่งตะกร้าไปด้วย
                 }) 
             });
             const data = await res.json();
@@ -308,13 +466,13 @@ export default function ChatPage() {
         } finally { 
             setIsLoading(false); 
             setChatHistory([ ...updatedHistory, { role: "model", parts: [{ text: finalAnswerText }] } ]);
-            if (onSpeakEndCallback) { speak(finalAnswerText, onEndCallback); } 
+            if (onEndCallback) { speak(finalAnswerText, onEndCallback); } 
             else if (textFromSpeech) { setQuestion(''); speak(finalAnswerText); }
             if (!textFromSpeech && !onSpeakEndCallback) { setQuestion(''); }
         }
     };
 
-    // --- JSX ---
+    // --- JSX (เหมือนเดิม) ---
     return (
         <div className="bg-white min-h-screen"> 
             
