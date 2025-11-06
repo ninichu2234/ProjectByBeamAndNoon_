@@ -98,7 +98,7 @@ export default function Header() {
                         {loading ? (
                             <div className="h-6 w-24 bg-white/20 rounded-md animate-pulse"></div>
                         ) : session ? (
-                            // (ถ้าล็อกอินแล้ว)
+
                             <>
                                 <Link 
                                     href="/member" 
@@ -109,7 +109,7 @@ export default function Header() {
                                 </Link>
                             </>
                         ) : (
-                            // (ถ้ายังไม่ล็อกอิน)
+                            
                         <div className="relative">
                             <Link 
                                 href="/member" 
@@ -241,4 +241,3 @@ export default function Header() {
         </header>
     );
 }
-
