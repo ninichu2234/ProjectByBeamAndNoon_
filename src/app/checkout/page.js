@@ -123,17 +123,32 @@ export default function CheckoutPage() {
 
     // ‼️ (บีม) Memo ใหม่สำหรับเช็กว่าปุ่มควรกดได้ยัง (ข้อ 3)
     const isFormValid = useMemo(() => {
-        return formData.tableNumber.trim().length > 0;
+        const tableStr = formData.tableNumber.trim();
+        if (tableStr.length === 0) {
+            return false
+        }
+        const num = parseInt(tableStr, 10);
+        return !isNaN(num) && num >= 1 && num <= 25;
     }, [formData.tableNumber]);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
-        
-        // ‼️ (บีม) ถ้าเริ่มพิมพ์เลขโต๊ะ ให้ซ่อน Error (ข้อ 3)
-        if (name === 'tableNumber' && value.trim().length > 0) {
-            setTableNumberError(false);
-        }
+        if (name === 'tableNumber') {
+            const MAX_TABLE_NUMBER = 25;
+            const numericValue = value.replace(/[^0-9]/g, '');
+            if (numericValue === '') {
+                setFormData(prev => ({ ...prev, tableNumber: '' }))
+                setTableNumberError(false);
+                return;
+            }
+            const num = parseInt(numericValue, 10);
+            if (num >= 1 && num <= MAX_TABLE_NUMBER) {
+                setFormData(prev => ({ ...prev, tableNumber: numericValue }));
+                setTableNumberError(false);
+            }
+            } else {
+                setFormData(prev => ({ ...prev, [name]: value }));
+            }
         
         console.log("CheckoutPage: formData updated:", { ...formData, [name]: value });
     };
@@ -181,8 +196,8 @@ export default function CheckoutPage() {
                 totalPrice: summary.total,
                 userId: userId || null,
                 guestId: userId ? null : guestId,
-                orderStatus: 'รับออเดอร์แล้ว', 
-                paymentStatus: formData.paymentMethod === 'counter' ? 'Pay At Counter' : 'รอชำระเงิน', 
+                orderStatus: 'Order received', 
+                paymentStatus: formData.paymentMethod === 'counter' ? 'Pay At Counter' : 'Waiting for payment', 
                 specialInstructions: null 
             };
 
@@ -359,17 +374,18 @@ export default function CheckoutPage() {
                              </label>
                              <input
                                  type="number"
+                                 min="1"
+                                 max="25"
                                  name="tableNumber"
                                  id="tableNumber"
                                  value={formData.tableNumber}
                                  onChange={handleInputChange}
-                                 // ‼️ (บีม) เพิ่ม CSS สำหรับกรอบสีแดง (ข้อ 3) ‼️
                                  className={`mt-1 block w-full max-w-xs rounded-md shadow-sm text-lg p-2 ${
                                      tableNumberError 
-                                     ? 'border-red-500 ring-1 ring-red-500' // ถ้า Error
-                                     : 'border-gray-300 focus:border-green-500 focus:ring-green-500' // ปกติ
+                                     ? 'border-red-500 ring-1 ring-red-500 font-semibold text-red-700' // ถ้า Error
+                                     : 'border-gray-300 focus:border-green-500 focus:ring-green-500 font-semibold text-gray-900' // ปกติ
                                  }`}
-                                 placeholder="Enter your table number"
+                                 placeholder="Enter table (1-25)"
                                />
                              {/* ‼️ (บีม) เพิ่มข้อความ Error (ข้อ 3) ‼️ */}
                              {tableNumberError && (

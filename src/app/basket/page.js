@@ -229,7 +229,7 @@ export default function BasketPage() {
                                                         >
                                                             -
                                                         </button>
-                                                        <span className="w-10 text-center text-sm font-medium">{item.quantity}</span>
+                                                        <span className="w-10 text-center text-sm font-medium text-gray-800">{item.quantity}</span>
                                                         <button 
                                                             onClick={() => handleUpdateQuantity(item.cartItemId, item.quantity + 1)}
                                                             className="w-8 h-8 text-gray-600 hover:bg-gray-100"

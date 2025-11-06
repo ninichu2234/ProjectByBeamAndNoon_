@@ -140,7 +140,7 @@ const OrderStatusBanner = ({ orderData, onDismiss }) => {
             case 'Preparing': return { text: `order (${displayId}) Preparing`, icon: <ClockIcon />, bgColor: 'bg-yellow-100', textColor: 'text-yellow-800', borderColor: 'border-yellow-400' };
             case 'Serving': return { text: `order (${displayId}) Serving`, icon: <TruckIcon />, bgColor: 'bg-blue-100', textColor: 'text-blue-800', borderColor: 'border-blue-400' };
             case 'Served': return { text: `order (${displayId}) Served`, icon: <CheckBadgeIcon />, bgColor: 'bg-green-100', textColor: 'text-green-800', borderColor: 'border-green-400' };
-            default: return { text: `oder (${displayId}) status: ${status}`, icon: null, bgColor: 'bg-gray-100', textColor: 'text-gray-800', borderColor: 'border-gray-400' };
+            default: return { text: `order (${displayId}) status: ${status}`, icon: null, bgColor: 'bg-gray-100', textColor: 'text-gray-800', borderColor: 'border-gray-400' };
         }
     };
     const { text, icon, bgColor, textColor, borderColor } = getStatusInfo(orderData.orderStatus);
